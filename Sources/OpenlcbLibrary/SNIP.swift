@@ -12,8 +12,9 @@ import os
 /// Provides support for loading via short or long messages. A SNIP is write-once; when the underlying
 /// connection resets, a new SNIP struct should be installed in the node.
 public struct SNIP {
-    
-    // TODO: make these into properties that load from the data array as needed
+
+    // The values of these are updated as more data comes in so othat they're
+    // always the best available names.
     var manufacturerName = ""
     var modelName = ""
     var hardwareVersion = ""
