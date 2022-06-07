@@ -61,6 +61,7 @@ public class CanLink : LinkLayer {
         }
     }
 
+    // these are link-level concepts, so below here instead of CanFrame
     enum ControlFrame : Int {
         case RID = 0x0700
         case AMD = 0x0701
@@ -89,14 +90,21 @@ public class CanLink : LinkLayer {
         state = .Inhibited
         sendAliasAllocationSequence()
         // TODO: wait 200 msec and declare ready to go, see https://stackoverflow.com/questions/27517632/how-to-create-a-delay-in-swift
-        // TODO: send AMD frame, go to Permitted state and notify upper levels
+        // send AMD frame, go to Permitted state
+        link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias) )
+        state = .Permitted
+        // send AME with no NodeID to get full alias map
+        link!.sendCanFrame( CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias) )
+        // notify upper levels
+        linkStateChange(state: state)
     }
         
     func handleReceivedLinkDown(_ frame : CanFrame) {
         // return to Inhibited state until link back up
         // Note: since no working link, not sending the AMR frame
         state = .Inhibited
-        // TODO: notify higher levels to reset
+        // notify upper levels
+        linkStateChange(state: state)
     }
     
     func handleReceivedCID(_ frame : CanFrame) {
@@ -139,6 +147,10 @@ public class CanLink : LinkLayer {
 
     func handleReceivedData(_ frame : CanFrame) {
         if (abortOnAliasCollision(frame)) { return }
+        // get proper MTI
+        let mti = canHeaderToFullFormat(frame: frame)
+        let msg = Message(mti: mti, source: NodeID(0))  // TODO: source and destination handling
+        fireListeners(msg)
     }
 
     // MARK: common code
@@ -205,5 +217,27 @@ public class CanLink : LinkLayer {
         }
     }
     
+    // returns a fill 16-bit MTI from the full 29 bits of a CAN header
+    func canHeaderToFullFormat(frame : CanFrame) -> MTI {
+        let frameType = (frame.header >> 24) & 0x7
+        let canMTI = Int((frame.header >> 12) & 0xFFF)
+        
+        if frameType == 1 {
+            if let okMTI = MTI(rawValue: canMTI) {
+                return okMTI
+            } else {
+                logger.error("unhandled canMTI: \(frame), marked Unknown")
+                return MTI.Unknown
+            }
+        } else if (frameType >= 2 && 5 >= frameType) {
+            // datagram type - we don't address the subtypes here
+            return MTI.Datagram
+        } else {
+            // not handling reserver and stream type except to log
+            logger.error("unhandled canMTI: \(frame), marked Unknown")
+            return MTI.Unknown
+        }
+    }
+
     let logger = Logger(subsystem: "org.ardenwood.openlcblibrary", category: "CanLink")
 }

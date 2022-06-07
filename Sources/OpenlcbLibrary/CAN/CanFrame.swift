@@ -7,10 +7,12 @@
 
 import Foundation
 
-public struct CanFrame : Equatable {
+public struct CanFrame : Equatable, CustomStringConvertible {
     var header : UInt
     var data : [UInt8]
     
+    public var description : String { "CanFrame header: \(String(format:"%08X", header)) ) \(data)" }
+
     init(header : UInt, data : [UInt8] ) {
         self.header = header
         self.data = data
@@ -31,5 +33,4 @@ public struct CanFrame : Equatable {
         header = UInt(control << 12) | (alias & 0xFFF)
         data = []
     }
-
 }

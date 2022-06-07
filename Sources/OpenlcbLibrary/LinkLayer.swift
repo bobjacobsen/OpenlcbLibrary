@@ -29,16 +29,21 @@ public class LinkLayer {
     }
     var listeners : [( (_ : Message) -> () )] = []
     
-    func fireListeners(_ frame : Message) {
+    func fireListeners(_ msg : Message) {
         for listener in listeners {
-            listener(frame)
+            listener(msg)
         }
     }
     
     // invoked when the link layer comes up and down
     func linkStateChange(state : State) {
-        // let cf = CanFrame(control : CanLink.ControlFrame.LinkUp.rawValue, alias : 0)
-        // fireListeners(cf)
+        var msg : Message
+        if state == State.Permitted {
+            msg = Message(mti: MTI.LinkLevelUp, source: NodeID(0) )
+        } else {
+            msg = Message(mti: MTI.LinkLevelDown, source: NodeID(0) )
+        }
+        fireListeners(msg)
     }
 
 }

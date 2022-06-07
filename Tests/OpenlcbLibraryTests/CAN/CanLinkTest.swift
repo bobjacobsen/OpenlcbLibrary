@@ -23,6 +23,11 @@ class CanLinkTest: XCTestCase {
         var receivedFrames : [CanFrame] = []
         override func sendCanFrame(_ frame : CanFrame) { receivedFrames.append(frame) }
     }
+    /// Mock Message to record messages requested to be sent
+    class MessageMockLayer {
+        var receivedMessages : [Message] = []
+        func receiveMessage(_ msg : Message) { receivedMessages.append(msg) }
+    }
 
     // MARK: - Alias calculations
     func testIncrementAlias48() {
@@ -53,11 +58,15 @@ class CanLinkTest: XCTestCase {
         let canPhysicalLayer = CanMockPhysicalLayer()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
+        let messageLayer = MessageMockLayer()
+        canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
 
         canPhysicalLayer.physicalLayerUp()
 
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 5)
-        XCTAssertEqual(canLink.state, CanLink.State.Inhibited)
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 7)  // TODO: includes AMD, AME w/o delay now
+        XCTAssertEqual(canLink.state, CanLink.State.Permitted)
+
+        XCTAssertEqual(messageLayer.receivedMessages.count, 1)
     }
 
     // MARK: - Test PHY Down, Up, Error Information
@@ -65,11 +74,14 @@ class CanLinkTest: XCTestCase {
         let canPhysicalLayer = CanMockPhysicalLayer()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
+        let messageLayer = MessageMockLayer()
+        canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
         canLink.state = CanLink.State.Permitted
         
         canPhysicalLayer.physicalLayerDown()
 
         XCTAssertEqual(canLink.state, CanLink.State.Inhibited)
+        XCTAssertEqual(messageLayer.receivedMessages.count, 1)
     }
 
     func testAEIE2noData() {
@@ -157,8 +169,42 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canLink.state, CanLink.State.Inhibited)
     }
     
-    // MARK: - Test Remote Node Alias Tracking
+    // TODO: test message transfer
     
+    func testCheckMTImapping() {
+        let canLink = CanLink()
+
+        XCTAssertEqual(canLink.canHeaderToFullFormat(frame: CanFrame(header:0x19490000, data:[]) ),
+                       MTI.VerifyNodeIDNumberGlobal )
+    }
+            
+    // TODO:    single frame messages - addressed and not
+    func testSimpleGlobalData() {
+        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canLink = CanLink()
+        let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
+        canLink.linkPhysicalLayer(canPhysicalLayer)
+        let messageLayer = MessageMockLayer()
+        canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
+        canLink.state = .Permitted
+
+        canPhysicalLayer.fireListeners(CanFrame(control: 0x19490, alias: ourAlias+1)) // from some other alias
+
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0) // nothing back down to CAN
+        XCTAssertEqual(messageLayer.receivedMessages.count, 1) // one message forwarded
+        // check for proper global MTI
+        print (messageLayer.receivedMessages[0])
+        XCTAssertEqual(messageLayer.receivedMessages[0].mti,
+                       MTI.VerifyNodeIDNumberGlobal)
+        
+        // TODO: check for proper source EventID from alias
+    }
+
+    // TODO:    multi frame addressed messages - SNIP reply
+    // TODO:    datagrams short and long
+    
+    // MARK: - Test Remote Node Alias Tracking
+    // TODO: - Test Remote Node Alias Tracking
     
     
 }

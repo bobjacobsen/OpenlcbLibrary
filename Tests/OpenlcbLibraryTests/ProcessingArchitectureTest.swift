@@ -63,6 +63,6 @@ class ProcessingArchitectureTest: XCTestCase {
         // and bring the link up
         canPhysicalLayer.physicalLayerUp()
         
-        XCTAssertEqual(canLink.state, CanLink.State.Inhibited)
+        XCTAssertEqual(canLink.state, CanLink.State.Permitted)
     }
 }

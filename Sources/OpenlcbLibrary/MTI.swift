@@ -40,6 +40,8 @@ public enum MTI : Int {
     case DatagramReceivedOK             = 0x0A28
     case DatagramRejected               = 0x0A48
     
+    case Unknown                        = 0x0000
+    
     // these are used for internal signalling and are not present in the MTI specification
     case LinkLevelUp                    = 0x2000   // entered Permitted state
     case LinkLevelDown                  = 0x2001   // entered Inhibited state
