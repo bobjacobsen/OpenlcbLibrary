@@ -14,9 +14,14 @@ import os
 public struct SNIP {
     
     // TODO: make these into properties that load from the data array as needed
-    var userProvidedDescription = ""
+    var manufacturerName = ""
+    var modelName = ""
     var hardwareVersion = ""
+    var softwareVersion = ""
     
+    var userProvidedNodeName = ""
+    var userProvidedDescription = ""
+
     // total SNIP data is 1+41+41+21+21 1+63+64 = 125+128 = 253 bytes
     var data : [UInt8] = Array(repeating: 0, count: 253)
     var index = 0; // for loading in multiple messages
@@ -24,7 +29,7 @@ public struct SNIP {
     // we don't (yet) support later versions with e.g. larger strings, etc.
     // OLCB Strings are fixed length null terminated
     
-    /// Get the desired string
+    /// Get the desired string by string number in the data
     /// 0-indexed
     func getString(n : Int) -> String {
         let start = findString(n: n)
@@ -78,7 +83,7 @@ public struct SNIP {
         return 0
     }
     
-    ///  Retrieve a string from a starting index
+    ///  Retrieve a string from a starting byte index and largest possible length
     ///   The `maxLength` parameter prevents overflow
     func getString(first : Int, maxLength : Int) -> String {
         var last = first
@@ -101,11 +106,25 @@ public struct SNIP {
         }
     }
     
+    // add additional bytes of SNIP data
     mutating func addData(data : [UInt8] ) {
         for i in 0...data.count-1 {
             self.data[i+index] = data[i]
         }
         index += data.count
+        updateStrings()
+    }
+    
+    // load strings from current SNIP accumulated data
+    mutating func updateStrings() {
+        manufacturerName =  getString(n: 0)
+        modelName =         getString(n: 1)
+        hardwareVersion =   getString(n: 2)
+        softwareVersion =   getString(n: 3)
+        
+        userProvidedNodeName = getString(n: 4)
+        userProvidedDescription = getString(n: 5)
+
     }
     
     static let logger = Logger(subsystem: "com.ardenwood", category: "SNIP")

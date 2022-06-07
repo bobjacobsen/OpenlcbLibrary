@@ -55,5 +55,12 @@ class SNIPTest: XCTestCase {
         XCTAssertEqual(s.getString(n: 4),"3EF")
         XCTAssertEqual(s.getString(n: 5),"4EF")
 
+        XCTAssertEqual(s.manufacturerName,"ABC")
+        XCTAssertEqual(s.modelName,"DEF")
+        XCTAssertEqual(s.hardwareVersion,"1EF")
+        XCTAssertEqual(s.softwareVersion,"2EF")
+        XCTAssertEqual(s.userProvidedNodeName,"3EF")
+        XCTAssertEqual(s.userProvidedDescription,"4EF")
+
     }
 }
