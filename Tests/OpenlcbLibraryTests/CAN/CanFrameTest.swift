@@ -42,7 +42,6 @@ class CanFrameTest: XCTestCase {
         XCTAssertEqual(cidFrame4ABC.data, [])
 
         let cidFrame4 = CanFrame(cid: 4, nodeID: NodeID(0x12_34_56_78_9A_BC), alias: 0x123)
-        print(String(format:"0x%5X", cidFrame4.header))
         XCTAssertEqual(cidFrame4.header, 0x4_ABC_123)
         XCTAssertEqual(cidFrame4.data, [])
 

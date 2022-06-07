@@ -26,6 +26,9 @@ public class CanLink : LinkLayer {
     
     var link : CanPhysicalLayer?
     
+    var aliasToNodeID : [UInt:NodeID] = [:]
+    var nodeIdToAlias : [NodeID:UInt] = [:]
+
     final func linkPhysicalLayer( _ cpl : CanPhysicalLayer) {
         link = cpl
         cpl.registerFrameReceivedListener(receiveListener)
@@ -93,6 +96,9 @@ public class CanLink : LinkLayer {
         // send AMD frame, go to Permitted state
         link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias) )
         state = .Permitted
+        // add to map
+        aliasToNodeID[localAlias] = CanLink.localNodeID
+        nodeIdToAlias[CanLink.localNodeID] = localAlias
         // send AME with no NodeID to get full alias map
         link!.sendCanFrame( CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias) )
         // notify upper levels
@@ -118,6 +124,11 @@ public class CanLink : LinkLayer {
     
     func handleReceivedAMD(_ frame : CanFrame) {
         if (abortOnAliasCollision(frame)) { return }
+        // This defines an alias, so store it
+        let nodeID = NodeID(frame.data)
+        let alias = frame.header & 0xFFF
+        aliasToNodeID[alias] = nodeID
+        nodeIdToAlias[nodeID] = alias
     }
     
     func handleReceivedAME(_ frame : CanFrame) {
@@ -143,14 +154,64 @@ public class CanLink : LinkLayer {
     
     func handleReceivedAMR(_ frame : CanFrame) {
         if (abortOnAliasCollision(frame)) { return }
+        // Alias Map Reset - drop from maps
+        let nodeID = NodeID(frame.data)
+        let alias = frame.header & 0xFFF
+        aliasToNodeID.removeValue(forKey: alias)
+        nodeIdToAlias.removeValue(forKey: nodeID)
     }
 
-    func handleReceivedData(_ frame : CanFrame) {
+    func handleReceivedData(_ frame : CanFrame) {  // mutation to accumulate multi-frame messages
         if (abortOnAliasCollision(frame)) { return }
         // get proper MTI
         let mti = canHeaderToFullFormat(frame: frame)
-        let msg = Message(mti: mti, source: NodeID(0))  // TODO: source and destination handling
-        fireListeners(msg)
+        var sourceID = NodeID(0)
+        if let mapped = aliasToNodeID[frame.header&0xFFF] {
+            sourceID = mapped
+        } else {
+            logger.error("message from unknown source alias: \(frame), contine with 00.00.00.00.00.00")
+        }
+        
+        var destID = NodeID(0)
+        // handle destination for addressed messages
+        if (frame.header & 0x008_000 != 0) {
+            var destAlias : UInt = 0
+            if (frame.data.count > 0) { destAlias |= UInt(frame.data[0] & 0x0F ) << 8 } // rm f bits
+            if (frame.data.count > 1) { destAlias |= UInt(frame.data[1] & 0xFF ) }
+            if let mapped = aliasToNodeID[destAlias] {
+                destID = mapped
+            } else {
+                logger.error("message from unknown dest alias: \(frame), contine with 00.00.00.00.00.00")
+            }
+            
+            // check for start and end bits
+            let key = AccumKey(mti:mti, source:sourceID, dest:destID)
+            if (frame.data[0] & 0x20 == 0) {
+                // is start, create the entry in the accumulator
+                accumulator[key] = []
+            }
+            // add this data
+            if (frame.data.count > 2) {
+                for byte in frame.data[2...frame.data.count-1] {
+                    accumulator[key]!.append(byte)
+                }
+            }
+            if (frame.data[0] & 0x10 == 0) {
+                // is end, ship and remove accumulation
+                var msg = Message(mti: mti, source: sourceID, destination: destID)
+                msg.data = accumulator[key]!
+                fireListeners(msg)
+
+                // remove accumulution
+                accumulator[key] = nil
+            }
+            
+        } else {
+            // forward global message
+            var msg = Message(mti: mti, source: sourceID, destination: destID)
+            msg.data = frame.data
+            fireListeners(msg)
+        }
     }
 
     // MARK: common code
@@ -238,6 +299,18 @@ public class CanLink : LinkLayer {
             return MTI.Unknown
         }
     }
+    
+    // struct that holds the ID for accumulating a mult-part message:
+    //   - MTI
+    //   - Source
+    //   - Destination
+    // Together these uniquely identify a stream of frames that need to be assembled into a message
+    struct AccumKey : Hashable, Equatable {
+        let mti: MTI
+        let source: NodeID
+        let dest: NodeID
+    }
+    var accumulator : [AccumKey: [UInt8]] = [:]
 
     let logger = Logger(subsystem: "org.ardenwood.openlcblibrary", category: "CanLink")
 }
