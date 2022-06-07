@@ -39,5 +39,18 @@ public struct NodeID : Equatable, Hashable, CustomStringConvertible {
         let hex = nodeID.replacingOccurrences(of: ".", with: "")
         self.nodeID = UInt64(hex, radix: 16) ?? 0
     }
+
+    /// Convert data bytes to nodeID
+    public init(_ data : [UInt8]) {
+        var nodeID : UInt64 = 0
+        if (data.count > 0) {nodeID |= UInt64(data[0] & 0xFF) << 40}
+        if (data.count > 1) {nodeID |= UInt64(data[1] & 0xFF) << 32}
+        if (data.count > 2) {nodeID |= UInt64(data[2] & 0xFF) << 24}
+        if (data.count > 3) {nodeID |= UInt64(data[3] & 0xFF) << 16}
+        if (data.count > 4) {nodeID |= UInt64(data[4] & 0xFF) <<  8}
+        if (data.count > 5) {nodeID |= UInt64(data[5] & 0xFF)      }
+        self.init(nodeID)
+    }
+
 }
 

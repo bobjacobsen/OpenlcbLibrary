@@ -23,6 +23,13 @@ class EventIDTest: XCTestCase {
         let eid2 = EventID("FF.09.0A.0B.0C.0D.0E.0F")
         XCTAssertEqual(eid2.description, "EventID FF.09.0A.0B.0C.0D.0E.0F")
     }
+    func testInitArray() {
+        let array : [UInt8] = [8,9,10,11,12,13,14,15]
+        let eid = EventID(array)
+        XCTAssertEqual(eid.description, "EventID 08.09.0A.0B.0C.0D.0E.0F")
+        let eid2 = EventID("FF.09.0A.0B.0C.0D.0E.0F")
+        XCTAssertEqual(eid2.description, "EventID FF.09.0A.0B.0C.0D.0E.0F")
+    }
 
     func testInvalidInitString() {
         let eid = EventID("foo")

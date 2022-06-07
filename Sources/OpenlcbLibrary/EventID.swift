@@ -43,5 +43,19 @@ public struct EventID : Equatable, Hashable, CustomStringConvertible {
         let hex = eventID.replacingOccurrences(of: ".", with: "")
         self.eventID = UInt64(hex, radix: 16) ?? 0
     }
+
+    /// Convert data bytes to eventID
+    public init(_ data : [UInt8]) {
+        var eventID : UInt64 = 0
+        if (data.count > 0) {eventID |= UInt64(data[0] & 0xFF) << 56}
+        if (data.count > 1) {eventID |= UInt64(data[1] & 0xFF) << 48}
+        if (data.count > 2) {eventID |= UInt64(data[2] & 0xFF) << 40}
+        if (data.count > 3) {eventID |= UInt64(data[3] & 0xFF) << 32}
+        if (data.count > 4) {eventID |= UInt64(data[4] & 0xFF) << 24}
+        if (data.count > 5) {eventID |= UInt64(data[5] & 0xFF) << 16}
+        if (data.count > 6) {eventID |= UInt64(data[6] & 0xFF) <<  8}
+        if (data.count > 7) {eventID |= UInt64(data[7] & 0xFF)      }
+        self.init(eventID)
+    }
 }
 
