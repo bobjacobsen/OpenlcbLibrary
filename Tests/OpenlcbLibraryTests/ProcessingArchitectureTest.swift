@@ -29,9 +29,9 @@ class ProcessingArchitectureTest: XCTestCase {
 
     // test of multiple processors working in parallel
     func testMessageArrival() {
-        let msg = Message(mti : MTI.InitializationComplete, source : NodeID(12), destination : NodeID(21))
+        let msg = Message(mti : MTI.InitializationComplete, source : NodeID(12))
         
-        let rnode = Node(NodeID(21))
+        let rnode = Node(NodeID(12))
         let rprocessor : Processor = RemoteNodeProcessor() // track effect of messages on Remote Node
         
         XCTAssertEqual(rnode.state, Node.State.Uninitialized, "node state starts uninitialized")
@@ -39,7 +39,7 @@ class ProcessingArchitectureTest: XCTestCase {
         XCTAssertEqual(rnode.state, Node.State.Initialized, "node state goes initialized")
 
         let dprocessor : Processor = DatagramProcessor() // datagram processor doesn't affect node status
-        let dnode = Node(NodeID(21))
+        let dnode = Node(NodeID(12))
         dprocessor.process(msg, dnode)
         XCTAssertEqual(dnode.state, Node.State.Uninitialized, "node state should be unchanged")
         
@@ -51,7 +51,7 @@ class ProcessingArchitectureTest: XCTestCase {
         let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
         let pnode = Node(NodeID(12))
         pprocessor.process(msg, pnode)
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C InitializationComplete (NodeID 00.00.00.00.00.15)")
+        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C InitializationComplete")
     }
     
     // test of connecting a CAN link and physical layer

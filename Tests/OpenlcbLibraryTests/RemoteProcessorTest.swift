@@ -21,15 +21,18 @@ class RemoteProcessorTest: XCTestCase {
     }
 
     func testInitializationComplete() {
-        let msg1 = Message(mti : MTI.InitializationComplete, source : NodeID(12), destination : NodeID(13))
+        // not related to node
+        let msg1 = Message(mti : MTI.InitializationComplete, source : NodeID(13))
         XCTAssertEqual(node21.state, Node.State.Uninitialized, "node state starts uninitialized")
         processor.process(msg1, node21)
         XCTAssertEqual(node21.state, Node.State.Uninitialized, "node state stays uninitialized")
 
-        let msg2 = Message(mti : MTI.InitializationComplete, source : NodeID(12), destination : NodeID(21))
+        // send by node
+        let msg2 = Message(mti : MTI.InitializationComplete, source : NodeID(21))
         XCTAssertEqual(node21.state, Node.State.Uninitialized, "node state starts uninitialized")
         processor.process(msg2, node21)
         XCTAssertEqual(node21.state, Node.State.Initialized, "node state goes initialized")
+        
     }
 
     func testPipReplyFull() {
@@ -64,7 +67,7 @@ class RemoteProcessorTest: XCTestCase {
     }
 
     func testTestsNotComplete() throws {
-        // eventually, this will handle all MTI types, but here we check for one not coded yet
+        // TODO: eventually, this will handle all MTI types, but here we check for one not coded yet
         let msg = Message(mti : MTI.ConsumerRangeIdentified, source : NodeID(12), destination : NodeID(13))
         
         processor.process(msg, node21)

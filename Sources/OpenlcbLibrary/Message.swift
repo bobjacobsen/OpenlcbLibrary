@@ -13,16 +13,22 @@ public struct Message : Equatable, Hashable, CustomStringConvertible {
     let destination : NodeID?
     var data : [UInt8]
     
+    /// Addressed message initialization
     init(mti : MTI, source : NodeID, destination : NodeID?) {
         self.mti = mti
         self.source = source
         self.destination = destination
         self.data = []
+        // TODO: check consistency with MTI and log
     }
     
+    /// Global message initiallization
     init(mti : MTI, source : NodeID) {
         self.init(mti: mti, source : source, destination : nil)
+        // TODO: check consistency with MTI and log
     }
+    
+    
     
     public var description : String { "Message (\(mti))"}
 

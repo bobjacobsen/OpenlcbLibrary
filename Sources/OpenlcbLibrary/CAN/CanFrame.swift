@@ -29,8 +29,10 @@ public struct CanFrame : Equatable, CustomStringConvertible {
     }
     
     /// Create control frame (other than CID)
-    init(control : Int, alias : UInt) {  // TODO: needs to have optional NodeID in data
+    ///
+    /// The  `data` parameter defaults to an empty frame
+    init(control : Int, alias : UInt, data : [UInt8] = []) {
         header = UInt(control << 12) | (alias & 0xFFF)
-        data = []
+        self.data = data
     }
 }

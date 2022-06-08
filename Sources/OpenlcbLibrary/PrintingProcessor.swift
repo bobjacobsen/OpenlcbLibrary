@@ -16,8 +16,7 @@ struct PrintingProcessor : Processor {
     
     public func process( _ message : Message, _ node : Node) {
         switch message.mti {
-        case    .InitializationComplete,
-                .VerifyNodeIDNumberAddressed,
+        case    .VerifyNodeIDNumberAddressed,
                 .VerifiedNodeID,
                 .OptionalInteractionRejected,
                 .TerminateDueToError,
@@ -39,7 +38,8 @@ struct PrintingProcessor : Processor {
                 .DatagramRejected :
             simpleAddressedMessage(message, node)
             
-        case    .VerifyNodeIDNumberGlobal,
+        case    .InitializationComplete,
+                .VerifyNodeIDNumberGlobal,
                 .IdentifyConsumer,
                 .IdentifyProducer,
                 .IdentifyEventsGlobal,

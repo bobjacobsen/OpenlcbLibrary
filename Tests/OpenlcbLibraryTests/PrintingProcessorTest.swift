@@ -25,11 +25,11 @@ class PrintingProcessorTest: XCTestCase {
             self.result = data
         }
         let processor = PrintingProcessor(handler)
-        let msg = Message(mti : MTI.InitializationComplete, source : NodeID(12), destination : NodeID(13))
+        let msg = Message(mti : MTI.InitializationComplete, source : NodeID(12))
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C InitializationComplete (NodeID 00.00.00.00.00.0D)")
+        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C InitializationComplete")
     }
     
     func testConsumerRangeIdentified() {
