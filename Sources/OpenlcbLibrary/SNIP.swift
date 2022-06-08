@@ -80,7 +80,6 @@ public struct SNIP {
             }
         }
         // fell out without finding
-        SNIP.logger.error("String not found: \(n)")
         return 0
     }
     

@@ -66,9 +66,29 @@ class RemoteProcessorTest: XCTestCase {
         XCTAssertEqual(node21.pipSet, Set([]))
     }
 
-    func testTestsNotComplete() throws {
-        // TODO: eventually, this will handle all MTI types, but here we check for one not coded yet
-        let msg = Message(mti : MTI.ConsumerRangeIdentified, source : NodeID(12), destination : NodeID(13))
+    func testLinkDown() throws {
+        node21.pipSet = Set([PIP.EVENT_EXCHANGE_PROTOCOL])
+        node21.state = .Initialized
+        var msg = Message(mti : MTI.LinkLevelDown, source : NodeID(0), destination : NodeID(0))
+        msg.data = []
+        processor.process(msg, node21)
+        XCTAssertEqual(node21.pipSet, Set([]))
+        XCTAssertEqual(node21.state, Node.State.Uninitialized)
+    }
+
+    func testLinkUp() throws {
+        node21.pipSet = Set([PIP.EVENT_EXCHANGE_PROTOCOL])
+        node21.state = .Initialized
+        var msg = Message(mti : MTI.LinkLevelUp, source : NodeID(0), destination : NodeID(0))
+        msg.data = []
+        processor.process(msg, node21)
+        XCTAssertEqual(node21.pipSet, Set([]))
+        XCTAssertEqual(node21.state, Node.State.Uninitialized)
+    }
+
+    func testUndefinedType() throws {
+        // TODO: need checks for what happens on an unknown type
+        let msg = Message(mti : MTI.Unknown, source : NodeID(12), destination : NodeID(13))
         
         processor.process(msg, node21)
     }

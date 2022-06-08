@@ -13,6 +13,12 @@ import Foundation
 struct DatagramProcessor : Processor {
     public func process( _ message : Message, _ node : Node) {
         switch message.mti {
+        case MTI.Datagram :
+            break // TODO: handle datagram-related MTIs
+        case MTI.DatagramRejected :
+            break
+        case MTI.DatagramReceivedOK :
+            break
         default:
             // no need to do anything
             break

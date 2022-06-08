@@ -17,7 +17,6 @@ import os
 ///
 public class CanLink : LinkLayer {
     
-    // TODO: alias data needs to be Node-by-Node when this code supports multiple remote nodes
     static let localNodeID  = NodeID(0x05_01_01_01_03_01)  // valid default node ID, static needed to use in initialization
     var localAliasSeed : UInt64 = localNodeID.nodeID
     var localAlias : UInt = createAlias12(localNodeID.nodeID)  // 576 with NodeID(0x05_01_01_01_03_01)

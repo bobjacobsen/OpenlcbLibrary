@@ -169,8 +169,6 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canLink.state, CanLink.State.Inhibited)
     }
     
-    // TODO: test message transfer
-    
     func testCheckMTImapping() {
         
         let canLink = CanLink()
@@ -274,9 +272,7 @@ class CanLinkTest: XCTestCase {
     // TODO:    datagrams short and long
     
     // MARK: - Test Remote Node Alias Tracking
-    // TODO: - Test Remote Node Alias Tracking
     
-    // TODO:    single frame messages - addressed and not
     func testAmdAmrSequence() {
         let canPhysicalLayer = CanMockPhysicalLayer()
         let canLink = CanLink()
@@ -297,6 +293,4 @@ class CanLinkTest: XCTestCase {
 
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0) // nothing back down to CAN
     }
-
-    
 }

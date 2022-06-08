@@ -32,7 +32,7 @@ public class DatagramService {
     }
     
     func sendDatagram(_ memo : DatagramMemo) {
-        
+        // TODO: Create a datagram message and forward
     }
     
     func registerDatagramReceivedListener(_ listener : @escaping ( (_ : Datagram) -> () )) {
