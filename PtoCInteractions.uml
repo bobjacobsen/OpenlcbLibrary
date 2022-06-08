@@ -1,0 +1,57 @@
+@startuml
+
+participant PhysicalLayer
+participant LinkLayer
+participant NodeStore
+participant Processor
+participant Node
+participant clients
+
+->> PhysicalLayer
+
+activate PhysicalLayer
+
+PhysicalLayer -> LinkLayer
+
+activate LinkLayer
+
+LinkLayer -> LinkLayer : fireListeners
+activate LinkLayer
+
+LinkLayer -> LinkLayer : foreach listener
+activate LinkLayer
+
+LinkLayer -> NodeStore : listener
+
+activate NodeStore
+
+NodeStore -> NodeStore : foreach Processor x Node
+
+activate NodeStore
+
+NodeStore -> Processor : process(Message: Node: )
+
+activate Processor
+Processor -> Processor : message type
+activate Processor
+
+Processor -> Node : query / adjust state
+activate Node
+
+Node -> clients
+activate clients
+deactivate clients
+
+
+deactivate Node
+deactivate Processor
+deactivate NodeStore
+deactivate NodeStore
+
+deactivate LinkLayer
+deactivate LinkLayer
+deactivate LinkLayer
+
+deactivate PhysicalLayer
+
+@enduml

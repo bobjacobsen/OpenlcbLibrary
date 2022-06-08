@@ -1,0 +1,38 @@
+@startuml
+
+participant PhysicalLayer
+participant LinkLayer
+participant NodeStore
+participant DatagramProcessor
+participant DatagramService
+participant Node
+participant client
+
+activate client
+client -> Node : get Datagram Service
+
+client -> DatagramService : present memo
+DatagramService -> LinkLayer : send Datagram message
+LinkLayer -> PhysicalLayer : send frames
+
+activate PhysicalLayer
+<<- PhysicalLayer
+deactivate PhysicalLayer
+deactivate client
+
+== network operations ==
+
+->> PhysicalLayer
+activate PhysicalLayer
+PhysicalLayer -> LinkLayer : reply frames
+LinkLayer -> DatagramProcessor : ok/reject message
+DatagramProcessor -> Node : get Datagram Service
+DatagramProcessor -> DatagramService : present ok/reject message
+
+DatagramService -> client : return memo
+activate client
+deactivate client
+
+deactivate PhysicalLayer
+
+@enduml

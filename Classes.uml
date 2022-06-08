@@ -1,0 +1,30 @@
+@startuml
+
+protocol PhysicalLayer
+PhysicalLayer <|-- CanPhysicalLayer : implements
+CanPhysicalLayer <|-- CanTelnetLink
+CanPhysicalLayer <|-- CanUsbLink
+
+class LinkLayer
+LinkLayer <|-- CanLink
+
+CanLink *-l-> CanPhysicalLayer : listener
+
+
+protocol Processor
+struct RemoteNode
+struct LocalNode
+struct DatagramService
+Processor <|-- RemoteNode
+Processor <|-- LocalNode
+Processor <|-- DatagramService
+
+class Node
+struct NodeStore
+
+
+NodeStore *-l-> LinkLayer
+NodeStore -r-> Node
+NodeStore -r-> Processor : reference
+
+@enduml
