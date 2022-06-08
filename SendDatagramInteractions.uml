@@ -20,7 +20,7 @@ activate PhysicalLayer
 deactivate PhysicalLayer
 deactivate client
 
-== network operations ==
+note left of PhysicalLayer : Wait for\nnetwork reply
 
 ->> PhysicalLayer
 activate PhysicalLayer

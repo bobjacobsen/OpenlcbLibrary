@@ -9,19 +9,32 @@ class LinkLayer
 LinkLayer <|-- CanLink
 
 CanLink *-l-> CanPhysicalLayer : listener
-
+CanLink : CanPhysicalLayer
 
 protocol Processor
-struct RemoteNode
-struct LocalNode
-struct DatagramService
-Processor <|-- RemoteNode
-Processor <|-- LocalNode
-Processor <|-- DatagramService
+Processor : process(Message:, Node:)
+
+struct RemoteNodeProcessor
+struct LocalNodeProcessor
+struct DatagramProcessor
+Processor <|-- RemoteNodeProcessor
+Processor <|-- LocalNodeProcessor
+Processor <|-- DatagramProcessor
 
 class Node
-struct NodeStore
+Node : DatagramService
+Node : MemoryService
 
+struct NodeStore
+NodeStore : Set<Node>
+NodeStore : Set<Processor>
+NodeStore : LinkLevel
+
+Node --> DatagramService
+Node --> MemoryService
+
+class DatagramService
+class MemoryService
 
 NodeStore *-l-> LinkLayer
 NodeStore -r-> Node

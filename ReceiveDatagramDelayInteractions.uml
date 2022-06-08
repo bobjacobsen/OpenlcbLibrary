@@ -20,8 +20,9 @@ DatagramProcessor -> DatagramService : present Datagram
 
 activate DatagramService
 DatagramService -> client : provide memo
-note right: Here, the client\ndoes a delayed return
 activate client
+client -->>
+note right of client: Here, the client\ndoes a delayed reply
 deactivate client
 
 deactivate DatagramService
