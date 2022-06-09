@@ -2,7 +2,10 @@ import XCTest
 @testable import OpenlcbLibrary
 
 final class OpenlcbLibraryTests: XCTestCase {
-    func testExample() {
-        _ = OpenlcbLibrary()
+    
+    func testCanSetup() {
+        let lib = OpenlcbLibrary()
+        lib.configureCanTelnet()
     }
+    
 }
