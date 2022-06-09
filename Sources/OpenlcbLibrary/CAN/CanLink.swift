@@ -18,8 +18,8 @@ import os
 public class CanLink : LinkLayer {
     
     static let localNodeID  = NodeID(0x05_01_01_01_03_01)  // valid default node ID, static needed to use in initialization
-    var localAliasSeed : UInt64 = localNodeID.nodeID
-    var localAlias : UInt = createAlias12(localNodeID.nodeID)  // 576 with NodeID(0x05_01_01_01_03_01)
+    var localAliasSeed : UInt64 = localNodeID.nodeId
+    var localAlias : UInt = createAlias12(localNodeID.nodeId)  // 576 with NodeID(0x05_01_01_01_03_01)
 
     var state : State = .Initial
     
@@ -180,7 +180,7 @@ public class CanLink : LinkLayer {
             
             // check for start and end bits
             let key = AccumKey(mti:mti, source:sourceID, dest:destID)
-            if (frame.data[0] & 0x20 == 0) {
+            if (frame.data[0] & 0x20 == 0) {   // TODO: handle case of never got first bit, so no entry here at next step
                 // is start, create the entry in the accumulator
                 accumulator[key] = []
             }
@@ -192,8 +192,7 @@ public class CanLink : LinkLayer {
             }
             if (frame.data[0] & 0x10 == 0) {
                 // is end, ship and remove accumulation
-                var msg = Message(mti: mti, source: sourceID, destination: destID)
-                msg.data = accumulator[key]!
+                let msg = Message(mti: mti, source: sourceID, destination: destID, data: accumulator[key]!)
                 fireListeners(msg)
 
                 // remove accumulution
@@ -202,8 +201,7 @@ public class CanLink : LinkLayer {
             
         } else {
             // forward global message
-            var msg = Message(mti: mti, source: sourceID, destination: destID)
-            msg.data = frame.data
+            let msg = Message(mti: mti, source: sourceID, destination: destID, data: frame.data)
             fireListeners(msg)
         }
     }

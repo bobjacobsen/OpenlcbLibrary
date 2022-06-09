@@ -26,12 +26,18 @@ class MessageTest: XCTestCase {
         let message = Message(mti : MTI.IdentifyConsumer, source : NodeID(12))
         XCTAssertEqual(message.description, "Message (IdentifyConsumer)")
     }
+    
+    func testGlobalAddressed() {
+        XCTAssertTrue(Message(mti:.InitializationComplete, source:NodeID(0)).isGlobal())
+        XCTAssertFalse(Message(mti:.InitializationComplete, source:NodeID(0)).isAddressed())
+
+        XCTAssertTrue(Message(mti:.VerifyNodeIDNumberAddressed, source:NodeID(0)).isAddressed())
+        XCTAssertFalse(Message(mti:.VerifyNodeIDNumberAddressed, source:NodeID(0)).isGlobal())
+    }
 
     func testHash() {
-        var m1 = Message(mti : MTI.IdentifyConsumer, source : NodeID(12))
-        m1.data = [1,2,3]
-        var m1a = Message(mti : MTI.IdentifyConsumer, source : NodeID(12))
-        m1a.data = [3,2,1]
+        let m1 = Message(mti : MTI.IdentifyConsumer, source : NodeID(12), data: [1,2,3])
+        let m1a = Message(mti : MTI.IdentifyConsumer, source : NodeID(12), data: [3,2,1])
 
         let m2 = Message(mti : MTI.IdentifyConsumer, source : NodeID(13))
         let m2a = Message(mti : MTI.IdentifyConsumer, source : NodeID(13))

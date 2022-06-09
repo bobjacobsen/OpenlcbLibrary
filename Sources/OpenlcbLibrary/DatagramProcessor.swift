@@ -11,7 +11,12 @@ import Foundation
 /// Works with ``DatagramService``
 /// 
 struct DatagramProcessor : Processor {
-    public func process( _ message : Message, _ node : Node) {
+    public init ( _ linkLayer: LinkLayer? = nil) {
+        self.linkLayer = linkLayer
+    }
+    let linkLayer : LinkLayer?
+
+    public func process( _ message : Message, _ node : Node ) {
         switch message.mti {
         case MTI.Datagram :
             break // TODO: handle datagram-related MTIs

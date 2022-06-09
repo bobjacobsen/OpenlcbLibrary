@@ -11,11 +11,12 @@ import Foundation
 ///  You can't remove a node; once we know about it, we know about it.
 struct NodeStore {
     private var byIdMap : [NodeID : Node] = [:]
+    var processors : [Processor] = []
     
     /// Store a new node or replace an existing stored node
     /// - Parameter node: new Node content
     mutating func store(_ node : Node) {
-        byIdMap[node.nodeID] = node
+        byIdMap[node.id] = node
     }
     
     /// Retrieve a Node's content from the store
@@ -43,5 +44,9 @@ struct NodeStore {
         }
         return nil
     }
+    
+    // TODO:  add invokeProcessors() to loop over processors X nodes
+    
+    // TODO:  How does a store get updated when a new node is observed? Sometimes that means a new node (remoteStore), sometimes not (localStore)
     
 }

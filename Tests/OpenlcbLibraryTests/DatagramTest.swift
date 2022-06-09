@@ -30,4 +30,15 @@ class DatagramTest: XCTestCase {
         XCTAssertNotEqual(dg1, dgsource)
         XCTAssertNotEqual(dg1, dgdestination)
     }
+
+    func testDatagramType() throws {
+        let dg0 = Datagram(source : Node(NodeID(12)), destination : Node(NodeID(13)), data : [])
+        XCTAssertEqual(dg0.datagramType(), Datagram.DatagramProtocolID.Unrecognized)
+        let dg1 = Datagram(source : Node(NodeID(12)), destination : Node(NodeID(13)), data : [0,2,3])
+        XCTAssertEqual(dg1.datagramType(), Datagram.DatagramProtocolID.Unrecognized)
+
+        let dg2 = Datagram(source : Node(NodeID(12)), destination : Node(NodeID(13)), data : [0x20,2,3])
+        XCTAssertEqual(dg2.datagramType(), Datagram.DatagramProtocolID.MemoryOperation)
+
+    }
 }

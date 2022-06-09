@@ -22,7 +22,7 @@ public class LinkLayer {
         case Permitted
     }
 
-    func sendMessage(_ msg : Message) {}
+    func  sendMessage(_ msg : Message) {}
     
     func registerMessageReceivedListener(_ listener : @escaping ( (_ : Message) -> () )) {
         listeners.append(listener)

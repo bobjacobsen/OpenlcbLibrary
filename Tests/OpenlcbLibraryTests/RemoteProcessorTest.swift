@@ -36,32 +36,27 @@ class RemoteProcessorTest: XCTestCase {
     }
 
     func testPipReplyFull() {
-        var msg1 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(13))
-        msg1.data = [0x10, 0x10, 0x00, 0x00]
+        let msg1 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(13), data: [0x10, 0x10, 0x00, 0x00])
         processor.process(msg1, node21)
         XCTAssertEqual(node21.pipSet, Set([]))
 
-        var msg2 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(21))
-        msg2.data = [0x10, 0x10, 0x00, 0x00]
+        let msg2 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(21), destination : NodeID(12), data: [0x10, 0x10, 0x00, 0x00])
         processor.process(msg2, node21)
         XCTAssertEqual(node21.pipSet, Set([PIP.MEMORY_CONFIGURATION_PROTOCOL, PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL]))
     }
 
     func testPipReply2() {
-        var msg1 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(13))
-        msg1.data = [0x10, 0x10]
+        let msg1 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(13), data: [0x10, 0x10])
         processor.process(msg1, node21)
         XCTAssertEqual(node21.pipSet, Set([]))
 
-        var msg2 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(21))
-        msg2.data = [0x10, 0x10]
+        let msg2 = Message(mti : MTI.ProtocolSupportReply, source : NodeID(21), destination : NodeID(12), data: [0x10, 0x10])
         processor.process(msg2, node21)
         XCTAssertEqual(node21.pipSet, Set([PIP.MEMORY_CONFIGURATION_PROTOCOL, PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL]))
     }
 
     func testPipReplyEmpty() throws {
-        var msg = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(13))
-        msg.data = []
+        let msg = Message(mti : MTI.ProtocolSupportReply, source : NodeID(12), destination : NodeID(13))
         processor.process(msg, node21)
         XCTAssertEqual(node21.pipSet, Set([]))
     }
@@ -69,8 +64,7 @@ class RemoteProcessorTest: XCTestCase {
     func testLinkDown() throws {
         node21.pipSet = Set([PIP.EVENT_EXCHANGE_PROTOCOL])
         node21.state = .Initialized
-        var msg = Message(mti : MTI.LinkLevelDown, source : NodeID(0), destination : NodeID(0))
-        msg.data = []
+        let msg = Message(mti : MTI.LinkLevelDown, source : NodeID(0), destination : NodeID(0))
         processor.process(msg, node21)
         XCTAssertEqual(node21.pipSet, Set([]))
         XCTAssertEqual(node21.state, Node.State.Uninitialized)
@@ -79,8 +73,7 @@ class RemoteProcessorTest: XCTestCase {
     func testLinkUp() throws {
         node21.pipSet = Set([PIP.EVENT_EXCHANGE_PROTOCOL])
         node21.state = .Initialized
-        var msg = Message(mti : MTI.LinkLevelUp, source : NodeID(0), destination : NodeID(0))
-        msg.data = []
+        let msg = Message(mti : MTI.LinkLevelUp, source : NodeID(0), destination : NodeID(0))
         processor.process(msg, node21)
         XCTAssertEqual(node21.pipSet, Set([]))
         XCTAssertEqual(node21.state, Node.State.Uninitialized)

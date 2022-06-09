@@ -19,16 +19,6 @@ public class DatagramService {
         let rejectedReply : ( (_ : Message) -> () )?
 
         let data : [UInt8] = []
-        
-        /// Retrieve the datagram typre from a DatagramMemo.
-        /// Returns -1 if there is no type specified, i.e. the datagram is empty
-        func datagramType() -> Int {
-            if data.count > 0 {
-                return Int(data[0])
-            } else {
-                return -1
-            }
-        }
     }
     
     func sendDatagram(_ memo : DatagramMemo) {

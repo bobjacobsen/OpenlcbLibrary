@@ -12,9 +12,9 @@ import Foundation
 ///
 ///  Concrete implementations may include a "node in this machine" and a "remote node elsewhere" a.k.a an image node.
 ///
-public class Node : Equatable, Hashable, CustomStringConvertible {
-    let nodeID : NodeID  // nodeID is immutable
-    
+public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable {
+    public let id : NodeID  // nodeID is immutable; also serves for Identifiable
+ 
     // TODO: This needs to be a computed property from SNIP
     let name : String
     
@@ -28,20 +28,20 @@ public class Node : Equatable, Hashable, CustomStringConvertible {
     var snip = SNIP()
     
     public init( _ nodeID : NodeID) {
-        self.nodeID = nodeID
+        self.id = nodeID
         self.name = ""
     }
     
-    public var description : String { "Node (\(nodeID))"}
+    public var description : String { "Node (\(id))"}
     
     // MARK: - protocols
     
     /// Equality is defined on the NodeID only.
     public static func ==(lhs: Node, rhs:Node) -> Bool {
-        return lhs.nodeID == rhs.nodeID
+        return lhs.id == rhs.id
     }
     public func hash(into hasher : inout Hasher) {
-        hasher.combine(nodeID)
+        hasher.combine(id)
     }
 }
 

@@ -9,12 +9,14 @@ import Foundation
 /// Provide String versions of the received messages
 struct PrintingProcessor : Processor {
     /// Pass in something to process output
-    public init (_ result : @escaping ( _ : String) -> ()) {
+    public init ( _ result : @escaping ( _ : String) -> (), _ linkLayer: LinkLayer? = nil) {
         self.result = result
+        self.linkLayer = linkLayer
     }
+    let linkLayer : LinkLayer?
     var result : (_ : String) -> ()
     
-    public func process( _ message : Message, _ node : Node) {
+    public func process( _ message : Message, _ node : Node ) {
         switch message.mti {
         case    .VerifyNodeIDNumberAddressed,
                 .VerifiedNodeID,

@@ -124,7 +124,64 @@ public struct SNIP {
         
         userProvidedNodeName = getString(n: 4)
         userProvidedDescription = getString(n: 5)
-
+    }
+    
+    // store strings into SNIP accumulated data
+    mutating func loadStrings() {
+        // clear string
+        data = Array(repeating: 0, count: 253)
+        
+        var index = 1 // next storage location
+        data[0] = 4 // first part version
+        
+        let mfgArray = Data(manufacturerName.utf8.prefix(40))  // leave one space for zero
+        if (mfgArray.count>0) {
+            for i in 0...mfgArray.count-1 { data[index] = mfgArray[i]; index+=1}
+            data[index] = 0; index += 1
+        }
+        
+        let mdlArray = Data(modelName.utf8.prefix(40))
+        if (mdlArray.count>0) {
+            for i in 0...mdlArray.count-1 { data[index] = mdlArray[i]; index+=1}
+            data[index] = 0; index += 1
+        }
+        
+        let hdvArray = Data(hardwareVersion.utf8.prefix(20))
+            if (hdvArray.count>0) {
+            for i in 0...hdvArray.count-1 { data[index] = hdvArray[i]; index+=1}
+        data[index] = 0; index += 1
+        }
+        
+        let sdvArray = Data(softwareVersion.utf8.prefix(20))
+        if (sdvArray.count>0) {
+            for i in 0...sdvArray.count-1 { data[index] = sdvArray[i]; index+=1}
+            data[index] = 0; index += 1
+        }
+        
+        data[index] = 2; index += 1
+        
+        let upnArray = Data(userProvidedNodeName.utf8.prefix(62))
+        if (upnArray.count>0) {
+            for i in 0...upnArray.count-1 { data[index] = upnArray[i]; index+=1}
+            data[index] = 0; index += 1
+        }
+        
+        let updArray = Data(userProvidedDescription.utf8.prefix(63))
+        if (updArray.count>0) {
+            for i in 0...updArray.count-1 { data[index] = updArray[i]; index+=1}
+            data[index] = 0; index += 1
+        }
+    }
+    
+    func returnStrings() -> [UInt8] {
+        // copy out until the 6th zero byte
+        let stop = findString(n: 6)
+        var retval : [UInt8] = Array(repeating: 0, count: stop)
+        if (stop == 0) { return retval }
+        for i in 0 ... stop-1 {
+            retval[i] = data[i]
+        }
+        return retval
     }
     
     static let logger = Logger(subsystem: "com.ardenwood", category: "SNIP")

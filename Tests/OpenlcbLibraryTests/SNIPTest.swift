@@ -63,4 +63,85 @@ class SNIPTest: XCTestCase {
         XCTAssertEqual(s.userProvidedDescription,"4EF")
 
     }
+
+    func testCharacterDecode() {
+        // This checks how we're converting strings to byte arrays
+        let str1 = "1234567890"
+        
+        let first3Bytes = Data(str1.utf8.prefix(3))
+        XCTAssertEqual(first3Bytes.count, 3)
+        XCTAssertEqual(first3Bytes[0], 0x31)
+        
+        let first20Bytes = Data(str1.utf8.prefix(20))
+        XCTAssertEqual(first20Bytes[0], 0x31)
+    }
+    
+    func testLoadStrings() {
+        var s = SNIP() // init to all zeros
+
+        s.manufacturerName = "ABC"
+        s.modelName = "DEF"
+        s.hardwareVersion = "1EF"
+        s.softwareVersion = "2EF"
+        s.userProvidedNodeName = "3EF"
+        s.userProvidedDescription = "4EF"
+
+        s.loadStrings()
+        
+        XCTAssertEqual(s.getString(n: 0),"ABC")
+        XCTAssertEqual(s.getString(n: 1),"DEF")
+        XCTAssertEqual(s.getString(n: 2),"1EF")
+        XCTAssertEqual(s.getString(n: 3),"2EF")
+        XCTAssertEqual(s.getString(n: 4),"3EF")
+        XCTAssertEqual(s.getString(n: 5),"4EF")
+    }
+    
+    func testReturnStrings() {
+        var s = SNIP() // init to all zeros
+
+        s.manufacturerName = "ABC"
+        s.modelName = "DEF"
+        s.hardwareVersion = "1EF"
+        s.softwareVersion = "2EF"
+        s.userProvidedNodeName = "3EF"
+        s.userProvidedDescription = "4EF"
+
+        s.loadStrings()
+
+        let result = s.returnStrings()
+        
+        XCTAssertEqual(result[0], 4)
+        
+        XCTAssertEqual(result[1], 0x41)
+        XCTAssertEqual(result[2], 0x42)
+        XCTAssertEqual(result[3], 0x43)
+        XCTAssertEqual(result[4], 0)
+
+        XCTAssertEqual(result[5], 0x44)
+        XCTAssertEqual(result[6], 0x45)
+        XCTAssertEqual(result[7], 0x46)
+        XCTAssertEqual(result[8], 0)
+
+        XCTAssertEqual(result[ 9], 0x31)
+        XCTAssertEqual(result[10], 0x45)
+        XCTAssertEqual(result[11], 0x46)
+        XCTAssertEqual(result[12], 0)
+
+        XCTAssertEqual(result[13], 0x32)
+        XCTAssertEqual(result[14], 0x45)
+        XCTAssertEqual(result[15], 0x46)
+        XCTAssertEqual(result[16], 0)
+
+        XCTAssertEqual(result[17], 2)
+
+        XCTAssertEqual(result[18], 0x33)
+        XCTAssertEqual(result[19], 0x45)
+        XCTAssertEqual(result[20], 0x46)
+        XCTAssertEqual(result[21], 0)
+
+        XCTAssertEqual(result[22], 0x34)
+        XCTAssertEqual(result[23], 0x45)
+        XCTAssertEqual(result[24], 0x46)
+        XCTAssertEqual(result[25], 0)
+    }
 }

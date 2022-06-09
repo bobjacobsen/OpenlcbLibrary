@@ -9,16 +9,16 @@ import Foundation
 /// Represents a 6-byte node ID.
 ///  Provides conversion to and from Ints and Strings in standard form.
 public struct NodeID : Equatable, Hashable, CustomStringConvertible {
-    let nodeID : UInt64 // to ensure 6 byte ID (analogy to 8 byte EventID)
-    
+    let nodeId : UInt64 // UInt64 to ensure 6 byte ID (analogy to 8 byte EventID)
+                    
     /// Display in standard format
     public var description : String {
-        let part1 = (nodeID / 0x01_00_00_00_00_00 ) & 0xFF
-        let part2 = (nodeID / 0x00_01_00_00_00_00 ) & 0xFF
-        let part3 = (nodeID / 0x00_00_01_00_00_00 ) & 0xFF
-        let part4 = (nodeID / 0x00_00_00_01_00_00 ) & 0xFF
-        let part5 = (nodeID / 0x00_00_00_00_01_00 ) & 0xFF
-        let part6 = (nodeID / 0x00_00_00_00_00_01 ) & 0xFF
+        let part1 = (nodeId / 0x01_00_00_00_00_00 ) & 0xFF
+        let part2 = (nodeId / 0x00_01_00_00_00_00 ) & 0xFF
+        let part3 = (nodeId / 0x00_00_01_00_00_00 ) & 0xFF
+        let part4 = (nodeId / 0x00_00_00_01_00_00 ) & 0xFF
+        let part5 = (nodeId / 0x00_00_00_00_01_00 ) & 0xFF
+        let part6 = (nodeId / 0x00_00_00_00_00_01 ) & 0xFF
         
         return "NodeID " +
         "\(String(format:"%02X", part1))." +
@@ -31,13 +31,13 @@ public struct NodeID : Equatable, Hashable, CustomStringConvertible {
     
     /// Convert an integer to a NodeID
     public init(_ nodeID : UInt64) {
-        self.nodeID = nodeID
+        self.nodeId = nodeID
     }
     
     /// Convert a standard-format string 0A.0B.0C.0D.0E.0F to a NodeID
     public init(_ nodeID : String) {
         let hex = nodeID.replacingOccurrences(of: ".", with: "")
-        self.nodeID = UInt64(hex, radix: 16) ?? 0
+        self.nodeId = UInt64(hex, radix: 16) ?? 0
     }
 
     /// Convert data bytes to nodeID
@@ -54,12 +54,12 @@ public struct NodeID : Equatable, Hashable, CustomStringConvertible {
 
     func toArray() -> [UInt8] {
         return [
-            UInt8( (nodeID / 0x01_00_00_00_00_00 ) & 0xFF ),
-            UInt8( (nodeID / 0x00_01_00_00_00_00 ) & 0xFF ),
-            UInt8( (nodeID / 0x00_00_01_00_00_00 ) & 0xFF ),
-            UInt8( (nodeID / 0x00_00_00_01_00_00 ) & 0xFF ),
-            UInt8( (nodeID / 0x00_00_00_00_01_00 ) & 0xFF ),
-            UInt8( (nodeID / 0x00_00_00_00_00_01 ) & 0xFF )
+            UInt8( (nodeId / 0x01_00_00_00_00_00 ) & 0xFF ),
+            UInt8( (nodeId / 0x00_01_00_00_00_00 ) & 0xFF ),
+            UInt8( (nodeId / 0x00_00_01_00_00_00 ) & 0xFF ),
+            UInt8( (nodeId / 0x00_00_00_01_00_00 ) & 0xFF ),
+            UInt8( (nodeId / 0x00_00_00_00_01_00 ) & 0xFF ),
+            UInt8( (nodeId / 0x00_00_00_00_00_01 ) & 0xFF )
         ]
     }
 }

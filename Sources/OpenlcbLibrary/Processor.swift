@@ -13,5 +13,6 @@ import Foundation
 
 public protocol Processor {
     /// accept a Message, adjust state as needed, possibly reply
-    func process( _ message : Message, _ node : Node)
+    func process( _ message : Message, _ node : Node )
+
 }

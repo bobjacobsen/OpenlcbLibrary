@@ -11,24 +11,30 @@ public struct Message : Equatable, Hashable, CustomStringConvertible {
     let mti : MTI
     let source : NodeID
     let destination : NodeID?
-    var data : [UInt8]
+    let data : [UInt8]
     
     /// Addressed message initialization
-    init(mti : MTI, source : NodeID, destination : NodeID?) {
+    init(mti : MTI, source : NodeID, destination : NodeID?, data: [UInt8] = []) {
         self.mti = mti
         self.source = source
         self.destination = destination
-        self.data = []
+        self.data = data
         // TODO: check consistency with MTI and log
     }
     
     /// Global message initiallization
-    init(mti : MTI, source : NodeID) {
-        self.init(mti: mti, source : source, destination : nil)
+    init(mti : MTI, source : NodeID, data: [UInt8] = []) {
+        self.init(mti: mti, source : source, destination : nil, data: data)
         // TODO: check consistency with MTI and log
     }
     
+    public func isGlobal() -> Bool {
+        return mti.rawValue  & 0x0008 == 0
+    }
     
+    public func isAddressed() -> Bool {
+        return mti.rawValue  & 0x0008 != 0
+    }
     
     public var description : String { "Message (\(mti))"}
 

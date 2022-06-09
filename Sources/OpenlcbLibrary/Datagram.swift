@@ -21,6 +21,18 @@ struct Datagram : Equatable {
         case RemoteButton   = 0x21
         case Display        = 0x28
         case TrainControl   = 0x30
+        
+        case Unrecognized   = 0xFFF // 12 bits: out of possible normal range
+    }
+
+    /// Returns Unrecognized if there is no type specified, i.e. the datagram is empty
+    func datagramType() -> DatagramProtocolID {
+        if (data.count == 0) { return .Unrecognized }
+        if let retval = DatagramProtocolID(rawValue: UInt(data[0])) {
+            return retval
+        } else {
+            return .Unrecognized
+        }
     }
 
 }

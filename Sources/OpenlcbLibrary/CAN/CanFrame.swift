@@ -23,7 +23,7 @@ public struct CanFrame : Equatable, CustomStringConvertible {
         // cid must be 4 to 7 inclusive
         precondition(4 <= cid && cid <= 7)
         
-        let nodeCode = UInt( ( nodeID.nodeID >> ((cid-4)*12) ) & 0xFFF )
+        let nodeCode = UInt( ( nodeID.nodeId >> ((cid-4)*12) ) & 0xFFF )
         header = (UInt(cid << 12) | nodeCode) << 12 | (alias & 0xFFF)
         data = []
     }
