@@ -45,4 +45,10 @@ class NodeIDTest: XCTestCase {
         let nidDef2 = NodeID(0x05_01_01_01_03_01)
         XCTAssertEqual(nidDef1, nidDef2, "default contents equal")
     }
+    
+    func testToArray() {
+        let arr : [UInt8] = NodeID(0x05_01_01_01_03_01).toArray()
+        XCTAssertEqual(arr, [UInt8(5), UInt8(1), UInt8(1), UInt8(1), UInt8(3), UInt8(1), ])
+        XCTAssertEqual(NodeID(arr), NodeID(0x05_01_01_01_03_01), "array operations")
+    }
 }

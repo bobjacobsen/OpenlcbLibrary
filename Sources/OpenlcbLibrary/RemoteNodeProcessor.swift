@@ -12,7 +12,8 @@ import Foundation
 /// Tracks node status, PIP and SNIP information, but deliberately does not track memory (config, CDI) contents due to size.
 ///
 
-// TODO: add producer/consumer tracking
+// TODO: add producer/consumer tracking?
+
 struct RemoteNodeProcessor : Processor {
     public func process( _ message : Message, _ node : Node) {
         // if you see anything at all from us, must be in Initialized state

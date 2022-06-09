@@ -52,5 +52,15 @@ public struct NodeID : Equatable, Hashable, CustomStringConvertible {
         self.init(nodeID)
     }
 
+    func toArray() -> [UInt8] {
+        return [
+            UInt8( (nodeID / 0x01_00_00_00_00_00 ) & 0xFF ),
+            UInt8( (nodeID / 0x00_01_00_00_00_00 ) & 0xFF ),
+            UInt8( (nodeID / 0x00_00_01_00_00_00 ) & 0xFF ),
+            UInt8( (nodeID / 0x00_00_00_01_00_00 ) & 0xFF ),
+            UInt8( (nodeID / 0x00_00_00_00_01_00 ) & 0xFF ),
+            UInt8( (nodeID / 0x00_00_00_00_00_01 ) & 0xFF )
+        ]
+    }
 }
 

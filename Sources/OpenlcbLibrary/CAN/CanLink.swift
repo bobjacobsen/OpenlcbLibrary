@@ -136,18 +136,13 @@ public class CanLink : LinkLayer {
         // check node ID
         var matchNodeID = CanLink.localNodeID
         if (frame.data.count >= 6) {
-            let part1 = UInt64(frame.data[0] & 0xFF) << 40
-            let part2 = UInt64(frame.data[1] & 0xFF) << 32
-            let part3 = UInt64(frame.data[2] & 0xFF) << 24
-            let part4 = UInt64(frame.data[3] & 0xFF) << 16
-            let part5 = UInt64(frame.data[4] & 0xFF) <<  8
-            let part6 = UInt64(frame.data[5] & 0xFF)
-            let id = part1|part2|part2|part3|part4|part5|part6
-            matchNodeID = NodeID(id)
+            matchNodeID = NodeID(frame.data)
         }
         if (CanLink.localNodeID == matchNodeID) {
             // matched, send RID
-            link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias) ) // TODO: add NodeID
+            var returnFrame = CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias)
+            returnFrame.data = CanLink.localNodeID.toArray()
+            link!.sendCanFrame( returnFrame ) // TODO: add NodeID
         }
     }
     

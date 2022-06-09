@@ -104,7 +104,7 @@ class CanLinkTest: XCTestCase {
 
         canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.AME.rawValue, alias: 0))
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias))
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias, data: CanLink.localNodeID.toArray()))
     }
  
     func testAMEnoDataInhibited() {
@@ -128,7 +128,7 @@ class CanLinkTest: XCTestCase {
         frame.data = [5,1,1,1,3,1]
         canPhysicalLayer.fireListeners(frame)
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias))
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias, data: CanLink.localNodeID.toArray()))
     }
 
     func testAMEnotMatchEvent() {
