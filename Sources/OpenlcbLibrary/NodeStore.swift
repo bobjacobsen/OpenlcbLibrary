@@ -10,7 +10,7 @@ import Foundation
 ///  Storage and indexing methods are an internal detail.
 ///  You can't remove a node; once we know about it, we know about it.
 class NodeStore {
-    private var byIdMap : [NodeID : Node] = [:]
+    var byIdMap : [NodeID : Node] = [:]
     var processors : [Processor] = []
     
     /// Store a new node or replace an existing stored node
@@ -23,16 +23,14 @@ class NodeStore {
     /// - Parameter nodeID: Look-up key
     /// - Returns: Returns Node, creating if need be
     // mutates to create non-existing node
-    func lookup(_ nodeID : NodeID) -> Node {
-        if let node = byIdMap[nodeID] {
-            return node
-        } else {
-            let node = Node(nodeID)
-            store(node)
-            return node
-        }
+    func lookup(_ nodeID : NodeID) -> Node? {
+        return byIdMap[nodeID]
     }
 
+    func isPresent(_ nodeID : NodeID) -> (Bool) {
+        return byIdMap[nodeID] != nil
+    }
+    
     /// Retrieve a Node's content from the store
     /// - Parameter userProvidedDescription: Look-up key, from SNIP content
     /// - Returns: Optional<Node>, hence nil if Node hasn't been stored
@@ -47,7 +45,6 @@ class NodeStore {
     
     /// Process a message across all nodes
     func invokeProcessorsOnNodes(message : Message) {
-        // TODO: loop over processors X nodes
         for processor in processors {
             for node in byIdMap.values {
                 processor.process(message, node)

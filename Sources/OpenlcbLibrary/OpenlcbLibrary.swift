@@ -11,9 +11,9 @@ public struct OpenlcbLibrary {
 
     static let defaultNode : Node = Node(NodeID(0x05_01_01_01_03_01))
     
-    static var remoteNodeStore  = NodeStore()
     static var localNodeStore   = NodeStore()
-    
+    static var remoteNodeStore  = RemoteNodeStore(localNodeStore: localNodeStore)
+
     static let canLink = CanLink()
     
     /// The ``configureCanTelnet`` method will set up a system with
@@ -31,6 +31,7 @@ public struct OpenlcbLibrary {
         OpenlcbLibrary.defaultNode.snip.modelName        = "OpenlcbLib"
         OpenlcbLibrary.defaultNode.snip.hardwareVersion  = "14"             // holds iOS version // TODO: rethink hardware version
         OpenlcbLibrary.defaultNode.snip.softwareVersion  = "0.0"            // TODO: Version number handling
+        OpenlcbLibrary.defaultNode.snip.loadStrings()
 
         OpenlcbLibrary.localNodeStore.store(OpenlcbLibrary.defaultNode)
         
@@ -71,7 +72,7 @@ public struct OpenlcbLibrary {
         node1.snip.loadStrings()
         OpenlcbLibrary.remoteNodeStore.store(node1)
 
-        let node2 = Node(NodeID(0x01_01_02_02_02_02))
+        let node2 = Node(NodeID(0x02_02_02_02_02_02))
         node2.pipSet = Set([PIP.DATAGRAM_PROTOCOL,
                              PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL,
                              PIP.EVENT_EXCHANGE_PROTOCOL])

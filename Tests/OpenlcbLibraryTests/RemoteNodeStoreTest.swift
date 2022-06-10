@@ -1,13 +1,14 @@
 //
-//  NodeStoreTest.swift
+//  RemoteNodeStoreTest.swift
+//  
 //
-//  Created by Bob Jacobsen on 6/1/22.
+//  Created by Bob Jacobsen on 6/10/22.
 //
 
 import XCTest
 @testable import OpenlcbLibrary
 
-class NodeStoreTest: XCTestCase {
+class RemoteNodeStoreTest: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -18,7 +19,8 @@ class NodeStoreTest: XCTestCase {
     }
 
     func testSimpleLoadStore() {
-        let store = NodeStore()
+        let localNodeStore = NodeStore()
+        let store = RemoteNodeStore(localNodeStore:localNodeStore)
         
         let n12 = Node(NodeID(12))
         
@@ -28,29 +30,38 @@ class NodeStoreTest: XCTestCase {
         XCTAssertEqual(store.lookup(NodeID(12)), n12, "store then lookup OK")
     }
 
-    func testAccessThroughLoadStoreByID() {
-        let store = NodeStore()
+    func testRequestCreates() {
+        let localNodeStore = NodeStore()
+        let store = RemoteNodeStore(localNodeStore:localNodeStore)
+ 
+        let n12 = Node(NodeID(12))
+
+        // try a load
+        let temp = store.lookup(NodeID(12))
         
+        XCTAssertEqual(temp, n12, "store then lookup OK")
+    }
+
+    func testAccessThroughLoadStoreByID() {
+        let localNodeStore = NodeStore()
+        let store = RemoteNodeStore(localNodeStore:localNodeStore)
+
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
 
         let n12 = Node(nid12)
         let n13 = Node(nid13)
 
-        XCTAssertFalse(store.isPresent(nid12))  // n12 not present yet
-        
         store.store(n12)
         store.store(n13)
- 
-        XCTAssertTrue(store.isPresent(nid12))  // n12 present now
- 
+        
         // test ability to modify state
         n12.state = Node.State.Initialized
         XCTAssertEqual(n12.state, Node.State.Initialized, "local modification OK")
         XCTAssertEqual(store.lookup(nid12)!.state, Node.State.Initialized, "original in store modified")
         
-        // lookup non-existing node leaves it uncreated
-        XCTAssertNil(store.lookup(NodeID(21)), "no match in store")
+        // lookup non-existing node creates it
+        XCTAssertEqual(store.lookup(NodeID(21)), Node(NodeID(21)), "create on no match in store")
         
         let temp = store.lookup(nid13)
         temp!.state = Node.State.Uninitialized
@@ -59,21 +70,23 @@ class NodeStoreTest: XCTestCase {
 
     }
 
-    func testAccessThroughLoadStoreByName() {
-        let store = NodeStore()
-        
+    func testALocalStoreVeto() {
+        let localNodeStore = NodeStore()
+        let store = RemoteNodeStore(localNodeStore:localNodeStore)
+
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
 
         let n12 = Node(nid12)
-        n12.state = Node.State.Initialized
-        n12.snip.userProvidedDescription = "N12"
-        let n13 = Node(nid13)
+        
+        let n13 = Node(nid13) // node in local store
+        localNodeStore.store(n13)
 
         store.store(n12)
-        store.store(n13)
+        
+        // lookup non-existing node doesn't create it if in local store
+        XCTAssertNil(store.lookup(nid13), "don't create if in local store")
+    }
 
-        XCTAssertEqual(store.lookup(userProvidedDescription : "N12")!, n12, "retrieve original")
-        XCTAssertEqual(store.lookup(userProvidedDescription : "foo"), nil, "no match")  // check Optional is nil on no match
-     }
+
 }

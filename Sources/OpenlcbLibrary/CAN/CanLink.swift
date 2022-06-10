@@ -217,21 +217,62 @@ public class CanLink : LinkLayer {
             logger.error("Did not know source = \(msg.source) on global send")
         }
 
+        var tempData : [UInt8] = [0,0,0,0,0,0,0,0]
+        var outDataCount = 0
         // Is a destination address needed?
         if (msg.isAddressed()) {
             if let alias = nodeIdToAlias[msg.destination ?? NodeID(0)] { // might not know it?
-                header |= (alias & 0xFFF)
+                tempData[0] = UInt8((alias >> 8) & 0x0F)
+                tempData[1] = UInt8(alias & 0xFF)
+                outDataCount = 2
+            } else {
+                logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0))")
             }
         }
+        // is there data to add? // TODO: Handle longer data segments
+        for i in 0...7-outDataCount {
+            if (i < msg.data.count) {
+                tempData[outDataCount] = msg.data[i]
+                outDataCount += 1
+            } else {
+                break
+            }
+        }
+        // and shorten data segment as needed
+        let outData = Array(tempData.prefix(outDataCount))
         
         // send the resulting frame
-        let frame = CanFrame(header: header, data: msg.data)
+        let frame = CanFrame(header: header, data: outData)
         link!.sendCanFrame( frame )
         
-        // TODO: handle addressed messages (including data segment)
+
         // TODO: reformat datagrams
     }
-
+    
+    // segment data into zero or more arrays of no more than 8 bytes, with the alias at the start of each
+    final func segmentDataArray(_ alias : UInt, _ data : [UInt8]) ->[[UInt8]] {
+        let part0 = UInt8( (alias >> 8) & 0xF)
+        let part1 = UInt8( alias & 0xFF )
+        let nSegments = (data.count+5) / 6 // the +5 is since integer division takes the floor value
+        if (nSegments == 0 ) { return [[part0, part1]] }
+        if (nSegments == 1 ) {
+            return [[part0, part1]+data]
+        }
+        // multiple frames
+        var retval : [[UInt8]] = []
+        for i in 0...nSegments-2 { // first enty of 2 has full data
+            let nextEntry = [part0 | 0x30, part1]+Array(data[i*6 ... i*6+5])
+            retval.append(nextEntry)
+        }
+        // add the last
+        let lastEntry = [part0 | 0x20, part1]+Array(data[6*(nSegments-1) ... data.count-1])
+        retval.append(lastEntry)
+        // mark first (last already done above)
+        retval[0][0] &= ~0x20
+        
+        return retval
+    }
+    
     // MARK: common code
     func abortOnAliasCollision(_ frame : CanFrame) -> Bool {
         if state != .Permitted { return false }
