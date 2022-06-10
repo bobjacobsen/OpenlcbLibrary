@@ -8,7 +8,7 @@ import Foundation
 
 /// Handle incoming messages for a datagram service that can send and receive datagrams.
 ///
-/// Works with ``DatagramService``
+/// Works with ``DatagramService`` which holds context; this struct must remain immutable
 /// 
 struct DatagramProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil) {
@@ -19,14 +19,28 @@ struct DatagramProcessor : Processor {
     public func process( _ message : Message, _ node : Node ) {
         switch message.mti {
         case MTI.Datagram :
-            break // TODO: handle datagram-related MTIs
+            handleDatagram(message)
         case MTI.DatagramRejected :
-            break
+            handleDatagramRejected(message)
         case MTI.DatagramReceivedOK :
-            break
+            handleDatagramReceivedOK(message)
         default:
             // no need to do anything
             break
         }
     }
+    
+    func handleDatagram(_ message : Message) {
+            // TODO: handle Datagram
+    }
+
+    func handleDatagramReceivedOK(_ message : Message) {
+            // TODO: handle DatagramReceivedOK
+    }
+    
+    func handleDatagramRejected(_ message : Message) {
+            // TODO: handle DatagramRejected
+    }
+    
 }
+
