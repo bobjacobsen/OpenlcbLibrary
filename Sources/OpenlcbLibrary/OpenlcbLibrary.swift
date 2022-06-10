@@ -38,7 +38,6 @@ public struct OpenlcbLibrary {
         // connect the physical -> link layers
         OpenlcbLibrary.canLink.linkPhysicalLayer(canPhysicalLayer)
         
-        // TODO: connection link -> message layers by registering NodeStore(s)
         OpenlcbLibrary.canLink.registerMessageReceivedListener(OpenlcbLibrary.localNodeStore.invokeProcessorsOnNodes)
         OpenlcbLibrary.canLink.registerMessageReceivedListener(OpenlcbLibrary.remoteNodeStore.invokeProcessorsOnNodes)
 

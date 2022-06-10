@@ -140,9 +140,8 @@ public class CanLink : LinkLayer {
         }
         if (CanLink.localNodeID == matchNodeID) {
             // matched, send RID
-            var returnFrame = CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias)
-            returnFrame.data = CanLink.localNodeID.toArray()
-            link!.sendCanFrame( returnFrame ) // TODO: add NodeID
+            let returnFrame = CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: CanLink.localNodeID.toArray())
+            link!.sendCanFrame( returnFrame )
         }
     }
     
@@ -217,33 +216,25 @@ public class CanLink : LinkLayer {
             logger.error("Did not know source = \(msg.source) on global send")
         }
 
-        var tempData : [UInt8] = [0,0,0,0,0,0,0,0]
-        var outDataCount = 0
-        // Is a destination address needed?
+        // Is a destination address needed? Could be long message
         if (msg.isAddressed()) {
             if let alias = nodeIdToAlias[msg.destination ?? NodeID(0)] { // might not know it?
-                tempData[0] = UInt8((alias >> 8) & 0x0F)
-                tempData[1] = UInt8(alias & 0xFF)
-                outDataCount = 2
+                // address and have alias, break up data
+                let dataSegments = segmentDataArray(alias, msg.data)
+                for content in dataSegments {
+                    // send the resulting frame
+                    let frame = CanFrame(header: header, data: content)
+                    link!.sendCanFrame( frame )
+                }
             } else {
                 logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0))")
             }
+        } else {
+            // global still can hold data; assume length is correct by protocol
+            // send the resulting frame
+            let frame = CanFrame(header: header, data: msg.data)
+            link!.sendCanFrame( frame )
         }
-        // is there data to add? // TODO: Handle longer data segments
-        for i in 0...7-outDataCount {
-            if (i < msg.data.count) {
-                tempData[outDataCount] = msg.data[i]
-                outDataCount += 1
-            } else {
-                break
-            }
-        }
-        // and shorten data segment as needed
-        let outData = Array(tempData.prefix(outDataCount))
-        
-        // send the resulting frame
-        let frame = CanFrame(header: header, data: outData)
-        link!.sendCanFrame( frame )
         
 
         // TODO: reformat datagrams
@@ -277,12 +268,12 @@ public class CanLink : LinkLayer {
     func abortOnAliasCollision(_ frame : CanFrame) -> Bool {
         if state != .Permitted { return false }
         let receivedAlias = frame.header & 0x0000_FFF
-        let abort = receivedAlias == localAlias
+        let abort = (receivedAlias == localAlias)
         if (abort ) {
             // Collision!
             link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias) )
             state = .Inhibited
-            // TODO: Notify and restart alias process (ala LinkUp)
+            // TODO: Notify and restart alias process (ala LinkDown, LinkUp? )
         }
         return abort
     }
@@ -305,6 +296,7 @@ public class CanLink : LinkLayer {
         let maskedProduct : UInt64 = newProduct & 0xFFFF_FFFF_FFFFF
         return maskedProduct;
     }
+    
     /// Form 12 bit alias from 48-bit random number
     static func createAlias12(_ rnd : UInt64) -> UInt {
         let part1 = (rnd >> 36) & 0x0FFF
@@ -319,13 +311,13 @@ public class CanLink : LinkLayer {
             if UInt( (part1+part2+part3+part4)&0xFF) != 0 {
                 return UInt((part1+part2+part3+part4)&0xFF)
             } else {
-                return 0xAEF
+                return 0xAEF // Why'd you say Burma?
             }
         }
     }
     
     func decodeControlFrameFormat(_ frame : CanFrame) -> (ControlFrame) {
-        if (frame.header & 0x1800_0000) == 0x1800_0000 { // data case
+        if (frame.header & 0x0800_0000) == 0x0800_0000 { // data case; not checking leading 1 bit
             return .Data
         } else if (frame.header & 0x4_000_000) != 0 { // CID case
             return .CID

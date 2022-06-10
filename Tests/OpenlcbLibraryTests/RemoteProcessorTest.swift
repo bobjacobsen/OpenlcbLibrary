@@ -80,7 +80,6 @@ class RemoteProcessorTest: XCTestCase {
     }
 
     func testUndefinedType() throws {
-        // TODO: need checks for what happens on an unknown type
         let msg = Message(mti : MTI.Unknown, source : NodeID(12), destination : NodeID(13))
         // nothing but logging happens on an unknown type
         

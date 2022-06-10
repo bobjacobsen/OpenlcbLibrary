@@ -51,7 +51,4 @@ class NodeStore {
             }
         }
     }
-    
-    // TODO:  How does a store get updated when a new node is observed? Sometimes that means a new node (remoteStore), sometimes not (localStore)
-    
 }
