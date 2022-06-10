@@ -9,6 +9,7 @@ import Foundation
 /// Represents the Full MTI Format, a 16-bit quantity
 public enum MTI : Int {
     case InitializationComplete         = 0x0100
+    case InitializationCompleteSimple   = 0x0101
     case VerifyNodeIDNumberAddressed    = 0x0488
     case VerifyNodeIDNumberGlobal       = 0x0490
     case VerifiedNodeID                 = 0x0170

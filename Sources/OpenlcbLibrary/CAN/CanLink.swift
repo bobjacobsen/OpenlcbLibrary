@@ -205,6 +205,32 @@ public class CanLink : LinkLayer {
             fireListeners(msg)
         }
     }
+    
+    override func sendMessage(_ msg : Message) {
+        
+        // Remap the mti
+        var header = UInt( 0x19_000_000 | ((msg.mti.rawValue & 0xFFF) << 12) )
+ 
+        if let alias = nodeIdToAlias[msg.source] { // might not know it if error
+            header |= (alias & 0xFFF)
+        } else {
+            logger.error("Did not know source = \(msg.source) on global send")
+        }
+
+        // Is a destination address needed?
+        if (msg.isAddressed()) {
+            if let alias = nodeIdToAlias[msg.destination ?? NodeID(0)] { // might not know it?
+                header |= (alias & 0xFFF)
+            }
+        }
+        
+        // send the resulting frame
+        let frame = CanFrame(header: header, data: msg.data)
+        link!.sendCanFrame( frame )
+        
+        // TODO: handle addressed messages (including data segment)
+        // TODO: reformat datagrams
+    }
 
     // MARK: common code
     func abortOnAliasCollision(_ frame : CanFrame) -> Bool {

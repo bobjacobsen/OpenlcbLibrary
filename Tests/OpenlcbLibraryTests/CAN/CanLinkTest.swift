@@ -18,11 +18,6 @@ class CanLinkTest: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    /// Mock CanPhysicalLayer to record frames requested to be sent
-    class CanMockPhysicalLayer : CanPhysicalLayer {
-        var receivedFrames : [CanFrame] = []
-        override func sendCanFrame(_ frame : CanFrame) { receivedFrames.append(frame) }
-    }
     /// Mock Message to record messages requested to be sent
     class MessageMockLayer {
         var receivedMessages : [Message] = []
@@ -55,7 +50,7 @@ class CanLinkTest: XCTestCase {
     
     // MARK: - Test PHY Up
     func testLinkUpSequence() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
@@ -71,7 +66,7 @@ class CanLinkTest: XCTestCase {
 
     // MARK: - Test PHY Down, Up, Error Information
     func testLinkDownSequence() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
@@ -85,7 +80,7 @@ class CanLinkTest: XCTestCase {
     }
 
     func testAEIE2noData() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Permitted
@@ -96,7 +91,7 @@ class CanLinkTest: XCTestCase {
 
     // MARK: - Test AME (Local Node)
     func testAMEnoData() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
@@ -108,7 +103,7 @@ class CanLinkTest: XCTestCase {
     }
  
     func testAMEnoDataInhibited() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Inhibited
@@ -118,7 +113,7 @@ class CanLinkTest: XCTestCase {
     }
  
     func testAMEMatchEvent() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)
@@ -132,7 +127,7 @@ class CanLinkTest: XCTestCase {
     }
 
     func testAMEnotMatchEvent() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Permitted
@@ -145,7 +140,7 @@ class CanLinkTest: XCTestCase {
 
     // MARK: - Test Alias Collisions (Local Node)
     func testCIDreceivedMatch() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)
@@ -157,7 +152,7 @@ class CanLinkTest: XCTestCase {
     }
     
     func testRIDreceivedMatch() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)
@@ -177,7 +172,7 @@ class CanLinkTest: XCTestCase {
     }
 
     func testSimpleGlobalData() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
@@ -201,7 +196,7 @@ class CanLinkTest: XCTestCase {
     }
 
     func testSimpleAddressedData() { // Test start=yes, end=yes frame
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
@@ -234,7 +229,7 @@ class CanLinkTest: XCTestCase {
     
     // multi-frame addressed messages - SNIP reply
     func testMultiFrameAddressedData() { // Test message in 3 frames
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
@@ -274,7 +269,7 @@ class CanLinkTest: XCTestCase {
     // MARK: - Test Remote Node Alias Tracking
     
     func testAmdAmrSequence() {
-        let canPhysicalLayer = CanMockPhysicalLayer()
+        let canPhysicalLayer = CanPhysicalLayerMock()
         let canLink = CanLink()
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)

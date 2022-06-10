@@ -28,7 +28,7 @@ struct RemoteNodeProcessor : Processor {
         
         // specific message handling
         switch message.mti {
-        case .InitializationComplete :
+        case .InitializationComplete, .InitializationCompleteSimple :
             initializationComplete(message, node)
         case .ProtocolSupportReply :
             protocolSupportReply(message, node)

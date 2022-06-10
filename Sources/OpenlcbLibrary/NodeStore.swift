@@ -9,13 +9,13 @@ import Foundation
 /// Store the available Nodes and provide multiple means of retrieval.
 ///  Storage and indexing methods are an internal detail.
 ///  You can't remove a node; once we know about it, we know about it.
-struct NodeStore {
+class NodeStore {
     private var byIdMap : [NodeID : Node] = [:]
     var processors : [Processor] = []
     
     /// Store a new node or replace an existing stored node
     /// - Parameter node: new Node content
-    mutating func store(_ node : Node) {
+    func store(_ node : Node) {
         byIdMap[node.id] = node
     }
     
@@ -23,7 +23,7 @@ struct NodeStore {
     /// - Parameter nodeID: Look-up key
     /// - Returns: Returns Node, creating if need be
     // mutates to create non-existing node
-    mutating func lookup(_ nodeID : NodeID) -> Node {
+    func lookup(_ nodeID : NodeID) -> Node {
         if let node = byIdMap[nodeID] {
             return node
         } else {
@@ -45,7 +45,15 @@ struct NodeStore {
         return nil
     }
     
-    // TODO:  add invokeProcessors() to loop over processors X nodes
+    /// Process a message across all nodes
+    func invokeProcessorsOnNodes(message : Message) {
+        // TODO: loop over processors X nodes
+        for processor in processors {
+            for node in byIdMap.values {
+                processor.process(message, node)
+            }
+        }
+    }
     
     // TODO:  How does a store get updated when a new node is observed? Sometimes that means a new node (remoteStore), sometimes not (localStore)
     

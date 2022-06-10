@@ -41,6 +41,7 @@ struct PrintingProcessor : Processor {
             simpleAddressedMessage(message, node)
             
         case    .InitializationComplete,
+                .InitializationCompleteSimple,
                 .VerifyNodeIDNumberGlobal,
                 .IdentifyConsumer,
                 .IdentifyProducer,

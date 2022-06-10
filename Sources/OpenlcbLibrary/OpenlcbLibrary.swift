@@ -15,16 +15,13 @@ public struct OpenlcbLibrary {
     static var localNodeStore   = NodeStore()
     
     static let canLink = CanLink()
-    static let canPhysicalLayer = CanPhysicalLayer()
-    
-    
     
     /// The ``configureCanTelnet`` method will set up a system with
     ///   - A CAN-protocol Telnet connection
     ///   - ``defaultNode``, a  local node in a ``localNodeStore``
     ///   - A ``remoteNodeStore`` that will contain every node the implementation sees
     ///
-    public func configureCanTelnet() {
+    public func configureCanTelnet(_ canPhysicalLayer : CanPhysicalLayer) { // pass in either a real or mock physical layer
         
         // local node has limited capability
         OpenlcbLibrary.defaultNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to make memory requests
@@ -38,16 +35,16 @@ public struct OpenlcbLibrary {
         OpenlcbLibrary.localNodeStore.store(OpenlcbLibrary.defaultNode)
         
         // connect the physical -> link layers
-        OpenlcbLibrary.canLink.linkPhysicalLayer(OpenlcbLibrary.canPhysicalLayer)
+        OpenlcbLibrary.canLink.linkPhysicalLayer(canPhysicalLayer)
         
         // TODO: connection link -> message layers by registering NodeStore(s)
-        // OpenlcbLibrary.canLink.registerMessageReceivedListener(OpenlcbLibrary.localNodeStore)
-        // OpenlcbLibrary.canLink.registerMessageReceivedListener(OpenlcbLibrary.remoteNodeStore)
+        OpenlcbLibrary.canLink.registerMessageReceivedListener(OpenlcbLibrary.localNodeStore.invokeProcessorsOnNodes)
+        OpenlcbLibrary.canLink.registerMessageReceivedListener(OpenlcbLibrary.remoteNodeStore.invokeProcessorsOnNodes)
 
         // create processors
-        let rprocessor : Processor = RemoteNodeProcessor() // track effect of messages on Remote Nodes
-        let lprocessor : Processor = LocalNodeProcessor()  // track effect of messages on Local Node
-        let dprocessor : Processor = DatagramProcessor()   // datagram processor doesn't affect node status
+        let rprocessor : Processor = RemoteNodeProcessor(OpenlcbLibrary.canLink) // track effect of messages on Remote Nodes
+        let lprocessor : Processor = LocalNodeProcessor(OpenlcbLibrary.canLink)  // track effect of messages on Local Node
+        let dprocessor : Processor = DatagramProcessor(OpenlcbLibrary.canLink)   // datagram processor doesn't affect node status
         // printing process, well, prints
         let handler : (_ : String) -> () = { (data: String)  in
             // TODO: do something print-like with ``data``
@@ -57,9 +54,7 @@ public struct OpenlcbLibrary {
         // install processors
         OpenlcbLibrary.remoteNodeStore.processors = [pprocessor,             rprocessor]
         OpenlcbLibrary.localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor]
-
-        // Finally bring the link up
-        OpenlcbLibrary.canPhysicalLayer.physicalLayerUp()
+        
     }
     
     /// Load some sample nodes, but don't activate them
@@ -86,5 +81,10 @@ public struct OpenlcbLibrary {
         node2.snip.softwareVersion  = "SVersion 2"
         node2.snip.loadStrings()
         OpenlcbLibrary.remoteNodeStore.store(node2)
+    }
+    
+    /// Once configuration (and optional sample data) is complete, bring the link up
+    public func bringLinkUp(_ canPhysicalLayer : CanPhysicalLayer) {
+        canPhysicalLayer.physicalLayerUp()
     }
 }

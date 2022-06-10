@@ -18,7 +18,7 @@ class NodeStoreTest: XCTestCase {
     }
 
     func testSimpleLoadStore() {
-        var store = NodeStore()
+        let store = NodeStore()
         
         let n12 = Node(NodeID(12))
         
@@ -29,7 +29,7 @@ class NodeStoreTest: XCTestCase {
     }
 
     func testAccessThroughLoadStoreByID() {
-        var store = NodeStore()
+        let store = NodeStore()
         
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
@@ -56,7 +56,7 @@ class NodeStoreTest: XCTestCase {
     }
 
     func testAccessThroughLoadStoreByName() {
-        var store = NodeStore()
+        let store = NodeStore()
         
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
