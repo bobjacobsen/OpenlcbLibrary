@@ -9,7 +9,7 @@ import Foundation
 
 /// Provide a service interface for reading and writing Datagrams
 ///
-/// Works with ``DatagramProcessor``
+/// Works with and holds context for ``DatagramProcessor``
 /// 
 public class DatagramService {
     // Memo carries request and reply

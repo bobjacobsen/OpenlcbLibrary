@@ -16,7 +16,9 @@ public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable {
     public let id : NodeID  // nodeID is immutable; also serves for Identifiable
  
     // TODO: This needs to be a computed property from SNIP
-    let name : String
+    public var name : String {
+        return snip.userProvidedNodeName
+    }
     
     enum State {
         case Uninitialized
@@ -24,12 +26,11 @@ public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable {
     }
     var state : State = .Uninitialized
 
-    var pipSet = Set<PIP>()
-    var snip = SNIP()
+    public var pipSet = Set<PIP>()
+    public var snip = SNIP()
     
     public init( _ nodeID : NodeID) {
         self.id = nodeID
-        self.name = ""
     }
     
     public var description : String { "Node (\(id))"}

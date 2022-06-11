@@ -15,13 +15,13 @@ public struct SNIP {
 
     // The values of these are updated as more data comes in so othat they're
     // always the best available names.
-    var manufacturerName = ""
-    var modelName = ""
-    var hardwareVersion = ""
-    var softwareVersion = ""
+    public var manufacturerName = ""
+    public var modelName = ""
+    public var hardwareVersion = ""
+    public var softwareVersion = ""
     
-    var userProvidedNodeName = ""
-    var userProvidedDescription = ""
+    public var userProvidedNodeName = ""
+    public var userProvidedDescription = ""
 
     // total SNIP data is 1+41+41+21+21 1+63+64 = 125+128 = 253 bytes
     var data : [UInt8] = Array(repeating: 0, count: 253)
