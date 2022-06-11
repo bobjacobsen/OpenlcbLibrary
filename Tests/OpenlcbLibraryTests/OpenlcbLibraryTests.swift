@@ -14,7 +14,7 @@ final class OpenlcbLibraryTests: XCTestCase {
         lib.bringLinkUp(canPhysicalLayer)
         
         // check initialization messages
-        XCTAssertEqual(OpenlcbLibrary.defaultNode.state, Node.State.Initialized)
+        XCTAssertEqual(lib.defaultNode.state, Node.State.Initialized)
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8) // should be 8 with the Initialization complete
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[5].header))", "0x00701240") // Allocation AMDefinition
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[6].header))", "0x00702240") // Acquire rest of network with AMEnquiry
@@ -24,7 +24,7 @@ final class OpenlcbLibraryTests: XCTestCase {
 
         canPhysicalLayer.receivedFrames = []
         
-        XCTAssertFalse(OpenlcbLibrary.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created yet
+        XCTAssertFalse(lib.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created yet
 
         
         // Provide AMR reply from our test node
@@ -34,7 +34,7 @@ final class OpenlcbLibraryTests: XCTestCase {
         canPhysicalLayer.fireListeners(frame)
 
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0)  // we don't reply to AMR
-        XCTAssertFalse(OpenlcbLibrary.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created yet // TODO: consider design of this; should node exist after AMR?
+        XCTAssertFalse(lib.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created yet // TODO: consider design of this; should node exist after AMR?
 
         canPhysicalLayer.receivedFrames = []
 
@@ -59,14 +59,14 @@ final class OpenlcbLibraryTests: XCTestCase {
         canPhysicalLayer.fireListeners(frame)
 
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0)
-        XCTAssertTrue(OpenlcbLibrary.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03])))
-        XCTAssertEqual(OpenlcbLibrary.remoteNodeStore.lookup(NodeID([03,03,03,03,03,03]))!.state, Node.State.Initialized)
+        XCTAssertTrue(lib.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03])))
+        XCTAssertEqual(lib.remoteNodeStore.lookup(NodeID([03,03,03,03,03,03]))!.state, Node.State.Initialized)
 
         canPhysicalLayer.receivedFrames = []
 
         // predefined nodes also present, but not yet Initialized
-        XCTAssertTrue(OpenlcbLibrary.remoteNodeStore.isPresent(NodeID([02,02,02,02,02,02])))
-        XCTAssertEqual(OpenlcbLibrary.remoteNodeStore.lookup(NodeID([02,02,02,02,02,02]))!.state, Node.State.Uninitialized)
+        XCTAssertTrue(lib.remoteNodeStore.isPresent(NodeID([02,02,02,02,02,02])))
+        XCTAssertEqual(lib.remoteNodeStore.lookup(NodeID([02,02,02,02,02,02]))!.state, Node.State.Uninitialized)
     
         
         // PIP request not to us
