@@ -9,7 +9,7 @@ import Foundation
 /// Store the available Nodes and provide multiple means of retrieval.
 ///  Storage and indexing methods are an internal detail.
 ///  You can't remove a node; once we know about it, we know about it.
-class NodeStore {
+public class NodeStore {
     var byIdMap : [NodeID : Node] = [:]
     var processors : [Processor] = []
     
@@ -31,6 +31,9 @@ class NodeStore {
         return byIdMap[nodeID] != nil
     }
     
+    public func asArray() -> [Node] {
+        return Array(byIdMap.values)
+    }
     /// Retrieve a Node's content from the store
     /// - Parameter userProvidedDescription: Look-up key, from SNIP content
     /// - Returns: Optional<Node>, hence nil if Node hasn't been stored

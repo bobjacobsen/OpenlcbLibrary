@@ -18,22 +18,33 @@ class PIPTest: XCTestCase {
     }
 
     func testContainsSingle() {
-        let result = PIP.contains(0x10_00_00_00)
+        let result = PIP.setContents(0x10_00_00_00)
         
         XCTAssertEqual(result, Set([PIP.MEMORY_CONFIGURATION_PROTOCOL]))
     }
 
     func testContainsMultiple() {
-        let result = PIP.contains(0x10_10_00_00)
+        let result = PIP.setContents(0x10_10_00_00)
         
         XCTAssertEqual(result, Set([PIP.MEMORY_CONFIGURATION_PROTOCOL, PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL]))
     }
     
     func testContainsFromRaw2() {
         let array : [UInt8] = [0x10, 0x10]
-        let result = PIP.contains(raw: array)
-        
+        let result = PIP.setContents(raw: array)
+  
         XCTAssertEqual(result, Set([PIP.MEMORY_CONFIGURATION_PROTOCOL, PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL]))
     }
 
+    func testContentsNameUInt() {
+        let result = PIP.contentsNames(0x10_00_00)
+
+        XCTAssertEqual(result, ["SIMPLE_NODE_IDENTIFICATION_PROTOCOL"])
+    }
+
+    func testContentsNameUSet() {
+        let result = PIP.contentsNames(Set([PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL]))
+
+        XCTAssertEqual(result, ["Simple Node Identification Protocol"])
+    }
 }

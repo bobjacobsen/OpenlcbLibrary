@@ -29,6 +29,8 @@ struct LocalNodeProcessor : Processor {
             protocolSupportInquiry(message, node)
         case .SimpleNodeIdentInfoRequest :
             simpleNodeIdentInfoRequest(message, node)
+        case .IdentifyEventsAddressed :
+            identifyEventsAddressed(message, node)
         default:
             break
         }
@@ -72,6 +74,13 @@ struct LocalNodeProcessor : Processor {
     
     private func simpleNodeIdentInfoRequest(_ message : Message, _ node : Node) {
         let msg = Message(mti: MTI.SimpleNodeIdentInfoReply, source: node.id, destination: message.source, data: node.snip.returnStrings())
+        linkLayer!.sendMessage(msg)
+    }
+    
+    private func identifyEventsAddressed(_ message : Message, _ node : Node) {
+        // EventProtocol not in PIP, so decode and reject those messages
+        let msg = Message(mti: MTI.OptionalInteractionRejected, source: node.id, destination: message.source,
+                          data: [0x10, 0x43, UInt8((message.mti.rawValue>>8)&0xFF), UInt8(message.mti.rawValue&0xFF)]) // permanent error
         linkLayer!.sendMessage(msg)
     }
     

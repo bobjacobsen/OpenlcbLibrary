@@ -12,10 +12,10 @@ import Foundation
 ///
 ///  Concrete implementations may include a "node in this machine" and a "remote node elsewhere" a.k.a an image node.
 ///
-public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable {
+public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable, Comparable {
     public let id : NodeID  // nodeID is immutable; also serves for Identifiable
  
-    // TODO: This needs to be a computed property from SNIP
+    // This is a computed property from SNIP
     public var name : String {
         return snip.userProvidedNodeName
     }
@@ -44,5 +44,10 @@ public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable {
     public func hash(into hasher : inout Hasher) {
         hasher.combine(id)
     }
+    // Comparable is defined on the ID
+    public static func <(lhs: Node, rhs: Node) -> Bool {
+        return lhs.id.nodeId < rhs.id.nodeId
+    }
+
 }
 

@@ -15,6 +15,8 @@ import os
 ///  - An alias is allocated for the Local Node when the link comes up.
 ///  - Aliases are tracked for the Remote Nodes, but not allocated
 ///
+///  Multi-frame addressed messages are accumulated in parallel
+///  
 public class CanLink : LinkLayer {
     
     static let localNodeID  = NodeID(0x05_01_01_01_03_01)  // valid default node ID, static needed to use in initialization
@@ -28,6 +30,10 @@ public class CanLink : LinkLayer {
     var aliasToNodeID : [UInt:NodeID] = [:]
     var nodeIdToAlias : [NodeID:UInt] = [:]
 
+    override public init() {
+        super.init()
+    }
+    
     final func linkPhysicalLayer( _ cpl : CanPhysicalLayer) {
         link = cpl
         cpl.registerFrameReceivedListener(receiveListener)
@@ -329,7 +335,7 @@ public class CanLink : LinkLayer {
         }
     }
     
-    // returns a fill 16-bit MTI from the full 29 bits of a CAN header
+    // returns a full 16-bit MTI from the full 29 bits of a CAN header
     func canHeaderToFullFormat(frame : CanFrame) -> MTI {
         let frameType = (frame.header >> 24) & 0x7
         let canMTI = Int((frame.header >> 12) & 0xFFF)

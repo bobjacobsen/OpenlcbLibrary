@@ -11,6 +11,7 @@ import Foundation
 ///
 ///
 public enum PIP : UInt32, CaseIterable {
+    
     /// Coded as a 32-bit values instead of the 24-bit values in the standard to give expansion room
     case SIMPLE_PROTOCOL                        = 0x80_00_00_00
     case DATAGRAM_PROTOCOL                      = 0x40_00_00_00
@@ -33,7 +34,34 @@ public enum PIP : UInt32, CaseIterable {
     case FIRMWARE_UPGRADE_PROTOCOL              = 0x00_00_20_00
     case FIRMWARE_ACTIVE                        = 0x00_00_10_00
     
-    static func contains(_ input : UInt32) -> Set<PIP> {
+    /**
+     * The name of the enumeration (as written in case).
+     */
+    var name: String {
+        get { return String(describing: self) }
+    }
+
+    // return an array of strings for all included values
+    public static func contentsNames(_ contents : UInt32) -> [String] {
+        var retval : [String] = []
+        for pip in PIP.allCases {
+            if (pip.rawValue & contents == pip.rawValue) {
+                retval += [pip.name]
+            }
+        }
+        return retval
+    }
+
+    // return an array of strings for all included values
+    public static func contentsNames(_ contents : Set<PIP>) -> [String] {
+        var retval : [String] = []
+        for pip in contents {
+            retval += [pip.name.replacingOccurrences(of: "_", with: " ").capitalized]
+        }
+        return retval
+    }
+    
+    static func setContents(_ input : UInt32) -> Set<PIP> {
         var retVal = Set<PIP>()
         for val in PIP.allCases {
             if (val.rawValue & input != 0) {
@@ -43,12 +71,12 @@ public enum PIP : UInt32, CaseIterable {
         return retVal
     }
     
-    static func contains(raw: [UInt8]) -> Set<PIP> {
+    static func setContents(raw: [UInt8]) -> Set<PIP> {
         var data : UInt32 = 0
         if (raw.count > 0 ) { data |= (UInt32(raw[0]) << 24 ) }
         if (raw.count > 1 ) { data |= (UInt32(raw[1]) << 16 ) }
         if (raw.count > 2 ) { data |= (UInt32(raw[2]) <<  8 ) }
         if (raw.count > 3 ) { data |= (UInt32(raw[3])       ) }
-        return contains(data)
+        return setContents(data)
     }
 }

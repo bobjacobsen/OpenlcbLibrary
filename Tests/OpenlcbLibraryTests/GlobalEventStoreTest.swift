@@ -1,5 +1,5 @@
 //
-//  EventStoreTest.swift
+//  GlobalEventStoreTest.swift
 //
 //  Created by Bob Jacobsen on 6/1/22.
 //
@@ -7,7 +7,7 @@
 import XCTest
 @testable import OpenlcbLibrary
 
-class EventStoreTest: XCTestCase {
+class GlobalEventStoreTest: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -18,7 +18,7 @@ class EventStoreTest: XCTestCase {
     }
 
     func testSimpleLoadStore() {
-        var store = EventStore()
+        var store = GlobalEventStore()
         
         let e12 = Event(EventID(12))
         
@@ -29,7 +29,7 @@ class EventStoreTest: XCTestCase {
     }
 
     func testAccessThroughLoadStoreByID() {
-        var store = EventStore()
+        var store = GlobalEventStore()
         
         let eid12 = EventID(12)
         let eid13 = EventID(13)

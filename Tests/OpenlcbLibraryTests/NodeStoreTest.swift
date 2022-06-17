@@ -26,6 +26,11 @@ class NodeStoreTest: XCTestCase {
         store.store(Node(NodeID(13)))
         
         XCTAssertEqual(store.lookup(NodeID(12)), n12, "store then lookup OK")
+        
+        var array = store.asArray()
+        array.sort() // so that test value is consistent
+        
+        XCTAssertEqual(array, [n12, Node(NodeID(13))])
     }
 
     func testAccessThroughLoadStoreByID() {

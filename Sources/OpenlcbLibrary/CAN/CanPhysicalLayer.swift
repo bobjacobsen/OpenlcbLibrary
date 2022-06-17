@@ -10,6 +10,9 @@ import Foundation
 /// This is a class because it represents a single physical connection to a layout. Subclasses will handle CAN, TCP/IP and test implementations.
 /// 
 public class CanPhysicalLayer : PhysicalLayer {
+    public init() {
+    }
+
     func sendCanFrame(_ frame : CanFrame) {}
     
     func registerFrameReceivedListener(_ listener : @escaping ( (_ : CanFrame) -> () )) {

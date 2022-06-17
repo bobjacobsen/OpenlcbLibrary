@@ -9,7 +9,7 @@ import Foundation
 
 /// Accumulates Nodes that it sees requested, unless they're already in a given local NodeStore
 /// 
-class RemoteNodeStore : NodeStore {
+public class RemoteNodeStore : NodeStore {
     
     let localNodeStore : NodeStore
 

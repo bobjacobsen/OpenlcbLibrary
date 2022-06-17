@@ -112,7 +112,7 @@ class LocalNodeProcessorTest: XCTestCase {
         node21.snip.modelName        = "Node 1"
         node21.snip.hardwareVersion  = "HVersion 1"
         node21.snip.softwareVersion  = "SVersion 1"
-        node21.snip.loadStrings()
+        node21.snip.updateSnipDataFromStrings()
 
         // not related to node
         let msg1 = Message(mti : MTI.SimpleNodeIdentInfoRequest, source : NodeID(13), destination : NodeID(24))
@@ -125,5 +125,17 @@ class LocalNodeProcessorTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data[0...2], [0x04,0x53,0x61])
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 46)
+    }
+    
+    func testIdentifyEventsAddressed() {
+        // addressed to node
+        let msg2 = Message(mti : MTI.IdentifyEventsAddressed, source : NodeID(13), destination : NodeID(21))
+        processor.process(msg2, node21)
+
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.OptionalInteractionRejected)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 4)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x10, 0x43, 0x09, 0x68])
+
     }
 }

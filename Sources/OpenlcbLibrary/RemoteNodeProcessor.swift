@@ -36,7 +36,11 @@ struct RemoteNodeProcessor : Processor {
             linkUpMessage(message, node)
         case .LinkLevelDown :
             linkDownMessage(message, node)
-        // TODO: SNIP request (clear cache), reply (accumulate)
+        case .SimpleNodeIdentInfoRequest :
+            simpleNodeIdentInfoRequest(message, node)
+        case .SimpleNodeIdentInfoReply :
+            simpleNodeIdentInfoReply(message, node)
+        // TODO: Event Protocol messages - record in local event store
         default:
             break
         }
@@ -74,7 +78,20 @@ struct RemoteNodeProcessor : Processor {
             let part2 : Int = (message.data.count > 2) ? (Int(message.data[2]) <<  8) : 0
             let part3 : Int = (message.data.count > 3) ? (Int(message.data[3])      ) : 0
             let content : UInt32 =  UInt32(part0|part1|part2|part3)
-            node.pipSet = PIP.contains(content)
+            node.pipSet = PIP.setContents(content)
+        }
+    }
+    
+    private func simpleNodeIdentInfoRequest(_ message : Message, _ node : Node) {
+        // clear SNIP in the node
+        node.snip = SNIP()
+    }
+    
+    private func simpleNodeIdentInfoReply(_ message : Message, _ node : Node) {
+        // accumulate data in the node
+        if message.data.count > 2 {
+            node.snip.addData(data: message.data)
+            node.snip.updateStringsFromSnipData()
         }
     }
     

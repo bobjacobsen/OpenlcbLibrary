@@ -112,11 +112,11 @@ public struct SNIP {
             self.data[i+index] = data[i]
         }
         index += data.count
-        updateStrings()
+        updateStringsFromSnipData()
     }
     
     // load strings from current SNIP accumulated data
-    mutating func updateStrings() {
+    mutating func updateStringsFromSnipData() {
         manufacturerName =  getString(n: 0)
         modelName =         getString(n: 1)
         hardwareVersion =   getString(n: 2)
@@ -127,7 +127,7 @@ public struct SNIP {
     }
     
     // store strings into SNIP accumulated data
-    mutating func loadStrings() {
+    mutating func updateSnipDataFromStrings() {
         // clear string
         data = Array(repeating: 0, count: 253)
         
@@ -137,40 +137,40 @@ public struct SNIP {
         let mfgArray = Data(manufacturerName.utf8.prefix(40))  // leave one space for zero
         if (mfgArray.count>0) {
             for i in 0...mfgArray.count-1 { data[index] = mfgArray[i]; index+=1}
-            data[index] = 0; index += 1
         }
+        data[index] = 0; index += 1
         
         let mdlArray = Data(modelName.utf8.prefix(40))
         if (mdlArray.count>0) {
             for i in 0...mdlArray.count-1 { data[index] = mdlArray[i]; index+=1}
-            data[index] = 0; index += 1
         }
+        data[index] = 0; index += 1
         
         let hdvArray = Data(hardwareVersion.utf8.prefix(20))
             if (hdvArray.count>0) {
             for i in 0...hdvArray.count-1 { data[index] = hdvArray[i]; index+=1}
-        data[index] = 0; index += 1
         }
+        data[index] = 0; index += 1
         
         let sdvArray = Data(softwareVersion.utf8.prefix(20))
         if (sdvArray.count>0) {
             for i in 0...sdvArray.count-1 { data[index] = sdvArray[i]; index+=1}
-            data[index] = 0; index += 1
         }
+        data[index] = 0; index += 1
         
         data[index] = 2; index += 1
         
         let upnArray = Data(userProvidedNodeName.utf8.prefix(62))
         if (upnArray.count>0) {
             for i in 0...upnArray.count-1 { data[index] = upnArray[i]; index+=1}
-            data[index] = 0; index += 1
         }
+        data[index] = 0; index += 1
         
         let updArray = Data(userProvidedDescription.utf8.prefix(63))
         if (updArray.count>0) {
             for i in 0...updArray.count-1 { data[index] = updArray[i]; index+=1}
-            data[index] = 0; index += 1
         }
+        data[index] = 0; index += 1
     }
     
     func returnStrings() -> [UInt8] {

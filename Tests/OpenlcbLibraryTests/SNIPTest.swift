@@ -86,7 +86,7 @@ class SNIPTest: XCTestCase {
         s.userProvidedNodeName = "3EF"
         s.userProvidedDescription = "4EF"
 
-        s.loadStrings()
+        s.updateSnipDataFromStrings()
         
         XCTAssertEqual(s.getString(n: 0),"ABC")
         XCTAssertEqual(s.getString(n: 1),"DEF")
@@ -106,7 +106,7 @@ class SNIPTest: XCTestCase {
         s.userProvidedNodeName = "3EF"
         s.userProvidedDescription = "4EF"
 
-        s.loadStrings()
+        s.updateSnipDataFromStrings()
 
         let result = s.returnStrings()
         
@@ -143,5 +143,13 @@ class SNIPTest: XCTestCase {
         XCTAssertEqual(result[23], 0x45)
         XCTAssertEqual(result[24], 0x46)
         XCTAssertEqual(result[25], 0)
+    }
+    
+    func testName() {
+        var s = SNIP() // init to all zeros
+        s.userProvidedNodeName = "test 123"
+        s.updateSnipDataFromStrings()
+        s.updateStringsFromSnipData()
+        XCTAssertEqual(s.userProvidedNodeName, "test 123")
     }
 }
