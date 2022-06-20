@@ -9,8 +9,8 @@
 ///
 import Foundation
 
-struct CdiXmlMemo : Equatable {
-    enum XMLMemoType {
+public struct CdiXmlMemo : Equatable, Identifiable {
+    public enum XMLMemoType {
         case TOPLEVEL // cdi element itself
         case SEGMENT  // Segment is a top-level group
         case GROUP
@@ -19,9 +19,9 @@ struct CdiXmlMemo : Equatable {
         case INPUT_STRING
     }
     // common values
-    var type : XMLMemoType
-    var name : String
-    var description : String
+    public var type : XMLMemoType
+    public var name : String
+    public var description : String
     // input values - see also type
     let length : Int
     let startAddress : Int
@@ -29,7 +29,9 @@ struct CdiXmlMemo : Equatable {
     var maxValue = 2_147_483_647  // 32 bit max
     var minValue = 0
     
-    var children : [CdiXmlMemo]
+    public var children : [CdiXmlMemo]? // Optional required to display in SwiftUI?  Never nil here.
+    
+    public let id = UUID()
     
     // TODO: needs map support
     // TODO: needs max/min for int
@@ -83,10 +85,163 @@ func getDataFromFile(_ file : String) -> Data? {
     }
 }
 
+public func sampleCdiXmlData() -> [CdiXmlMemo] {
+    let data : Data = ("""
+                    <cdi>
+                    <segment>
+                      <name>Power Monitor</name>
+                        <eventid>
+                         <name>Power OK</name>
+                            <description>EventID</description>
+                        </eventid>
+                        <eventid>
+                         <name>Power Not OK</name>
+                            <description>EventID (may be lost)</description>
+                        </eventid>
+                    </segment>
+
+                    <segment space='253' origin='128'>
+                      <name>Port I/O</name>
+                      <group replication="16">
+                      <name>Select Input/Output line.</name>
+                        <repname>Line</repname>
+                        <group>
+                          <name>I/O</name>
+                          <string size="32">
+                            <name>User ID</name>
+                          </string>
+                          <int size="1">
+                            <name>Output Mode</name>
+                            <default>0</default>
+                               <map>
+                                  <relation><property>0</property><value>None</value></relation>
+                                  <relation><property>1</property><value>Steady</value></relation>
+                                  <relation><property>2</property><value>Pulse</value></relation>
+                                  <relation><property>3</property><value>Blink phase A</value></relation>
+                                  <relation><property>4</property><value>Blink phase B</value></relation>
+                               </map>
+                          </int>
+                          <int size='1'>
+                            <name>Receiving the configured Command (C) event(s) will drive, pulse, or blink the line:</name>
+                            <default>1</default>
+                               <map>
+                                  <relation><property>0</property><value>High (5V)</value></relation>
+                                  <relation><property>1</property><value>Low (0V)</value></relation>
+                               </map>
+                          </int>
+                          <int size="1">
+                            <name>Input Mode</name>
+                            <default>0</default>
+                               <map>
+                                  <relation><property>0</property><value>None</value></relation>
+                                  <relation><property>1</property><value>Normal</value></relation>
+                                  <relation><property>2</property><value>Alternate action</value></relation>
+                               </map>
+                          </int>
+                          <int size='1'>
+                            <name>The configured Indication (P) event(s) will be sent when the line is driven:</name>
+                            <default>1</default>
+                               <map>
+                                  <relation><property>0</property><value>High (5V)</value></relation>
+                                  <relation><property>1</property><value>Low (0V)</value></relation>
+                               </map>
+                          </int>
+                          </group>
+                          <group replication="2">
+                            <name>Delay</name>
+                            <description>Int 1 = Delay, Int 2 = Input hold time - Output length</description>
+                            <repname>Interval</repname>
+                            <int size="2">
+                              <name />
+                              <description>Delay Time (1-60000).</description>
+                              <min>0</min>
+                              <max>60000</max>
+                            </int>
+                            <int size="1">
+                              <name />
+                              <map>
+                              <default>0</default>
+                                <relation><property>0</property><value>Milliseconds</value></relation>
+                                <relation><property>1</property><value>Seconds</value></relation>
+                                <relation><property>2</property><value>Minutes</value></relation>
+                              </map>
+                            </int>
+                            <int size="1">
+                              <name>Retrigger</name>
+                              <map>
+                                <relation><property>0</property><value>No</value></relation>
+                                <relation><property>1</property><value>Yes</value></relation>
+                              </map>
+                            </int>
+                          </group>
+                          <group replication="6">
+                            <name>Commands</name>
+                            <description>Consumer commands.</description>
+                            <repname>Event</repname>
+                            <eventid>
+                              <description>(C) When this event occurs,</description>
+                            </eventid>
+                            <int size="1">
+                              <name>the line state will be changed to.</name>
+                              <default>0</default>
+                              <map>
+                                <relation><property>0</property><value>None</value></relation>
+                                <relation><property>1</property><value>On  (Line Active)</value></relation>
+                                <relation><property>2</property><value>Off (Line Inactive)</value></relation>
+                                <relation><property>3</property><value>Change (Toggle)</value></relation>
+                                <relation><property>4</property><value>Veto On  (Active)</value></relation>
+                                <relation><property>5</property><value>Veto Off (Inactive)</value></relation>
+                                <relation><property>6</property><value>Gated On  (Non Veto Output)</value></relation>
+                                <relation><property>7</property><value>Gated Off (Non Veto Output)</value></relation>
+                                <relation><property>8</property><value>Gated Change (Non Veto Toggle)</value></relation>
+                              </map>
+                            </int>
+                          </group>
+                          <group replication="6">
+                            <name>Indications</name>
+                            <description>Producer commands.</description>
+                            <repname>Event</repname>
+                            <int size="1">
+                              <name>Upon this action</name>
+                              <name>Triggers</name>
+                              <default>0</default>
+                              <map>
+                                <relation><property>0</property><value>None</value></relation>
+                                <relation><property>1</property><value>Output State On command</value></relation>
+                                <relation><property>2</property><value>Output State Off command</value></relation>
+                                <relation><property>3</property><value>Output On (Function hi)</value></relation>
+                                <relation><property>4</property><value>Output Off (Function lo)</value></relation>
+                                <relation><property>5</property><value>Input On</value></relation>
+                                <relation><property>6</property><value>Input Off</value></relation>
+                                <relation><property>7</property><value>Gated On (Not Veto Input)</value></relation>
+                                <relation><property>8</property><value>Gated Off (Not Veto Input)</value></relation>
+                              </map>
+                            </int>
+                            <eventid>
+                              <description>(P) this event will be sent.</description>
+                            </eventid>
+                          </group>
+                        </group>
+
+                    </segment>
+                    </cdi>
+                    """.data(using: .utf8))!
+
+    let parser = XMLParser(data: data)
+    parser.shouldResolveExternalEntities = false
+    let delegate = CdiParserDelegate()
+    parser.delegate = delegate
+
+    // run the parser
+    parser.parse()
+
+    return delegate.memoStack[0].children!
+}
+
 class CdiParserDelegate : NSObject, XMLParserDelegate {
     // MARK: Delegate methods
     func parserDidStartDocument(_ parser : XMLParser) {
-        print ("parserDidStartDocument")
+        // print ("parserDidStartDocument")
     }
     func parserDidEndDocument(_ parser : XMLParser) {
         print ("parserDidEndDocument")
@@ -121,7 +276,8 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         case "string" :
             stringStart(attributes: attributes)
         default:
-            print ("did start element \(didStartElement) attributes: \(attributes)")
+            // print ("did start element \(didStartElement) attributes: \(attributes)")
+            break
         }
     }
 
@@ -155,7 +311,8 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         case "string" :
             stringEnd()
         default:
-            print ("did end element \(didEndElement)")
+            // print ("did end element \(didEndElement)")
+            break // have to say something
         }
     }
 
@@ -215,28 +372,28 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
 
     func segmentStart() {
         memoStack.append(CdiXmlMemo())
-        print ("segment start \(memoStack)")
+        // print ("segment start \(memoStack)")
     }
     func segmentEnd() {
         // TODO: fill and pop
         var current = memoStack.removeLast()
         current.type = .SEGMENT
         // add to children of parent (now last on stack)
-        memoStack[memoStack.count-1].children.append(current) // ".last" is a getter
-        print ("segment end \(memoStack)")
+        memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
+        // print ("segment end \(memoStack)")
     }
 
     func groupStart() {
         memoStack.append(CdiXmlMemo())
-        print ("group start \(memoStack)")
+        // print ("group start \(memoStack)")
     }
     func groupEnd() {
         // TODO: fill and pop
         var current = memoStack.removeLast()
         current.type = .GROUP
         // add to children of parent (now last on stack)
-        memoStack[memoStack.count-1].children.append(current) // ".last" is a getter
-        print ("group end \(memoStack)")
+        memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
+        // print ("group end \(memoStack)")
     }
 
     func nameSubStart() {
@@ -292,8 +449,9 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         var current = memoStack.removeLast()
         current.type = .INPUT_INT
         // add to children of parent (now last on stack)
-        memoStack[memoStack.count-1].children.append(current) // ".last" is a getter
-        print ("int end \(memoStack)")
+        memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
+        // no children in current node
+        current.children = nil
     }
 
     func eventIdStart(attributes : [String:String]) {
@@ -303,8 +461,9 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         var current = memoStack.removeLast()
         current.type = .INPUT_EVENTID
         // add to children of parent (now last on stack)
-        memoStack[memoStack.count-1].children.append(current) // ".last" is a getter
-        print ("int end \(memoStack)")
+        memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
+        // print ("event end \(memoStack)")
+        current.children = nil
     }
 
     func stringStart(attributes : [String:String]) {
@@ -314,9 +473,9 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         var current = memoStack.removeLast()
         current.type = .INPUT_STRING
         // add to children of parent (now last on stack)
-        memoStack[memoStack.count-1].children.append(current) // ".last" is a getter
-        print ("int end \(memoStack)")
+        memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
+        // print ("string end \(memoStack)")
+        current.children = nil
     }
-
+    
 }
-
