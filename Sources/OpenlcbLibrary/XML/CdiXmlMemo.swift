@@ -9,7 +9,7 @@
 ///
 import Foundation
 
-public struct CdiXmlMemo : Equatable, Identifiable {
+public final class CdiXmlMemo : Identifiable {
     public enum XMLMemoType {
         case TOPLEVEL // cdi element itself
         case SEGMENT  // Segment is a top-level group
@@ -17,45 +17,56 @@ public struct CdiXmlMemo : Equatable, Identifiable {
         case INPUT_EVENTID
         case INPUT_INT
         case INPUT_STRING
+        case MAP
     }
     // common values
     public var type : XMLMemoType
     public var name : String
     public var description : String
-    // input values - see also type
-    let length : Int
-    let startAddress : Int
-    var defaultValue : Int
-    var maxValue = 2_147_483_647  // 32 bit max
-    var minValue = 0
+    // input values - usage determined by type
+    public let length : Int
+    public let startAddress : Int
+    public var defaultValue : Int
+    public var maxValue = 2_147_483_647  // 32 bit max
+    public var minValue = 0
+    
+    public var currentValue : Int
     
     public var children : [CdiXmlMemo]? // Optional required to display in SwiftUI?  Never nil here.
+    
+    public var properties : [String] = []
+    public var values : [String] = []
     
     public let id = UUID()
     
     // TODO: needs map support
-    // TODO: needs max/min for int
+    // TODO: ACDI expansion
+    // TODO: memory address computation
+    // TODO: group repl
+    // TODO: How to handle the identification block?  Present or not? Read-only
     
-    // init mainly for segment, group
-    init(_ type : XMLMemoType, _ name : String, _ description : String, children : [CdiXmlMemo] = []) {
-        self.type = type
-        self.name = name
-        self.description = description
-        self.length = 0
-        self.startAddress = 0
-        self.defaultValue = 0
-        self.children = children
-    }
-    // init mainly for input
-    init(_ type : XMLMemoType, _ name : String, _ description : String, length : Int, startAddress : Int, defaultValue : Int) {
-        self.type = type
-        self.name = name
-        self.description = description
-        self.length = length
-        self.startAddress = startAddress
-        self.defaultValue = defaultValue
-        self.children = []
-    }
+//    // init mainly for segment, group
+//    init(_ type : XMLMemoType, _ name : String, _ description : String, children : [CdiXmlMemo] = []) {
+//        self.type = type
+//        self.name = name
+//        self.description = description
+//        self.length = 0
+//        self.startAddress = 0
+//        self.defaultValue = 0
+//        self.currentValue = 0
+//        self.children = children
+//    }
+//    // init mainly for input
+//    init(_ type : XMLMemoType, _ name : String, _ description : String, length : Int, startAddress : Int, defaultValue : Int) {
+//        self.type = type
+//        self.name = name
+//        self.description = description
+//        self.length = length
+//        self.startAddress = startAddress
+//        self.defaultValue = defaultValue
+//        self.currentValue = defaultValue
+//        self.children = []
+//    }
     // only for creating a null object
     init() {
         self.type = .TOPLEVEL
@@ -64,6 +75,7 @@ public struct CdiXmlMemo : Equatable, Identifiable {
         self.length = 0
         self.startAddress = 0
         self.defaultValue = 0
+        self.currentValue = 0
         self.children = []
     }
 }
@@ -77,7 +89,6 @@ func getDataFromFile(_ file : String) -> Data? {
     do {
         let fileURL = dir.appendingPathComponent(file)
         let data = try Data(contentsOf: fileURL)
-        // print (text)
         return data
     } catch {
         print ("caught \(error)")
@@ -238,16 +249,14 @@ public func sampleCdiXmlData() -> [CdiXmlMemo] {
     return delegate.memoStack[0].children!
 }
 
-class CdiParserDelegate : NSObject, XMLParserDelegate {
+final class CdiParserDelegate : NSObject, XMLParserDelegate {
     // MARK: Delegate methods
     func parserDidStartDocument(_ parser : XMLParser) {
-        // print ("parserDidStartDocument")
     }
     func parserDidEndDocument(_ parser : XMLParser) {
         print ("parserDidEndDocument")
     }
     func parser(_: XMLParser, didStartElement: String, namespaceURI: String?, qualifiedName: String?, attributes: [String : String]) {
-        // print ("didStartElement \(didEndElement)")
         switch didStartElement {
         case "cdi" :
             cdiStart()
@@ -275,14 +284,16 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
             eventIdStart(attributes: attributes)
         case "string" :
             stringStart(attributes: attributes)
+        case "property" :
+            propertyStart()
+        case "value" :
+            valueStart()
         default:
-            // print ("did start element \(didStartElement) attributes: \(attributes)")
             break
         }
     }
 
     func parser(_: XMLParser, didEndElement: String, namespaceURI: String?, qualifiedName : String?) {
-        // print ("didEndElement \(didEndElement)")
         switch didEndElement {
         case "cdi" :
             cdiEnd()
@@ -310,25 +321,33 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
             eventIdEnd()
         case "string" :
             stringEnd()
+        case "property" :
+            propertyEnd()
+        case "value" :
+            valueEnd()
         default:
-            // print ("did end element \(didEndElement)")
             break // have to say something
         }
     }
 
     func parser(_ : XMLParser, foundCharacters: String) {
         // check state, store as requested
-        switch currentTextState {
+        switch currentTextState { // what kind of element was this text within?
         case .NAME :
             memoStack[memoStack.count-1].name = foundCharacters
         case .DESCRIPTION :
             memoStack[memoStack.count-1].description = foundCharacters
         case .DEFAULT :
             memoStack[memoStack.count-1].defaultValue = Int(foundCharacters) ?? 0
+            memoStack[memoStack.count-1].currentValue = memoStack[memoStack.count-1].defaultValue
         case .MIN :
             memoStack[memoStack.count-1].minValue = Int(foundCharacters) ?? 0
         case .MAX :
             memoStack[memoStack.count-1].maxValue = Int(foundCharacters) ?? 2_147_483_647  // 32 bit max
+        case .PROPERTY :
+            memoStack[memoStack.count-1].properties.append(foundCharacters)
+        case .VALUE :
+            memoStack[memoStack.count-1].values.append(foundCharacters)
         case .NONE :
             break // need a statement for this case
         }
@@ -345,6 +364,8 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         case DEFAULT
         case MIN
         case MAX
+        case PROPERTY // part of map
+        case VALUE    // part of map
     }
     
     // MARK: Element methods
@@ -372,28 +393,24 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
 
     func segmentStart() {
         memoStack.append(CdiXmlMemo())
-        // print ("segment start \(memoStack)")
     }
     func segmentEnd() {
         // TODO: fill and pop
-        var current = memoStack.removeLast()
+        let current = memoStack.removeLast()
         current.type = .SEGMENT
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
-        // print ("segment end \(memoStack)")
     }
 
     func groupStart() {
         memoStack.append(CdiXmlMemo())
-        // print ("group start \(memoStack)")
     }
     func groupEnd() {
         // TODO: fill and pop
-        var current = memoStack.removeLast()
+        let current = memoStack.removeLast()
         current.type = .GROUP
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
-        // print ("group end \(memoStack)")
     }
 
     func nameSubStart() {
@@ -446,7 +463,7 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         memoStack.append(memo)
     }
     func intEnd()  {
-        var current = memoStack.removeLast()
+        let current = memoStack.removeLast()
         current.type = .INPUT_INT
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
@@ -458,11 +475,10 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         memoStack.append(CdiXmlMemo())
     }
     func eventIdEnd()  {
-        var current = memoStack.removeLast()
+        let current = memoStack.removeLast()
         current.type = .INPUT_EVENTID
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
-        // print ("event end \(memoStack)")
         current.children = nil
     }
 
@@ -470,12 +486,24 @@ class CdiParserDelegate : NSObject, XMLParserDelegate {
         memoStack.append(CdiXmlMemo())
     }
     func stringEnd()  {
-        var current = memoStack.removeLast()
+        let current = memoStack.removeLast()
         current.type = .INPUT_STRING
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
-        // print ("string end \(memoStack)")
         current.children = nil
     }
     
+    func propertyStart() {
+        currentTextState = .PROPERTY
+    }
+    func propertyEnd() {
+        currentTextState = .NONE
+    }
+
+    func valueStart() {
+        currentTextState = .VALUE
+    }
+    func valueEnd() {
+        currentTextState = .NONE
+    }
 }
