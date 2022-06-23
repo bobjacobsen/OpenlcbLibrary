@@ -99,6 +99,18 @@ func getDataFromFile(_ file : String) -> Data? {
 public func sampleCdiXmlData() -> [CdiXmlMemo] {
     let data : Data = ("""
                     <cdi>
+                    <segment><name>Sample Segment</name><description>Desc of Segment</description>
+                        <group><name>Sample Group</name><description>Desc of Group</description>
+                        <int><name>Numeric Int</name><description>Description of Num Int</description><default>321</default></int>
+                        <int><name>Mapped Int</name><description>Description of Map Int</description><default>2</default>
+                            <map>
+                                <relation><property>1</property><value>One</value></relation>
+                                <relation><property>2</property><value>Two</value></relation>
+                                <relation><property>3</property><value>Three</value></relation>
+                            </map></int>
+                        </group>
+                    </segment>
+                    
                     <segment>
                       <name>Power Monitor</name>
                         <eventid>
