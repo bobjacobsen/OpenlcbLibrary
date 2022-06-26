@@ -14,6 +14,7 @@ public final class CdiXmlMemo : Identifiable {
         case TOPLEVEL // cdi element itself
         case SEGMENT  // Segment is a top-level group
         case GROUP
+        case GROUP_REP // child of group for replications > 1
         case INPUT_EVENTID
         case INPUT_INT
         case INPUT_STRING
@@ -22,10 +23,11 @@ public final class CdiXmlMemo : Identifiable {
     // common values
     public var type : XMLMemoType
     public var name : String
+    public var repname : String
     public var description : String
     // input values - usage determined by type
-    public let length : Int
-    public let startAddress : Int
+    public var length : Int
+    public var startAddress : Int
     public var defaultValue : Int
     public var maxValue = 2_147_483_647  // 32 bit max
     public var minValue = 0
@@ -45,32 +47,24 @@ public final class CdiXmlMemo : Identifiable {
     // TODO: group repl
     // TODO: How to handle the identification block?  Present or not? Read-only
     
-//    // init mainly for segment, group
-//    init(_ type : XMLMemoType, _ name : String, _ description : String, children : [CdiXmlMemo] = []) {
-//        self.type = type
-//        self.name = name
-//        self.description = description
-//        self.length = 0
-//        self.startAddress = 0
-//        self.defaultValue = 0
-//        self.currentValue = 0
-//        self.children = children
-//    }
-//    // init mainly for input
-//    init(_ type : XMLMemoType, _ name : String, _ description : String, length : Int, startAddress : Int, defaultValue : Int) {
-//        self.type = type
-//        self.name = name
-//        self.description = description
-//        self.length = length
-//        self.startAddress = startAddress
-//        self.defaultValue = defaultValue
-//        self.currentValue = defaultValue
-//        self.children = []
-//    }
+    // copy ctor
+    init(_ memo : CdiXmlMemo) {
+        self.type = memo.type
+        self.name = memo.name
+        self.repname = memo.repname
+        self.description = memo.description
+        self.length = memo.length
+        self.startAddress = memo.startAddress
+        self.defaultValue = memo.defaultValue
+        self.currentValue = memo.currentValue
+        self.children = memo.children // TODO: is this where we put a deep copy?
+    }
+
     // only for creating a null object
     init() {
         self.type = .TOPLEVEL
         self.name = ""
+        self.repname = ""
         self.description = ""
         self.length = 0
         self.startAddress = 0
@@ -93,6 +87,33 @@ func getDataFromFile(_ file : String) -> Data? {
     } catch {
         print ("caught \(error)")
         return nil
+    }
+}
+
+// recurse through the Mmeo tree to expand group(replication>1) -> group with
+public func processGroupReplication(_ memo : CdiXmlMemo) {
+    if memo.type == .GROUP  && memo.length > 1 { // length holds replication count
+        // here, replication is required
+        // copy the current node to get children, etc,
+        let newChildNode = CdiXmlMemo(memo)
+        newChildNode.type = .GROUP_REP // this will be the master that's copied for the new childen
+
+        // drop children in prior memo
+        memo.children = []  // clears old elements (int, event, even group) that are now in new sub-elements
+
+        // add repl nodes as children of original
+        for i in 1...memo.length {
+            // TODO: is this where we put a deep copy?
+            let tempChildNode = CdiXmlMemo(newChildNode)  // create a new, to-be child node
+            tempChildNode.name = memo.repname+" \(i)"
+            memo.children?.append(tempChildNode)
+        }
+    }
+    // done if needed here, descend into children (including the new .GROUP_REP nodes)
+    if let children = memo.children {
+        for child in children {
+            processGroupReplication(child)
+        }
     }
 }
 
@@ -279,9 +300,11 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
         case "segment" :
             segmentStart()
         case "group" :
-            groupStart()
+            groupStart(attributes: attributes)
         case "name" :
             nameSubStart()
+        case "repname" :
+            repnameSubStart()
         case "description" :
             descSubStart()
         case "default" :
@@ -319,6 +342,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
             groupEnd()
         case "name" :
             nameSubEnd()
+        case "repname" :
+            repnameSubEnd()
         case "description" :
             descSubEnd()
         case "default" :
@@ -347,6 +372,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
         switch currentTextState { // what kind of element was this text within?
         case .NAME :
             memoStack[memoStack.count-1].name = foundCharacters
+        case .REPNAME :
+            memoStack[memoStack.count-1].repname = foundCharacters
         case .DESCRIPTION :
             memoStack[memoStack.count-1].description = foundCharacters
         case .DEFAULT :
@@ -372,6 +399,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
     enum NextTextOperation {
         case NONE
         case NAME
+        case REPNAME
         case DESCRIPTION
         case DEFAULT
         case MIN
@@ -414,8 +442,14 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
     }
 
-    func groupStart() {
-        memoStack.append(CdiXmlMemo())
+    func groupStart(attributes : [String:String]) {
+        let thisMemo = CdiXmlMemo()
+        if let attr = attributes["replication"] {
+            if let length = Int(attr) {
+                thisMemo.length = length
+            }
+        }
+        memoStack.append(thisMemo)
     }
     func groupEnd() {
         // TODO: fill and pop
@@ -431,6 +465,15 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
         currentTextState = .NAME
     }
     func nameSubEnd() {
+        currentTextState = .NONE
+    }
+    
+    func repnameSubStart() {
+        // process repname sub-element by adding to existing memo
+        // next character content goes to the repname of the most recent element
+        currentTextState = .REPNAME
+    }
+    func repnameSubEnd() {
         currentTextState = .NONE
     }
     
