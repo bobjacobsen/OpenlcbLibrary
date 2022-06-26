@@ -35,14 +35,14 @@ class CanPhysicalLayerGridConnectTest: XCTestCase {
         let gc = CanPhysicalLayerGridConnect(callback: captureString)
 
         gc.sendCanFrame(CanFrame(cid:4, nodeID: NodeID(0x010203040506), alias: 0xABC))
-        XCTAssertEqual(capturedString, ":X04506ABCN;\r\n")
+        XCTAssertEqual(capturedString, ":X04506ABCN;\n")
     }
     
     func testVerifyNodeSent() {
         let gc = CanPhysicalLayerGridConnect(callback: captureString)
         
         gc.sendCanFrame(CanFrame(control:0x19170, alias:0x365, data: [0x02, 0x01, 0x12, 0xFE, 0x05, 0x6C]))
-        XCTAssertEqual(capturedString, ":X19170365N020112FE056C;\r\n")
+        XCTAssertEqual(capturedString, ":X19170365N020112FE056C;\n")
     }
     
     func testOneFrameReceivedExactlyHeaderOnly() {

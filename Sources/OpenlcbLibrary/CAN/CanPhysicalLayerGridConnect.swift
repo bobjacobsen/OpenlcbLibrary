@@ -16,7 +16,7 @@ import Foundation
 public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
     
     // callback to send a string-formatted frame over the link
-    let canSendCallback : (_ : String) -> ()  // argument is the text to be send, including CRLF as needed
+    let canSendCallback : (_ : String) -> ()  // argument is the text to be send, including \n as needed
     
     init( callback : @escaping (_ : String) -> () ) {
         canSendCallback = callback
@@ -27,7 +27,7 @@ public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
         for byte in frame.data {
             output += "\(String(format:"%02X", byte))"
         }
-        output += ";\r\n"
+        output += ";\n"
         canSendCallback(output)
     }
     
