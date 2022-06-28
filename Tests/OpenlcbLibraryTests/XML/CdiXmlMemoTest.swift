@@ -21,7 +21,8 @@ class CdiXmlMemoTest: XCTestCase {
     func testStringElementFromFile() throws {
         #if os(macOS)  // file access only works on macOS due to file location?
         // set up the same file
-        let file = "tower-lcc-cdi.xml" //this is the file we will read from in ~/Documents
+        //let file = "tower-lcc-cdi.xml" //this is the file we will read from in ~/Documents
+        let file = "cdi-pretty.xml" //this is the file we will read from in ~/Documents
         let data = getDataFromFile(file)
         print (data as Any)
 
@@ -35,6 +36,7 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
 
         // print (delegate.memoStack)
         #endif
@@ -60,6 +62,7 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
 
         XCTAssertEqual(delegate.memoStack.count, 1)
         XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
@@ -71,7 +74,18 @@ class CdiXmlMemoTest: XCTestCase {
     }
 
     func testSeqmentOfIntElement() throws {
-        let data : Data = ("<cdi><segment><name>NameSeg</name><description>DescSeg</description><int><name>Name</name><description>Desc</description></int></segment></cdi>".data(using: .utf8))!
+        let data : Data =  ("""
+                        <cdi>
+                            <segment space="21" origin="123">
+                                <name>NameSeg</name>
+                                <description>DescSeg</description>
+                                <int>
+                                    <name>Name</name>
+                                    <description>Desc</description>
+                                </int>
+                            </segment>
+                        </cdi>
+                    """.data(using: .utf8))!
  
         let parser = XMLParser(data: data)
         parser.shouldResolveExternalEntities = false
@@ -82,7 +96,8 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
-
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
+        
         XCTAssertEqual(delegate.memoStack.count, 1)
         XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
         
@@ -92,12 +107,27 @@ class CdiXmlMemoTest: XCTestCase {
         
         XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 1)
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .INPUT_INT)
+        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].space, 21)
+        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].startAddress, 123)
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].name, "Name")
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].description, "Desc")
     }
 
-    func testGroupOfIntElement() throws {
-        let data : Data = ("<cdi><group><name>NameSeg</name><description>DescSeg</description><int><name>Name</name><description>Desc</description></int></group></cdi>".data(using: .utf8))!
+    func testGroupOfIntElements() throws {
+        let data : Data = ("""
+                          <cdi>
+                            <group>
+                                <name>NameSeg</name>
+                                <description>DescSeg</description>
+                                <int length="2">
+                                    <name>Name</name>
+                                    <description>Desc</description>
+                                </int>
+                                <int>
+                                </int>
+                            </group>
+                        </cdi>
+                    """.data(using: .utf8))!
  
         let parser = XMLParser(data: data)
         parser.shouldResolveExternalEntities = false
@@ -108,6 +138,7 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
 
         XCTAssertEqual(delegate.memoStack.count, 1)
         XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
@@ -116,10 +147,12 @@ class CdiXmlMemoTest: XCTestCase {
         XCTAssertEqual(delegate.memoStack[0].children![0].name, "NameSeg")
         XCTAssertEqual(delegate.memoStack[0].children![0].description, "DescSeg")
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 1)
+        XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 2)
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .INPUT_INT)
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].name, "Name")
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].description, "Desc")
+        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].startAddress, 0)
+        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].startAddress, 2)
     }
 
     func testGroupOfThreeElement() throws {
@@ -128,8 +161,8 @@ class CdiXmlMemoTest: XCTestCase {
                                 <name>NameSeg</name>
                                 <repname>RepNameSeg</repname>
                                 <description>DescSeg</description>
-                                <int><name>Name</name><description>Desc</description></int>"
-                                <string></string>
+                                <int length="2"><name>Name</name><description>Desc</description></int>"
+                                <string length="3" offset="4"></string>
                                 <eventid><name>NameE</name><description>DescE</description></eventid>
                             </group></cdi>
                         """.data(using: .utf8))!
@@ -143,7 +176,8 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
-        
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
+
         XCTAssertEqual(delegate.memoStack.count, 1)
         XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
         
@@ -157,14 +191,17 @@ class CdiXmlMemoTest: XCTestCase {
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .INPUT_INT)
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].name, "Name")
         XCTAssertEqual(delegate.memoStack[0].children![0].children![0].description, "Desc")
+        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].startAddress, 0)
 
         XCTAssertEqual(delegate.memoStack[0].children![0].children![1].type, .INPUT_STRING)
         XCTAssertEqual(delegate.memoStack[0].children![0].children![1].name, "")
         XCTAssertEqual(delegate.memoStack[0].children![0].children![1].description, "")
+        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].startAddress, 6) // 2 plus 4 offset
 
         XCTAssertEqual(delegate.memoStack[0].children![0].children![2].type, .INPUT_EVENTID)
         XCTAssertEqual(delegate.memoStack[0].children![0].children![2].name, "NameE")
         XCTAssertEqual(delegate.memoStack[0].children![0].children![2].description, "DescE")
+        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].startAddress, 9)
     }
 
     func testTripleRepGroupOfTwoElement() throws {
@@ -189,6 +226,7 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
 
         XCTAssertEqual(delegate.memoStack.count, 1)
         XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
@@ -255,6 +293,7 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
 
         // check for content
         XCTAssertEqual(delegate.memoStack.count, 1)
@@ -294,6 +333,7 @@ class CdiXmlMemoTest: XCTestCase {
         parser.parse()
         // and post-process
         processGroupReplication(delegate.memoStack[0])
+        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
     }
     
     func testTwoRRCirKitsSegmentsSample() throws {

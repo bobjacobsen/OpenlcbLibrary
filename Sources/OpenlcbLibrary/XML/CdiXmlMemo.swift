@@ -27,11 +27,15 @@ public final class CdiXmlMemo : Identifiable {
     public var description : String
     // input values - usage determined by type
     public var length : Int
-    public var startAddress : Int
+    public var offset : Int                 // initial offset from the CDI
+    public var space : Int
+    
     public var defaultValue : Int
-    public var maxValue = 2_147_483_647  // 32 bit max
+    public var maxValue = 2_147_483_647     // 32 bit max
     public var minValue = 0
     
+    public var startAddress : Int // set on segment element, otherwise computed
+
     public var currentValue : Int
     
     public var children : [CdiXmlMemo]? // Optional required to display in SwiftUI?  Never nil here.
@@ -54,10 +58,21 @@ public final class CdiXmlMemo : Identifiable {
         self.repname = memo.repname
         self.description = memo.description
         self.length = memo.length
+        self.offset = memo.offset
+        self.space = memo.space
         self.startAddress = memo.startAddress
         self.defaultValue = memo.defaultValue
         self.currentValue = memo.currentValue
-        self.children = memo.children // TODO: is this where we put a deep copy?
+        // make a recursive deep copy of memo.children
+        self.children = nil
+        if let children = memo.children {
+            self.children = []
+            for child in children {
+                self.children!.append(CdiXmlMemo(child))
+            }
+        }
+
+        
     }
 
     // only for creating a null object
@@ -67,7 +82,9 @@ public final class CdiXmlMemo : Identifiable {
         self.repname = ""
         self.description = ""
         self.length = 0
+        self.offset = 0
         self.startAddress = 0
+        self.space = 0
         self.defaultValue = 0
         self.currentValue = 0
         self.children = []
@@ -95,7 +112,7 @@ public func processGroupReplication(_ memo : CdiXmlMemo) {
     if memo.type == .GROUP  && memo.length > 1 { // length holds replication count
         // here, replication is required
         // copy the current node to get children, etc,
-        let newChildNode = CdiXmlMemo(memo)
+        let newChildNode = CdiXmlMemo(memo) // includes making a deep copy
         newChildNode.type = .GROUP_REP // this will be the master that's copied for the new childen
 
         // drop children in prior memo
@@ -103,7 +120,6 @@ public func processGroupReplication(_ memo : CdiXmlMemo) {
 
         // add repl nodes as children of original
         for i in 1...memo.length {
-            // TODO: is this where we put a deep copy?
             let tempChildNode = CdiXmlMemo(newChildNode)  // create a new, to-be child node
             tempChildNode.name = memo.repname+" \(i)"
             memo.children?.append(tempChildNode)
@@ -116,6 +132,30 @@ public func processGroupReplication(_ memo : CdiXmlMemo) {
         }
     }
 }
+
+// Recursively scan the tree (depth first) assigning starting addresses.
+// Assumes that group expansion has already taken place (or won't be done)
+public func computeMemoryLocations(_ memo : CdiXmlMemo, space : Int, endAddress : Int) -> Int {  // returns endAddress of entire memo subtree
+    var nextSpace = space
+    var newEndAddress = endAddress
+    
+    if memo.type == .SEGMENT {
+        nextSpace = memo.space
+        newEndAddress = memo.startAddress
+    } else {
+        memo.startAddress = endAddress+memo.offset
+        newEndAddress = memo.startAddress+memo.length
+    }
+    memo.space = nextSpace
+    // descend into children (including the new .GROUP_REP nodes)
+    if let children = memo.children {
+        for child in children {
+            newEndAddress = computeMemoryLocations(child, space: nextSpace, endAddress: newEndAddress)
+        }
+    }
+    return newEndAddress
+}
+
 
 public func sampleCdiXmlData() -> [CdiXmlMemo] {
     let data : Data = ("""
@@ -132,141 +172,249 @@ public func sampleCdiXmlData() -> [CdiXmlMemo] {
                         </group>
                     </segment>
                     
-                    <segment>
-                      <name>Power Monitor</name>
-                        <eventid>
-                         <name>Power OK</name>
-                            <description>EventID</description>
-                        </eventid>
-                        <eventid>
-                         <name>Power Not OK</name>
-                            <description>EventID (may be lost)</description>
-                        </eventid>
+                    <segment space="253" origin="7744">
+                      <name>Node Power Monitor</name>
+                      <int size="1">
+                        <name>Message Options</name>
+                        <map>
+                          <relation>
+                            <property>0</property>
+                            <value>None</value>
+                          </relation>
+                          <relation>
+                            <property>1</property>
+                            <value>Send Power OK only</value>
+                          </relation>
+                          <relation>
+                            <property>2</property>
+                            <value>Send both Power OK and Power Not OK</value>
+                          </relation>
+                        </map>
+                      </int>
+                      <eventid>
+                        <name>Power OK</name>
+                        <description>EventID</description>
+                      </eventid>
+                      <eventid>
+                        <name>Power Not OK</name>
+                        <description>EventID (may be lost)</description>
+                      </eventid>
                     </segment>
-
-                    <segment space='253' origin='128'>
+                    <segment space="253" origin="128">
                       <name>Port I/O</name>
                       <group replication="16">
-                      <name>Select Input/Output line.</name>
+                        <name>Line</name>
+                        <description>Select Input/Output line.</description>
                         <repname>Line</repname>
-                        <group>
-                          <name>I/O</name>
-                          <string size="32">
-                            <name>User ID</name>
-                          </string>
+                        <string size="32">
+                          <name>Line Description</name>
+                        </string>
+                        <int size="1" offset="11424">
+                          <name>Output Function</name>
+                          <map>
+                            <relation>
+                              <property>0</property>
+                              <value>None</value>
+                            </relation>
+                            <relation>
+                              <property>1</property>
+                              <value>Steady</value>
+                            </relation>
+                            <relation>
+                              <property>2</property>
+                              <value>Pulse</value>
+                            </relation>
+                            <relation>
+                              <property>3</property>
+                              <value>Blink A</value>
+                            </relation>
+                            <relation>
+                              <property>4</property>
+                              <value>Blink B</value>
+                            </relation>
+                          </map>
+                        </int>
+                        <int size="1">
+                          <name>Receiving the configured Command (C) event(s) will drive or pulse the line:</name>
+                          <map>
+                            <relation>
+                              <property>0</property>
+                              <value>Low  (0V)</value>
+                            </relation>
+                            <relation>
+                              <property>1</property>
+                              <value>High (5V)</value>
+                            </relation>
+                          </map>
+                        </int>
+                        <int size="1">
+                          <name>Input Function</name>
+                          <map>
+                            <relation>
+                              <property>0</property>
+                              <value>None</value>
+                            </relation>
+                            <relation>
+                              <property>1</property>
+                              <value>Normal</value>
+                            </relation>
+                            <relation>
+                              <property>2</property>
+                              <value>Alternating</value>
+                            </relation>
+                          </map>
+                        </int>
+                        <int size="1">
+                          <name>The configured Indication (P) event(s) will be sent when the line is driven:</name>
+                          <map>
+                            <relation>
+                              <property>0</property>
+                              <value>Low  (0V)</value>
+                            </relation>
+                            <relation>
+                              <property>1</property>
+                              <value>High (5V)</value>
+                            </relation>
+                          </map>
+                        </int>
+                        <group replication="2" offset="-11426">
+                          <name>Delay</name>
+                          <description>Delay time values for blinks, pulses, debounce.</description>
+                          <repname>Interval</repname>
+                          <int size="2">
+                            <name>Delay Time (1-60000)</name>
+                          </int>
                           <int size="1">
-                            <name>Output Mode</name>
-                            <default>0</default>
-                               <map>
-                                  <relation><property>0</property><value>None</value></relation>
-                                  <relation><property>1</property><value>Steady</value></relation>
-                                  <relation><property>2</property><value>Pulse</value></relation>
-                                  <relation><property>3</property><value>Blink phase A</value></relation>
-                                  <relation><property>4</property><value>Blink phase B</value></relation>
-                               </map>
-                          </int>
-                          <int size='1'>
-                            <name>Receiving the configured Command (C) event(s) will drive, pulse, or blink the line:</name>
-                            <default>1</default>
-                               <map>
-                                  <relation><property>0</property><value>High (5V)</value></relation>
-                                  <relation><property>1</property><value>Low (0V)</value></relation>
-                               </map>
+                            <name>Units</name>
+                            <map>
+                              <relation>
+                                <property>0</property>
+                                <value>Milliseconds</value>
+                              </relation>
+                              <relation>
+                                <property>1</property>
+                                <value>Seconds</value>
+                              </relation>
+                              <relation>
+                                <property>2</property>
+                                <value>Minutes</value>
+                              </relation>
+                            </map>
                           </int>
                           <int size="1">
-                            <name>Input Mode</name>
-                            <default>0</default>
-                               <map>
-                                  <relation><property>0</property><value>None</value></relation>
-                                  <relation><property>1</property><value>Normal</value></relation>
-                                  <relation><property>2</property><value>Alternate action</value></relation>
-                               </map>
+                            <name>Retrigger</name>
+                            <map>
+                              <relation>
+                                <property>0</property>
+                                <value>No</value>
+                              </relation>
+                              <relation>
+                                <property>1</property>
+                                <value>Yes</value>
+                              </relation>
+                            </map>
                           </int>
-                          <int size='1'>
-                            <name>The configured Indication (P) event(s) will be sent when the line is driven:</name>
-                            <default>1</default>
-                               <map>
-                                  <relation><property>0</property><value>High (5V)</value></relation>
-                                  <relation><property>1</property><value>Low (0V)</value></relation>
-                               </map>
-                          </int>
-                          </group>
-                          <group replication="2">
-                            <name>Delay</name>
-                            <description>Int 1 = Delay, Int 2 = Input hold time - Output length</description>
-                            <repname>Interval</repname>
-                            <int size="2">
-                              <name />
-                              <description>Delay Time (1-60000).</description>
-                              <min>0</min>
-                              <max>60000</max>
-                            </int>
-                            <int size="1">
-                              <name />
-                              <map>
-                              <default>0</default>
-                                <relation><property>0</property><value>Milliseconds</value></relation>
-                                <relation><property>1</property><value>Seconds</value></relation>
-                                <relation><property>2</property><value>Minutes</value></relation>
-                              </map>
-                            </int>
-                            <int size="1">
-                              <name>Retrigger</name>
-                              <map>
-                                <relation><property>0</property><value>No</value></relation>
-                                <relation><property>1</property><value>Yes</value></relation>
-                              </map>
-                            </int>
-                          </group>
-                          <group replication="6">
-                            <name>Commands</name>
-                            <description>Consumer commands.</description>
-                            <repname>Event</repname>
-                            <eventid>
-                              <description>(C) When this event occurs,</description>
-                            </eventid>
-                            <int size="1">
-                              <name>the line state will be changed to.</name>
-                              <default>0</default>
-                              <map>
-                                <relation><property>0</property><value>None</value></relation>
-                                <relation><property>1</property><value>On  (Line Active)</value></relation>
-                                <relation><property>2</property><value>Off (Line Inactive)</value></relation>
-                                <relation><property>3</property><value>Change (Toggle)</value></relation>
-                                <relation><property>4</property><value>Veto On  (Active)</value></relation>
-                                <relation><property>5</property><value>Veto Off (Inactive)</value></relation>
-                                <relation><property>6</property><value>Gated On  (Non Veto Output)</value></relation>
-                                <relation><property>7</property><value>Gated Off (Non Veto Output)</value></relation>
-                                <relation><property>8</property><value>Gated Change (Non Veto Toggle)</value></relation>
-                              </map>
-                            </int>
-                          </group>
-                          <group replication="6">
-                            <name>Indications</name>
-                            <description>Producer commands.</description>
-                            <repname>Event</repname>
-                            <int size="1">
-                              <name>Upon this action</name>
-                              <name>Triggers</name>
-                              <default>0</default>
-                              <map>
-                                <relation><property>0</property><value>None</value></relation>
-                                <relation><property>1</property><value>Output State On command</value></relation>
-                                <relation><property>2</property><value>Output State Off command</value></relation>
-                                <relation><property>3</property><value>Output On (Function hi)</value></relation>
-                                <relation><property>4</property><value>Output Off (Function lo)</value></relation>
-                                <relation><property>5</property><value>Input On</value></relation>
-                                <relation><property>6</property><value>Input Off</value></relation>
-                                <relation><property>7</property><value>Gated On (Not Veto Input)</value></relation>
-                                <relation><property>8</property><value>Gated Off (Not Veto Input)</value></relation>
-                              </map>
-                            </int>
-                            <eventid>
-                              <description>(P) this event will be sent.</description>
-                            </eventid>
-                          </group>
                         </group>
-
+                        <group replication="6">
+                          <name>Event</name>
+                          <repname>Event</repname>
+                          <eventid>
+                            <name>Command</name>
+                            <description>(C) When this event occurs</description>
+                          </eventid>
+                          <int size="1">
+                            <name>Action</name>
+                            <description>the line state will be changed to</description>
+                            <map>
+                              <relation>
+                                <property>0</property>
+                                <value>None</value>
+                              </relation>
+                              <relation>
+                                <property>1</property>
+                                <value>On  (Line Active)</value>
+                              </relation>
+                              <relation>
+                                <property>2</property>
+                                <value>Off (Line Inactive)</value>
+                              </relation>
+                              <relation>
+                                <property>3</property>
+                                <value>Change (Toggle)</value>
+                              </relation>
+                              <relation>
+                                <property>4</property>
+                                <value>Veto On  (Active)</value>
+                              </relation>
+                              <relation>
+                                <property>5</property>
+                                <value>Veto Off (Inactive)</value>
+                              </relation>
+                              <relation>
+                                <property>6</property>
+                                <value>Gated On  (Non Veto Output)</value>
+                              </relation>
+                              <relation>
+                                <property>7</property>
+                                <value>Gated Off (Non Veto Output)</value>
+                              </relation>
+                              <relation>
+                                <property>8</property>
+                                <value>Gated Change (Non Veto Toggle)</value>
+                              </relation>
+                            </map>
+                          </int>
+                        </group>
+                        <group replication="6">
+                          <name>Event</name>
+                          <repname>Event</repname>
+                          <int size="1">
+                            <name>Upon this action</name>
+                            <map>
+                              <relation>
+                                <property>0</property>
+                                <value>None</value>
+                              </relation>
+                              <relation>
+                                <property>1</property>
+                                <value>Output State On command</value>
+                              </relation>
+                              <relation>
+                                <property>2</property>
+                                <value>Output State Off command</value>
+                              </relation>
+                              <relation>
+                                <property>3</property>
+                                <value>Output On (Function hi)</value>
+                              </relation>
+                              <relation>
+                                <property>4</property>
+                                <value>Output Off (Function lo)</value>
+                              </relation>
+                              <relation>
+                                <property>5</property>
+                                <value>Input On</value>
+                              </relation>
+                              <relation>
+                                <property>6</property>
+                                <value>Input Off</value>
+                              </relation>
+                              <relation>
+                                <property>7</property>
+                                <value>Gated On (Non Veto Input)</value>
+                              </relation>
+                              <relation>
+                                <property>8</property>
+                                <value>Gated Off (Non Veto Input)</value>
+                              </relation>
+                            </map>
+                          </int>
+                          <eventid>
+                            <name>Indicator</name>
+                            <description>(P) this event will be sent</description>
+                          </eventid>
+                        </group>
+                      </group>
                     </segment>
                     </cdi>
                     """.data(using: .utf8))!
@@ -298,7 +446,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
         case "acdi" :
             acdiStart()
         case "segment" :
-            segmentStart()
+            segmentStart(attributes: attributes)
         case "group" :
             groupStart(attributes: attributes)
         case "name" :
@@ -414,25 +562,36 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
         memoStack.append(CdiXmlMemo())
      }
     func cdiEnd() {
-        // TODO: leave in place, don't pop, report as end element
     }
 
     func acdiStart() {
         // TODO: add standard-defined ACDI contents
     }
     func acdiEnd() {
-        // TODO: add standard-defined ACDI contents
     }
 
     func identificationStart() {
         // TODO: add standard-defined Identification contents
     }
     func identificationEnd() {
-        // TODO: add standard-defined Identification contents
     }
 
-    func segmentStart() {
-        memoStack.append(CdiXmlMemo())
+    func segmentStart(attributes : [String:String]) {
+        let thisMemo = CdiXmlMemo()
+        thisMemo.type = .SEGMENT
+        thisMemo.space = 0 // TODO: Is this the right default? Check CDI definition
+        if let attr = attributes["space"] {
+            if let space = Int(attr) {
+                thisMemo.space = space
+            }
+        }
+        thisMemo.startAddress = 0
+        if let attr = attributes["origin"] {
+            if let origin = Int(attr) {
+                thisMemo.startAddress = origin
+            }
+        }
+        memoStack.append(thisMemo)
     }
     func segmentEnd() {
         // TODO: fill and pop
@@ -447,6 +606,12 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
         if let attr = attributes["replication"] {
             if let length = Int(attr) {
                 thisMemo.length = length
+            }
+        }
+        thisMemo.offset = 0
+        if let attr = attributes["offset"] {
+            if let offset = Int(attr) {
+                thisMemo.offset = offset
             }
         }
         memoStack.append(thisMemo)
@@ -514,8 +679,20 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
     }
     
     func intStart(attributes : [String:String]) {
-        let memo = CdiXmlMemo()
-        memoStack.append(memo)
+        let thisMemo = CdiXmlMemo()
+        thisMemo.length = 1
+        if let attr = attributes["length"] {
+            if let length = Int(attr) {
+                thisMemo.length = length
+            }
+        }
+        thisMemo.offset = 0
+        if let attr = attributes["offset"] {
+            if let offset = Int(attr) {
+                thisMemo.offset = offset
+            }
+        }
+        memoStack.append(thisMemo)
     }
     func intEnd()  {
         let current = memoStack.removeLast()
@@ -527,7 +704,15 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
     }
 
     func eventIdStart(attributes : [String:String]) {
-        memoStack.append(CdiXmlMemo())
+        let thisMemo = CdiXmlMemo()
+        thisMemo.length = 8
+        thisMemo.offset = 0
+        if let attr = attributes["offset"] {
+            if let offset = Int(attr) {
+                thisMemo.offset = offset
+            }
+        }
+        memoStack.append(thisMemo)
     }
     func eventIdEnd()  {
         let current = memoStack.removeLast()
@@ -538,7 +723,19 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate {
     }
 
     func stringStart(attributes : [String:String]) {
-        memoStack.append(CdiXmlMemo())
+        let thisMemo = CdiXmlMemo()
+        if let attr = attributes["length"] {
+            if let length = Int(attr) {
+                thisMemo.length = length
+            }
+        }
+        thisMemo.offset = 0
+        if let attr = attributes["offset"] {
+            if let offset = Int(attr) {
+                thisMemo.offset = offset
+            }
+        }
+        memoStack.append(thisMemo)
     }
     func stringEnd()  {
         let current = memoStack.removeLast()
