@@ -23,22 +23,12 @@ class CdiXmlMemoTest: XCTestCase {
         // set up the same file
         //let file = "tower-lcc-cdi.xml" //this is the file we will read from in ~/Documents
         let file = "cdi-pretty.xml" //this is the file we will read from in ~/Documents
-        let data = getDataFromFile(file)
+        let data = CdiSampleDataAccess.getDataFromFile(file)
         print (data as Any)
 
-        let parser = XMLParser(data: data!)
-        print (parser)
-        parser.shouldResolveExternalEntities = false
-        let delegate = CdiParserDelegate()
-        parser.delegate = delegate
+        let _ = CdiXmlMemo.process(data!)
 
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
-
-        // print (delegate.memoStack)
+        // print (result)
         #endif
     }
 
@@ -53,24 +43,15 @@ class CdiXmlMemoTest: XCTestCase {
                             </int></cdi>
                         """.data(using: .utf8))!
  
-        let parser = XMLParser(data: data)
-        parser.shouldResolveExternalEntities = false
-        let delegate = CdiParserDelegate()
-        parser.delegate = delegate
+        let result = CdiXmlMemo.process(data)
+        
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
 
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
-
-        XCTAssertEqual(delegate.memoStack.count, 1)
-        XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
-
-        XCTAssertEqual(delegate.memoStack[0].children![0].type, .INPUT_INT)
-        XCTAssertEqual(delegate.memoStack[0].children![0].minValue, 15)
-        XCTAssertEqual(delegate.memoStack[0].children![0].maxValue, 20)
-        XCTAssertEqual(delegate.memoStack[0].children![0].defaultValue, 12)
+        XCTAssertEqual(result[0].children![0].type, .INPUT_INT)
+        XCTAssertEqual(result[0].children![0].minValue, 15)
+        XCTAssertEqual(result[0].children![0].maxValue, 20)
+        XCTAssertEqual(result[0].children![0].defaultValue, 12)
     }
 
     func testSeqmentOfIntElement() throws {
@@ -87,30 +68,21 @@ class CdiXmlMemoTest: XCTestCase {
                         </cdi>
                     """.data(using: .utf8))!
  
-        let parser = XMLParser(data: data)
-        parser.shouldResolveExternalEntities = false
-        let delegate = CdiParserDelegate()
-        parser.delegate = delegate
+        let result = CdiXmlMemo.process(data)
 
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
         
-        XCTAssertEqual(delegate.memoStack.count, 1)
-        XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
+        XCTAssertEqual(result[0].children![0].type, .SEGMENT)
+        XCTAssertEqual(result[0].children![0].name, "NameSeg")
+        XCTAssertEqual(result[0].children![0].description, "DescSeg")
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].type, .SEGMENT)
-        XCTAssertEqual(delegate.memoStack[0].children![0].name, "NameSeg")
-        XCTAssertEqual(delegate.memoStack[0].children![0].description, "DescSeg")
-        
-        XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 1)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .INPUT_INT)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].space, 21)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].startAddress, 123)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].name, "Name")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].description, "Desc")
+        XCTAssertEqual(result[0].children![0].children!.count, 1)
+        XCTAssertEqual(result[0].children![0].children![0].type, .INPUT_INT)
+        XCTAssertEqual(result[0].children![0].children![0].space, 21)
+        XCTAssertEqual(result[0].children![0].children![0].startAddress, 123)
+        XCTAssertEqual(result[0].children![0].children![0].name, "Name")
+        XCTAssertEqual(result[0].children![0].children![0].description, "Desc")
     }
 
     func testGroupOfIntElements() throws {
@@ -129,30 +101,21 @@ class CdiXmlMemoTest: XCTestCase {
                         </cdi>
                     """.data(using: .utf8))!
  
-        let parser = XMLParser(data: data)
-        parser.shouldResolveExternalEntities = false
-        let delegate = CdiParserDelegate()
-        parser.delegate = delegate
+        let result = CdiXmlMemo.process(data)
 
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
-
-        XCTAssertEqual(delegate.memoStack.count, 1)
-        XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].type, .GROUP)
-        XCTAssertEqual(delegate.memoStack[0].children![0].name, "NameSeg")
-        XCTAssertEqual(delegate.memoStack[0].children![0].description, "DescSeg")
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameSeg")
+        XCTAssertEqual(result[0].children![0].description, "DescSeg")
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 2)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .INPUT_INT)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].name, "Name")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].description, "Desc")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].startAddress, 0)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].startAddress, 2)
+        XCTAssertEqual(result[0].children![0].children!.count, 2)
+        XCTAssertEqual(result[0].children![0].children![0].type, .INPUT_INT)
+        XCTAssertEqual(result[0].children![0].children![0].name, "Name")
+        XCTAssertEqual(result[0].children![0].children![0].description, "Desc")
+        XCTAssertEqual(result[0].children![0].children![0].startAddress, 0)
+        XCTAssertEqual(result[0].children![0].children![1].startAddress, 2)
     }
 
     func testGroupOfThreeElement() throws {
@@ -167,41 +130,32 @@ class CdiXmlMemoTest: XCTestCase {
                             </group></cdi>
                         """.data(using: .utf8))!
  
-        let parser = XMLParser(data: data)
-        parser.shouldResolveExternalEntities = false
-        let delegate = CdiParserDelegate()
-        parser.delegate = delegate
+        let result = CdiXmlMemo.process(data)
 
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
-
-        XCTAssertEqual(delegate.memoStack.count, 1)
-        XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].type, .GROUP)
-        XCTAssertEqual(delegate.memoStack[0].children![0].name, "NameSeg")
-        XCTAssertEqual(delegate.memoStack[0].children![0].repname, "RepNameSeg")
-        XCTAssertEqual(delegate.memoStack[0].children![0].description, "DescSeg")
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameSeg")
+        XCTAssertEqual(result[0].children![0].repname, "RepNameSeg")
+        XCTAssertEqual(result[0].children![0].description, "DescSeg")
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 3)
+        XCTAssertEqual(result[0].children![0].children!.count, 3)
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .INPUT_INT)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].name, "Name")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].description, "Desc")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].startAddress, 0)
+        XCTAssertEqual(result[0].children![0].children![0].type, .INPUT_INT)
+        XCTAssertEqual(result[0].children![0].children![0].name, "Name")
+        XCTAssertEqual(result[0].children![0].children![0].description, "Desc")
+        XCTAssertEqual(result[0].children![0].children![0].startAddress, 0)
 
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].type, .INPUT_STRING)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].name, "")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].description, "")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].startAddress, 6) // 2 plus 4 offset
+        XCTAssertEqual(result[0].children![0].children![1].type, .INPUT_STRING)
+        XCTAssertEqual(result[0].children![0].children![1].name, "")
+        XCTAssertEqual(result[0].children![0].children![1].description, "")
+        XCTAssertEqual(result[0].children![0].children![1].startAddress, 6) // 2 plus 4 offset
 
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].type, .INPUT_EVENTID)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].name, "NameE")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].description, "DescE")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].startAddress, 9)
+        XCTAssertEqual(result[0].children![0].children![2].type, .INPUT_EVENTID)
+        XCTAssertEqual(result[0].children![0].children![2].name, "NameE")
+        XCTAssertEqual(result[0].children![0].children![2].description, "DescE")
+        XCTAssertEqual(result[0].children![0].children![2].startAddress, 9)
     }
 
     func testTripleRepGroupOfTwoElement() throws {
@@ -217,54 +171,45 @@ class CdiXmlMemoTest: XCTestCase {
                             </group></cdi>
                         """.data(using: .utf8))!
  
-        let parser = XMLParser(data: data)
-        parser.shouldResolveExternalEntities = false
-        let delegate = CdiParserDelegate()
-        parser.delegate = delegate
+        let result = CdiXmlMemo.process(data)
 
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
-
-        XCTAssertEqual(delegate.memoStack.count, 1)
-        XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].type, .GROUP)
-        XCTAssertEqual(delegate.memoStack[0].children![0].name, "NameGroup")
-        XCTAssertEqual(delegate.memoStack[0].children![0].description, "DescGroup")
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameGroup")
+        XCTAssertEqual(result[0].children![0].description, "DescGroup")
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 3)
+        XCTAssertEqual(result[0].children![0].children!.count, 3)
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .GROUP_REP) // three repl's under the group
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].name, "Repl Name 1")  // created from replication name and
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].type, .GROUP_REP)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].name, "Repl Name 2")  // created from replication name and
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].type, .GROUP_REP)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].name, "Repl Name 3")  // created from replication name and
+        XCTAssertEqual(result[0].children![0].children![0].type, .GROUP_REP) // three repl's under the group
+        XCTAssertEqual(result[0].children![0].children![0].name, "Repl Name 1")  // created from replication name and
+        XCTAssertEqual(result[0].children![0].children![1].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![1].name, "Repl Name 2")  // created from replication name and
+        XCTAssertEqual(result[0].children![0].children![2].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![2].name, "Repl Name 3")  // created from replication name and
 
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].children![0].type, .INPUT_INT) // each repl contains all elements
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].children![0].name, "Int Name")  // created from replication name and number
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].children![0].description, "Desc")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].children![1].type, .INPUT_STRING)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].children![1].name, "")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].children![1].description, "")
+        XCTAssertEqual(result[0].children![0].children![0].children![0].type, .INPUT_INT) // each repl contains all elements
+        XCTAssertEqual(result[0].children![0].children![0].children![0].name, "Int Name")  // created from replication name and number
+        XCTAssertEqual(result[0].children![0].children![0].children![0].description, "Desc")
+        XCTAssertEqual(result[0].children![0].children![0].children![1].type, .INPUT_STRING)
+        XCTAssertEqual(result[0].children![0].children![0].children![1].name, "")
+        XCTAssertEqual(result[0].children![0].children![0].children![1].description, "")
 
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].children![0].type, .INPUT_INT) // each repl contains all elements
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].children![0].name, "Int Name")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].children![0].description, "Desc")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].children![1].type, .INPUT_STRING)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].children![1].name, "")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![1].children![1].description, "")
+        XCTAssertEqual(result[0].children![0].children![1].children![0].type, .INPUT_INT) // each repl contains all elements
+        XCTAssertEqual(result[0].children![0].children![1].children![0].name, "Int Name")
+        XCTAssertEqual(result[0].children![0].children![1].children![0].description, "Desc")
+        XCTAssertEqual(result[0].children![0].children![1].children![1].type, .INPUT_STRING)
+        XCTAssertEqual(result[0].children![0].children![1].children![1].name, "")
+        XCTAssertEqual(result[0].children![0].children![1].children![1].description, "")
 
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].children![0].type, .INPUT_INT) // each repl contains all elements
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].children![0].name, "Int Name")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].children![0].description, "Desc")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].children![1].type, .INPUT_STRING)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].children![1].name, "")
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![2].children![1].description, "")
+        XCTAssertEqual(result[0].children![0].children![2].children![0].type, .INPUT_INT) // each repl contains all elements
+        XCTAssertEqual(result[0].children![0].children![2].children![0].name, "Int Name")
+        XCTAssertEqual(result[0].children![0].children![2].children![0].description, "Desc")
+        XCTAssertEqual(result[0].children![0].children![2].children![1].type, .INPUT_STRING)
+        XCTAssertEqual(result[0].children![0].children![2].children![1].name, "")
+        XCTAssertEqual(result[0].children![0].children![2].children![1].description, "")
 
     }
 
@@ -284,28 +229,19 @@ class CdiXmlMemoTest: XCTestCase {
                             </segment></cdi>
                         """.data(using: .utf8))!
  
-        let parser = XMLParser(data: data)
-        parser.shouldResolveExternalEntities = false
-        let delegate = CdiParserDelegate()
-        parser.delegate = delegate
-
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
+        let result = CdiXmlMemo.process(data)
 
         // check for content
-        XCTAssertEqual(delegate.memoStack.count, 1)
-        XCTAssertEqual(delegate.memoStack[0].children!.count, 1)
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].type, .SEGMENT)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children!.count, 1)
+        XCTAssertEqual(result[0].children![0].type, .SEGMENT)
+        XCTAssertEqual(result[0].children![0].children!.count, 1)
         
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].type, .INPUT_INT)
-        XCTAssertNil(delegate.memoStack[0].children![0].children![0].children)
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].properties, ["0", "1", "2"])
-        XCTAssertEqual(delegate.memoStack[0].children![0].children![0].values, ["None", "On", "Off"])
+        XCTAssertEqual(result[0].children![0].children![0].type, .INPUT_INT)
+        XCTAssertNil(result[0].children![0].children![0].children)
+        XCTAssertEqual(result[0].children![0].children![0].properties, ["0", "1", "2"])
+        XCTAssertEqual(result[0].children![0].children![0].values, ["None", "On", "Off"])
 
     }
     
@@ -329,14 +265,11 @@ class CdiXmlMemoTest: XCTestCase {
         let delegate = CdiParserDelegate()
         parser.delegate = delegate
 
-        // run the parser
-        parser.parse()
-        // and post-process
-        processGroupReplication(delegate.memoStack[0])
-        _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
+        let _ = CdiXmlMemo.process(data)
+
     }
     
     func testTwoRRCirKitsSegmentsSample() throws {
-        _ = sampleCdiXmlData() // this does the parsing
+        _ = CdiSampleDataAccess.sampleCdiXmlData() // this does the parsing
     }
 }
