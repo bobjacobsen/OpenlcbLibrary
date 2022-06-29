@@ -71,7 +71,15 @@ public final class CdiXmlMemo : Identifiable {
                 self.children!.append(CdiXmlMemo(child))
             }
         }
-        
+        self.properties = []
+        for property in memo.properties {
+            self.properties.append(property)
+        }
+        self.values = []
+        for value in memo.values {
+            self.values.append(value)
+        }
+
         
     }
     
