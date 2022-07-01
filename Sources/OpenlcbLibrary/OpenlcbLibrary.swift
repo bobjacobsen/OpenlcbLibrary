@@ -55,12 +55,14 @@ public struct OpenlcbLibrary {
         let rprocessor : Processor = RemoteNodeProcessor(canLink) // track effect of messages on Remote Nodes
         let lprocessor : Processor = LocalNodeProcessor(canLink)  // track effect of messages on Local Node
         let dprocessor : Processor = DatagramProcessor(canLink)   // datagram processor doesn't affect node status
-        // printing process, well, prints
-        let handler : (_ : String) -> () = { (data: String)  in
-            // TODO: do something print-like with ``data``
-            print(data)
-        }
-        let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
+        
+//        // printing process, well, prints
+//        let handler : (_ : String) -> () = { (data: String)  in
+//            // TODO: do something print-like with ``data``
+//            print(data)
+//        }
+//        let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
+        let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // example of processor that extracts info from message
 
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
