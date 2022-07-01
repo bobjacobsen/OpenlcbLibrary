@@ -63,7 +63,7 @@ public struct OpenlcbLibrary {
         let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
 
         // install processors
-        remoteNodeStore.processors = [pprocessor,             rprocessor]
+        remoteNodeStore.processors = [                        rprocessor]
         localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor]
         
     }
