@@ -4,6 +4,8 @@
 //  Created by Bob Jacobsen on 6/1/22.
 //
 
+// TODO: Does this display messages being sent?
+
 import Foundation
 
 /// Provide String versions of the received messages
@@ -74,7 +76,7 @@ struct PrintingProcessor : Processor {
 // ---------------------
 // for sending to a View
 // ---------------------
-var lotsOfLinesToDisplay : [MonitorLine] = [MonitorLine(line: "Initial Content")]
+var lotsOfLinesToDisplay : [MonitorLine] = []
 
 public func printingProcessorPublishLine(string : String) { // set this as ``result`` handler
     let NUMBER_OF_LINES = 100

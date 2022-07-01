@@ -6,6 +6,8 @@
 
 import Foundation
 
+// TODO: Should this also distribute locally-sent information to all the other nodes?  Local and/or remote node stores?
+
 /// Store the available Nodes and provide multiple means of retrieval.
 ///  Storage and indexing methods are an internal detail.
 ///  You can't remove a node; once we know about it, we know about it.
