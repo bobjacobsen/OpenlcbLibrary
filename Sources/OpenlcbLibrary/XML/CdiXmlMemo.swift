@@ -38,8 +38,9 @@ public final class CdiXmlMemo : Identifiable {
     
     public var startAddress : Int // set on segment element, otherwise computed
     
-    public var currentValue : Int
-    
+    public var currentIntValue : Int
+    public var currentStringValue : String
+
     public var children : [CdiXmlMemo]? // Optional required to display in SwiftUI?  Never nil here.
     
     public var properties : [String] = []
@@ -62,7 +63,8 @@ public final class CdiXmlMemo : Identifiable {
         self.space = memo.space
         self.startAddress = memo.startAddress
         self.defaultValue = memo.defaultValue
-        self.currentValue = memo.currentValue
+        self.currentIntValue = memo.currentIntValue
+        self.currentStringValue = memo.currentStringValue
         // make a recursive deep copy of memo.children
         self.children = nil
         if let children = memo.children {
@@ -94,7 +96,8 @@ public final class CdiXmlMemo : Identifiable {
         self.startAddress = 0
         self.space = 0
         self.defaultValue = 0
-        self.currentValue = 0
+        self.currentIntValue = 0
+        self.currentStringValue = ""
         self.children = []
     }
     
