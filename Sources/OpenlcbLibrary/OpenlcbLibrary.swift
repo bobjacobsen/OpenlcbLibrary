@@ -16,8 +16,9 @@ public struct OpenlcbLibrary {
 
     let canLink : CanLink
     
-    public init() {
-        defaultNode = Node(NodeID(0x05_01_01_01_03_01))
+    public init(defaultNodeID : NodeID) {
+        
+        defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01
         
         localNodeStore   = NodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeStore: localNodeStore)
