@@ -99,7 +99,7 @@ public class CanLink : LinkLayer {
         sendAliasAllocationSequence()
         // TODO: wait 200 msec and declare ready to go, see https://stackoverflow.com/questions/27517632/how-to-create-a-delay-in-swift
         // send AMD frame, go to Permitted state
-        link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias) )
+        link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: CanLink.localNodeID.toArray()) )
         state = .Permitted
         // add to map
         aliasToNodeID[localAlias] = CanLink.localNodeID
@@ -277,7 +277,7 @@ public class CanLink : LinkLayer {
         let abort = (receivedAlias == localAlias)
         if (abort ) {
             // Collision!
-            link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias) )
+            link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: CanLink.localNodeID.toArray()) )
             state = .Inhibited
             // TODO: Notify and restart alias process (ala LinkDown, LinkUp? )
         }
@@ -328,7 +328,7 @@ public class CanLink : LinkLayer {
         } else if (frame.header & 0x4_000_000) != 0 { // CID case
             return .CID
         } else {
-            if let retval = ControlFrame(rawValue: Int((frame.header >> 12)&0x3FFFF) ) { return retval } // top 1 bit for out-of-band messages
+            if let retval = ControlFrame(rawValue: Int((frame.header >> 12)&0x2FFFF) ) { return retval } // top 1 bit for out-of-band messages
             else {
                 return .UnknownFormat
             }
