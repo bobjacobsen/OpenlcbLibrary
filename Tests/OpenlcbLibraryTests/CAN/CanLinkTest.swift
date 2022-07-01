@@ -160,7 +160,7 @@ class CanLinkTest: XCTestCase {
 
         canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMR.rawValue, alias: ourAlias))
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMR.rawValue, alias: ourAlias, data: [5, 1, 1, 1, 3, 1]))
         XCTAssertEqual(canLink.state, CanLink.State.Inhibited)
     }
     

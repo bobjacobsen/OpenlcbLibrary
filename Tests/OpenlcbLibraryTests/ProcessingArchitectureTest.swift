@@ -51,7 +51,7 @@ class ProcessingArchitectureTest: XCTestCase {
         let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
         let pnode = Node(NodeID(12))
         pprocessor.process(msg, pnode)
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C InitializationComplete")
+        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C InitializationComplete ")
     }
     
     // test of connecting a CAN link and physical layer
