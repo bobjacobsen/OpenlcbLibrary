@@ -54,7 +54,9 @@ public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
                     // now start to accumulate data from entire message
                     var header : UInt = 0
                     for offset in 2...9 {
-                        header = (header<<4)+(UInt(inboundBuffer[index+offset])&0xF)
+                        let nextChar = UInt(inboundBuffer[index+offset])
+                        let nextByte = nextChar > 0x39 ? (nextChar & 0xF)+9 : nextChar & 0xF
+                        header = (header<<4)+nextByte
                     }
                     // offset 10 is N
                     // offset 11 might be data, might be ;
