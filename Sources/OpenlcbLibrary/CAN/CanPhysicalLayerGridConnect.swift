@@ -12,13 +12,15 @@
 ///         :X19170365N020112FE056C;
 
 import Foundation
+import os
 
 public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
     
+    let logger = Logger(subsystem: "org.ardenwood.OpenlcbLibrary", category: "CanPhysicalLayerGridConnect")
     // callback to send a string-formatted frame over the link
     let canSendCallback : (_ : String) -> ()  // argument is the text to be send, including \n as needed
     
-    init( callback : @escaping (_ : String) -> () ) {
+    public init( callback : @escaping (_ : String) -> () ) {
         canSendCallback = callback
     }
     
@@ -28,13 +30,20 @@ public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
             output += "\(String(format:"%02X", byte))"
         }
         output += ";\n"
+        logger.debug("sending \(output, privacy: .public)")
         canSendCallback(output)
     }
     
     var inboundBuffer : [UInt8] = []
     
+    /// Receive a string from the outside link to be parsed
+    func receiveString(string : String) {
+        receiveChars(data: Array(string.utf8))
+    }
+    
     /// Provide characters from the outside link to be parsed
     func receiveChars(data : [UInt8]) {
+        logger.debug("receive \(data, privacy: .public)")
         inboundBuffer += data
         var lastByte = 0
         if inboundBuffer.contains(0x3B) {  // ';' ends message so we have at least one

@@ -27,12 +27,12 @@ public class CanPhysicalLayer : PhysicalLayer {
     }
     
     // invoked when the physical implementation has actually come up
-    func physicalLayerUp() {
+    public func physicalLayerUp() {
         // notify link level
         let cf = CanFrame(control : CanLink.ControlFrame.LinkUp.rawValue, alias : 0)
         fireListeners(cf)
     }
-    func physicalLayerDown() {
+    public func physicalLayerDown() {
         // notify link level
         let cf = CanFrame(control : CanLink.ControlFrame.LinkDown.rawValue, alias : 0)
         fireListeners(cf)
