@@ -14,7 +14,7 @@ final class OpenlcbLibraryTests: XCTestCase {
     let canPhysicalLayer = CanPhysicalLayerSimulation()
     
     func testCanSetupRuns() {
-        let lib = OpenlcbLibrary()
+        let lib = OpenlcbLibrary(defaultNodeID: NodeID(0x05_01_01_01_03_01))
         lib.configureCanTelnet(canPhysicalLayer)
         
         lib.createSampleData()
@@ -25,7 +25,7 @@ final class OpenlcbLibraryTests: XCTestCase {
     
     /// More of an acceptance test than a unit test.
     func testOperation() {
-        let lib = OpenlcbLibrary()
+        let lib = OpenlcbLibrary(defaultNodeID: NodeID(0x05_01_01_01_03_01))
         lib.configureCanTelnet(canPhysicalLayer)
         lib.createSampleData()
         lib.bringLinkUp(canPhysicalLayer)
