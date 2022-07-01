@@ -11,7 +11,7 @@ public struct CanFrame : Equatable, CustomStringConvertible {
     var header : UInt
     var data : [UInt8]
     
-    public var description : String { "CanFrame header: \(String(format:"%08X", header)) ) \(data)" }
+    public var description : String { "CanFrame header: \(String(format:"0x%08X", header)) ) \(data)" }
 
     init(header : UInt, data : [UInt8] ) {
         self.header = header

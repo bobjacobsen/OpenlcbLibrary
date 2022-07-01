@@ -58,6 +58,7 @@ public struct OpenlcbLibrary {
         // printing process, well, prints
         let handler : (_ : String) -> () = { (data: String)  in
             // TODO: do something print-like with ``data``
+            print(data)
         }
         let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
 
