@@ -57,7 +57,7 @@ class ProcessingArchitectureTest: XCTestCase {
     // test of connecting a CAN link and physical layer
     func testCanLinks() {
         let canPhysicalLayer = CanPhysicalLayer()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         
         // and bring the link up

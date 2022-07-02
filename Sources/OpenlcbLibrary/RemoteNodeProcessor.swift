@@ -58,17 +58,17 @@ struct RemoteNodeProcessor : Processor {
     private func linkUpMessage(_ message : Message, _ node : Node) {
         // affects everybody
         node.state = Node.State.Uninitialized
-        // clear out PIP, SNIP caches
-        node.pipSet = Set<PIP>()
-        node.snip = SNIP()
+        // don't clear out PIP, SNIP caches, they're probably still good
+        // node.pipSet = Set<PIP>()
+        // node.snip = SNIP()
     }
 
     private func linkDownMessage(_ message : Message, _ node : Node) {
         // affects everybody
         node.state = Node.State.Uninitialized
-        // clear out PIP, SNIP caches
-        node.pipSet = Set<PIP>()
-        node.snip = SNIP()
+        // don't clear out PIP, SNIP caches, they're probably still good
+        // node.pipSet = Set<PIP>()
+        // node.snip = SNIP()
     }
 
     private func protocolSupportReply(_ message : Message, _ node : Node) {

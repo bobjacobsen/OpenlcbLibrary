@@ -18,7 +18,7 @@ final class OpenlcbLibraryTests: XCTestCase {
         lib.configureCanTelnet(canPhysicalLayer)
         
         lib.createSampleData()
-        XCTAssertEqual(lib.remoteNodeStore.asArray().count, 33)
+        XCTAssertEqual(lib.remoteNodeStore.asArray().count, 7)
         
         lib.bringLinkUp(canPhysicalLayer)
     }

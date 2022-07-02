@@ -19,9 +19,9 @@ import os
 ///  
 public class CanLink : LinkLayer {
     
-    static let localNodeID  = NodeID(0x05_01_01_01_03_01)  // valid default node ID, static needed to use in initialization
-    var localAliasSeed : UInt64 = localNodeID.nodeId
-    var localAlias : UInt = createAlias12(localNodeID.nodeId)  // 576 with NodeID(0x05_01_01_01_03_01)
+    let localNodeID : NodeID // valid default node ID
+    var localAliasSeed : UInt64
+    var localAlias : UInt
 
     var state : State = .Initial
     
@@ -30,7 +30,10 @@ public class CanLink : LinkLayer {
     var aliasToNodeID : [UInt:NodeID] = [:]
     var nodeIdToAlias : [NodeID:UInt] = [:]
 
-    override public init() {
+    public init(localNodeID : NodeID) {
+        self.localNodeID = localNodeID
+        self.localAliasSeed = localNodeID.nodeId
+        self.localAlias = CanLink.createAlias12(localAliasSeed)
         super.init()
     }
     
@@ -99,11 +102,11 @@ public class CanLink : LinkLayer {
         sendAliasAllocationSequence()
         // TODO: wait 200 msec and declare ready to go, see https://stackoverflow.com/questions/27517632/how-to-create-a-delay-in-swift
         // send AMD frame, go to Permitted state
-        link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: CanLink.localNodeID.toArray()) )
+        link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray()) )
         state = .Permitted
         // add to map
-        aliasToNodeID[localAlias] = CanLink.localNodeID
-        nodeIdToAlias[CanLink.localNodeID] = localAlias
+        aliasToNodeID[localAlias] = localNodeID
+        nodeIdToAlias[localNodeID] = localAlias
         // send AME with no NodeID to get full alias map
         link!.sendCanFrame( CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias) )
         // notify upper levels
@@ -140,13 +143,13 @@ public class CanLink : LinkLayer {
         if (abortOnAliasCollision(frame)) { return }
         if (state != .Permitted) { return }
         // check node ID
-        var matchNodeID = CanLink.localNodeID
+        var matchNodeID = localNodeID
         if (frame.data.count >= 6) {
             matchNodeID = NodeID(frame.data)
         }
-        if (CanLink.localNodeID == matchNodeID) {
+        if (localNodeID == matchNodeID) {
             // matched, send RID
-            let returnFrame = CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: CanLink.localNodeID.toArray())
+            let returnFrame = CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray())
             link!.sendCanFrame( returnFrame )
         }
     }
@@ -277,7 +280,7 @@ public class CanLink : LinkLayer {
         let abort = (receivedAlias == localAlias)
         if (abort ) {
             // Collision!
-            link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: CanLink.localNodeID.toArray()) )
+            link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
             state = .Inhibited
             // TODO: Notify and restart alias process (ala LinkDown, LinkUp? )
         }
@@ -287,10 +290,10 @@ public class CanLink : LinkLayer {
     /// Send the alias allocation sequence
     func sendAliasAllocationSequence() {
         localAliasSeed = CanLink.incrementAlias48(localAliasSeed)
-        link!.sendCanFrame( CanFrame(cid: 7, nodeID: CanLink.localNodeID, alias: localAlias) )
-        link!.sendCanFrame( CanFrame(cid: 6, nodeID: CanLink.localNodeID, alias: localAlias) )
-        link!.sendCanFrame( CanFrame(cid: 5, nodeID: CanLink.localNodeID, alias: localAlias) )
-        link!.sendCanFrame( CanFrame(cid: 4, nodeID: CanLink.localNodeID, alias: localAlias) )
+        link!.sendCanFrame( CanFrame(cid: 7, nodeID: localNodeID, alias: localAlias) )
+        link!.sendCanFrame( CanFrame(cid: 6, nodeID: localNodeID, alias: localAlias) )
+        link!.sendCanFrame( CanFrame(cid: 5, nodeID: localNodeID, alias: localAlias) )
+        link!.sendCanFrame( CanFrame(cid: 4, nodeID: localNodeID, alias: localAlias) )
         link!.sendCanFrame( CanFrame(control : ControlFrame.RID.rawValue,   alias: localAlias) )
     }
     

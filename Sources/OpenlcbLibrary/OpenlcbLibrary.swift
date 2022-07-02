@@ -23,7 +23,7 @@ public struct OpenlcbLibrary {
         localNodeStore   = NodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeStore: localNodeStore)
         
-        canLink = CanLink()
+        canLink = CanLink(localNodeID: defaultNodeID)
     }
     
     /// The ``configureCanTelnet`` method will set up a system with
@@ -104,7 +104,7 @@ public struct OpenlcbLibrary {
         
         // Leave 03,03,03,03,03,03 uncreated as that ID is used for testing
         
-        for i : UInt64 in 0...30 {
+        for i : UInt64 in 0...4 {
             let nextID = NodeID(0x02_02_02_02_02_03).nodeId+i
             let nextNode = Node(NodeID(nextID))
             nextNode.snip.manufacturerName = "Auto Nodes"

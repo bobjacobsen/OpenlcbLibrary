@@ -51,7 +51,7 @@ class CanLinkTest: XCTestCase {
     // MARK: - Test PHY Up
     func testLinkUpSequence() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
         canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
@@ -67,7 +67,7 @@ class CanLinkTest: XCTestCase {
     // MARK: - Test PHY Down, Up, Error Information
     func testLinkDownSequence() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
         canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
@@ -81,7 +81,7 @@ class CanLinkTest: XCTestCase {
 
     func testAEIE2noData() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Permitted
 
@@ -92,19 +92,19 @@ class CanLinkTest: XCTestCase {
     // MARK: - Test AME (Local Node)
     func testAMEnoData() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.state = CanLink.State.Permitted
 
         canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.AME.rawValue, alias: 0))
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias, data: CanLink.localNodeID.toArray()))
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias, data: canLink.localNodeID.toArray()))
     }
  
     func testAMEnoDataInhibited() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Inhibited
 
@@ -114,7 +114,7 @@ class CanLinkTest: XCTestCase {
  
     func testAMEMatchEvent() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Permitted
@@ -123,12 +123,12 @@ class CanLinkTest: XCTestCase {
         frame.data = [5,1,1,1,3,1]
         canPhysicalLayer.fireListeners(frame)
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias, data: CanLink.localNodeID.toArray()))
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias, data: canLink.localNodeID.toArray()))
     }
 
     func testAMEnotMatchEvent() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Permitted
 
@@ -141,19 +141,19 @@ class CanLinkTest: XCTestCase {
     // MARK: - Test Alias Collisions (Local Node)
     func testCIDreceivedMatch() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Permitted
 
-        canPhysicalLayer.fireListeners(CanFrame(cid: 7, nodeID: CanLink.localNodeID, alias: ourAlias))
+        canPhysicalLayer.fireListeners(CanFrame(cid: 7, nodeID: canLink.localNodeID, alias: ourAlias))
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
     }
     
     func testRIDreceivedMatch() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Permitted
@@ -166,14 +166,14 @@ class CanLinkTest: XCTestCase {
     
     func testCheckMTImapping() {
         
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         XCTAssertEqual(canLink.canHeaderToFullFormat(frame: CanFrame(header:0x19490247, data:[]) ),
                        MTI.VerifyNodeIDNumberGlobal )
     }
 
     func testSimpleGlobalData() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
         canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
@@ -197,7 +197,7 @@ class CanLinkTest: XCTestCase {
 
     func testSimpleAddressedData() { // Test start=yes, end=yes frame
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
         canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
@@ -230,7 +230,7 @@ class CanLinkTest: XCTestCase {
     // multi-frame addressed messages - SNIP reply
     func testMultiFrameAddressedData() { // Test message in 3 frames
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         let messageLayer = MessageMockLayer()
         canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
@@ -270,7 +270,7 @@ class CanLinkTest: XCTestCase {
     
     func testAmdAmrSequence() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         canLink.linkPhysicalLayer(canPhysicalLayer)
 
@@ -292,7 +292,7 @@ class CanLinkTest: XCTestCase {
     // MARK: - Data size handling
     
     func testSegmentDataArray() {
-        let canLink = CanLink()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         
         // no data
         XCTAssertEqual(canLink.segmentDataArray(UInt(0x123), []), [[0x1,0x23]])
