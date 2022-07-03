@@ -39,9 +39,9 @@ public class LinkLayer {
     func linkStateChange(state : State) {
         var msg : Message
         if state == State.Permitted {
-            msg = Message(mti: MTI.LinkLevelUp, source: NodeID(0) )
+            msg = Message(mti: MTI.Link_Level_Up, source: NodeID(0) )
         } else {
-            msg = Message(mti: MTI.LinkLevelDown, source: NodeID(0) )
+            msg = Message(mti: MTI.Link_Level_Down, source: NodeID(0) )
         }
         fireListeners(msg)
     }

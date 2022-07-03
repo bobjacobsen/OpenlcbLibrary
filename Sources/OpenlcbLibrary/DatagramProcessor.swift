@@ -20,9 +20,9 @@ struct DatagramProcessor : Processor {
         switch message.mti {
         case MTI.Datagram :
             handleDatagram(message)
-        case MTI.DatagramRejected :
+        case MTI.Datagram_Rejected :
             handleDatagramRejected(message)
-        case MTI.DatagramReceivedOK :
+        case MTI.Datagram_Received_OK :
             handleDatagramReceivedOK(message)
         default:
             // no need to do anything

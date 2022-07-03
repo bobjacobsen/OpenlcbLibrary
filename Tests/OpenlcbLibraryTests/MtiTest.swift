@@ -18,7 +18,7 @@ class MtiTest: XCTestCase {
     }
 
     func testInitFromInt() {
-        XCTAssertEqual(MTI(rawValue: 0x08F4), MTI.IdentifyConsumer)
+        XCTAssertEqual(MTI(rawValue: 0x08F4), MTI.Identify_Consumer)
     }
 
     func testPriority() {

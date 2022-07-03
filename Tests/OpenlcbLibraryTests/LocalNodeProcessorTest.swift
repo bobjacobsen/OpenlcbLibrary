@@ -32,20 +32,20 @@ class LocalNodeProcessorTest: XCTestCase {
 
     func testLinkUp() throws {
         node21.state = .Uninitialized
-        let msg = Message(mti : MTI.LinkLevelUp, source : NodeID(0), destination : NodeID(0), data: [])
+        let msg = Message(mti : MTI.Link_Level_Up, source : NodeID(0), destination : NodeID(0), data: [])
 
         processor.process(msg, node21)
 
         XCTAssertEqual(node21.state, Node.State.Initialized)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         XCTAssertEqual(LinkMockLayer.sentMessages[0],
-                       Message(mti: MTI.InitializationComplete, source: node21.id, data: node21.id.toArray()))
+                       Message(mti: MTI.Initialization_Complete, source: node21.id, data: node21.id.toArray()))
 
     }
 
     func testLinkDown() throws {
         node21.state = .Initialized
-        let msg = Message(mti : MTI.LinkLevelDown, source : NodeID(0), destination : NodeID(0), data: [])
+        let msg = Message(mti : MTI.Link_Level_Down, source : NodeID(0), destination : NodeID(0), data: [])
 
         processor.process(msg, node21)
 
@@ -56,36 +56,36 @@ class LocalNodeProcessorTest: XCTestCase {
 
     func testVerifyGlobal() {
         // not related to node
-        let msg1 = Message(mti : MTI.VerifyNodeIDNumberGlobal, source : NodeID(13), data: [0,0,0,0,12,21])
+        let msg1 = Message(mti : MTI.Verify_NodeID_Number_Global, source : NodeID(13), data: [0,0,0,0,12,21])
         processor.process(msg1, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
 
         // global no node ID
-        let msg2 = Message(mti : MTI.VerifyNodeIDNumberGlobal, source : NodeID(13))
+        let msg2 = Message(mti : MTI.Verify_NodeID_Number_Global, source : NodeID(13))
         processor.process(msg2, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         LinkMockLayer.sentMessages = []
         
         // global this Node ID
-        let msg3 = Message(mti : MTI.VerifyNodeIDNumberGlobal, source : NodeID(13), data: [0,0,0,0,0,21])
+        let msg3 = Message(mti : MTI.Verify_NodeID_Number_Global, source : NodeID(13), data: [0,0,0,0,0,21])
         processor.process(msg3, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
     }
 
     func testVerifyAddressed() {
         // not related to node
-        let msg1 = Message(mti : MTI.VerifyNodeIDNumberAddressed, source : NodeID(13), destination : NodeID(24), data: [0,0,0,0,0,24])
+        let msg1 = Message(mti : MTI.Verify_NodeID_Number_Addressed, source : NodeID(13), destination : NodeID(24), data: [0,0,0,0,0,24])
         processor.process(msg1, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
 
         // addressed no node ID
-        let msg2 = Message(mti : MTI.VerifyNodeIDNumberAddressed, source : NodeID(13), destination : NodeID(21))
+        let msg2 = Message(mti : MTI.Verify_NodeID_Number_Addressed, source : NodeID(13), destination : NodeID(21))
         processor.process(msg2, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         LinkMockLayer.sentMessages = []
         
         // addressed this Node ID
-        let msg3 = Message(mti : MTI.VerifyNodeIDNumberAddressed, source : NodeID(13), destination : NodeID(21), data: [0,0,0,0,0,21])
+        let msg3 = Message(mti : MTI.Verify_NodeID_Number_Addressed, source : NodeID(13), destination : NodeID(21), data: [0,0,0,0,0,21])
         processor.process(msg3, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
     }
@@ -96,12 +96,12 @@ class LocalNodeProcessorTest: XCTestCase {
                              PIP.EVENT_EXCHANGE_PROTOCOL])
 
         // not related to node
-        let msg1 = Message(mti : MTI.ProtocolSupportInquiry, source : NodeID(13), destination : NodeID(24))
+        let msg1 = Message(mti : MTI.Protocol_Support_Inquiry, source : NodeID(13), destination : NodeID(24))
         processor.process(msg1, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
 
         // addressed to node
-        let msg2 = Message(mti : MTI.ProtocolSupportInquiry, source : NodeID(13), destination : NodeID(21))
+        let msg2 = Message(mti : MTI.Protocol_Support_Inquiry, source : NodeID(13), destination : NodeID(21))
         processor.process(msg2, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x44,0x10,0x00, 0x00, 0x00, 0x00])
@@ -115,12 +115,12 @@ class LocalNodeProcessorTest: XCTestCase {
         node21.snip.updateSnipDataFromStrings()
 
         // not related to node
-        let msg1 = Message(mti : MTI.SimpleNodeIdentInfoRequest, source : NodeID(13), destination : NodeID(24))
+        let msg1 = Message(mti : MTI.Simple_Node_Ident_Info_Request, source : NodeID(13), destination : NodeID(24))
         processor.process(msg1, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
 
         // addressed to node
-        let msg2 = Message(mti : MTI.SimpleNodeIdentInfoRequest, source : NodeID(13), destination : NodeID(21))
+        let msg2 = Message(mti : MTI.Simple_Node_Ident_Info_Request, source : NodeID(13), destination : NodeID(21))
         processor.process(msg2, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data[0...2], [0x04,0x53,0x61])
@@ -129,11 +129,11 @@ class LocalNodeProcessorTest: XCTestCase {
     
     func testIdentifyEventsAddressed() {
         // addressed to node
-        let msg2 = Message(mti : MTI.IdentifyEventsAddressed, source : NodeID(13), destination : NodeID(21))
+        let msg2 = Message(mti : MTI.Identify_Events_Addressed, source : NodeID(13), destination : NodeID(21))
         processor.process(msg2, node21)
 
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.OptionalInteractionRejected)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.Optional_Interaction_Rejected)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 4)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x10, 0x43, 0x09, 0x68])
 

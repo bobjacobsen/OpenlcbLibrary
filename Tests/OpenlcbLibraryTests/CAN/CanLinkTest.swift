@@ -168,7 +168,7 @@ class CanLinkTest: XCTestCase {
         
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         XCTAssertEqual(canLink.canHeaderToFullFormat(frame: CanFrame(header:0x19490247, data:[]) ),
-                       MTI.VerifyNodeIDNumberGlobal )
+                       MTI.Verify_NodeID_Number_Global )
     }
 
     func testSimpleGlobalData() {
@@ -190,7 +190,7 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages.count, 1) // one message forwarded
         // check for proper global MTI
         XCTAssertEqual(messageLayer.receivedMessages[0].mti,
-                       MTI.VerifyNodeIDNumberGlobal)
+                       MTI.Verify_NodeID_Number_Global)
         XCTAssertEqual(messageLayer.receivedMessages[0].source,
                        NodeID(0x010203040506))
     }
@@ -217,7 +217,7 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages.count, 2) // startup plus one message forwarded
         // check for proper global MTI
         XCTAssertEqual(messageLayer.receivedMessages[1].mti,
-                       MTI.VerifyNodeIDNumberAddressed)
+                       MTI.Verify_NodeID_Number_Addressed)
         XCTAssertEqual(messageLayer.receivedMessages[1].source,
                        NodeID(0x01_02_03_04_05_06))
         XCTAssertEqual(messageLayer.receivedMessages[1].destination,
@@ -247,7 +247,7 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages.count, 2) // startup plus one message forwarded
         // check for proper global MTI
         XCTAssertEqual(messageLayer.receivedMessages[1].mti,
-                       MTI.VerifyNodeIDNumberAddressed)
+                       MTI.Verify_NodeID_Number_Addressed)
         XCTAssertEqual(messageLayer.receivedMessages[1].source,
                        NodeID(0x00_00_00_00_00_01))
         XCTAssertEqual(messageLayer.receivedMessages[1].destination,
@@ -287,7 +287,7 @@ class CanLinkTest: XCTestCase {
 
         // check for proper global MTI
         XCTAssertEqual(messageLayer.receivedMessages[1].mti,
-                       MTI.VerifyNodeIDNumberAddressed)
+                       MTI.Verify_NodeID_Number_Addressed)
         XCTAssertEqual(messageLayer.receivedMessages[1].source,
                        NodeID(0x01_02_03_04_05_06))
         XCTAssertEqual(messageLayer.receivedMessages[1].destination,

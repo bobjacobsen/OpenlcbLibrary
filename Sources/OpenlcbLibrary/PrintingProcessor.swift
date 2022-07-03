@@ -24,52 +24,55 @@ struct PrintingProcessor : Processor {
             dataString += "\(String(format:"%02X", byte)) "
         }
         switch message.mti {
-        case    .VerifyNodeIDNumberAddressed,
-                .VerifiedNodeID,
-                .OptionalInteractionRejected,
-                .TerminateDueToError,
-                .ProtocolSupportInquiry,
-                .ProtocolSupportReply,
-                .IdentifyEventsAddressed,
-                .SimpleNodeIdentInfoRequest,
-                .SimpleNodeIdentInfoReply,
+        case    .Verify_NodeID_Number_Addressed,
+                .Optional_Interaction_Rejected,
+                .Terminate_Due_To_Error,
+                .Protocol_Support_Inquiry,
+                .Protocol_Support_Reply,
+                .Identify_Events_Addressed,
+                .Simple_Node_Ident_Info_Request,
+                .Simple_Node_Ident_Info_Reply,
                 .Datagram,
-                .DatagramReceivedOK,
-                .DatagramRejected :
+                .Datagram_Received_OK,
+                .Datagram_Rejected :
             simpleAddressedMessage(message, node, dataString)
             
-        case    .InitializationComplete,
-                .InitializationCompleteSimple,
-                .VerifyNodeIDNumberGlobal,
-                .IdentifyConsumer,
-                .IdentifyProducer,
-                .ConsumerRangeIdentified,
-                .ConsumerIdentifiedUnknown,
-                .ConsumerIdentifiedActive,
-                .ConsumerIdentifiedInactive,
-                .ProducerRangeIdentified,
-                .ProducerIdentifiedUnknown,
-                .ProducerIdentifiedActive,
-                .ProducerIdentifiedInactive,
-               .IdentifyEventsGlobal,
-                .LearnEvent,
-                .ProducerConsumerEventReport :
+        case    .Initialization_Complete,
+                .Initialization_Complete_Simple,
+                .Verify_NodeID_Number_Global,
+                .Verified_NodeID,
+                .Identify_Consumer,
+                .Identify_Producer,
+                .Consumer_Range_Identified,
+                .Consumer_Identified_Unknown,
+                .Consumer_Identified_Active,
+                .Consumer_Identified_Inactive,
+                .Producer_Range_Identified,
+                .Producer_Identified_Unknown,
+                .Producer_Identified_Active,
+                .Producer_Identified_Inactive,
+               .Identify_Events_Global,
+                .Learn_Event,
+                .Producer_Consumer_Event_Report :
             simpleGlobalMessage(message, node, dataString)
-        case    .LinkLevelUp, .LinkLevelDown, .Unknown :
+        case    .Link_Level_Up, .Link_Level_Down, .Unknown :
             internalMessage(message, dataString)
         }
     }
     
     private func simpleAddressedMessage(_ message : Message, _ node : Node, _ dataString : String) {
-        result("\(message.source) \(message.mti) \(dataString)(\(message.destination ?? NodeID(0)))")
+        let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
+        result("\(message.source) \(name) \(dataString) to \(message.destination ?? NodeID(0))")
     }
 
     private func simpleGlobalMessage(_ message : Message, _ node : Node, _ dataString : String) {
-        result("\(message.source) \(message.mti) \(dataString)")
+        let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
+        result("\(message.source) \(name) \(dataString)")
     }
     
     private func internalMessage(_ message : Message, _ dataString : String) {
-        result("Internal Message: \(message.mti) \(dataString)")
+        let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
+        result("Internal Message: \(name) \(dataString)")
     }
 }
 

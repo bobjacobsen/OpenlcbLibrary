@@ -28,17 +28,17 @@ struct RemoteNodeProcessor : Processor {
         
         // specific message handling
         switch message.mti {
-        case .InitializationComplete, .InitializationCompleteSimple :
+        case .Initialization_Complete, .Initialization_Complete_Simple :
             initializationComplete(message, node)
-        case .ProtocolSupportReply :
+        case .Protocol_Support_Reply :
             protocolSupportReply(message, node)
-        case .LinkLevelUp :
+        case .Link_Level_Up :
             linkUpMessage(message, node)
-        case .LinkLevelDown :
+        case .Link_Level_Down :
             linkDownMessage(message, node)
-        case .SimpleNodeIdentInfoRequest :
+        case .Simple_Node_Ident_Info_Request :
             simpleNodeIdentInfoRequest(message, node)
-        case .SimpleNodeIdentInfoReply :
+        case .Simple_Node_Ident_Info_Reply :
             simpleNodeIdentInfoReply(message, node)
         // TODO: Event Protocol messages - record in local event store
         default:

@@ -6,10 +6,12 @@
 //
 
 import Foundation
+import os
 
 /// Accumulates Nodes that it sees requested, unless they're already in a given local NodeStore
 /// 
 public class RemoteNodeStore : NodeStore {
+    let logger = Logger(subsystem: "com.ardenwood", category: "RemoteNodeStore")
     
     let localNodeStore : NodeStore
 
@@ -32,7 +34,12 @@ public class RemoteNodeStore : NodeStore {
             } else {
                 // not present, create
                 let node = Node(nodeID)
-                store(node)
+                logger.debug("creating node \(nodeID, privacy: .public)")
+                // NodeID(0) is a special case, used for e.g. linkUp, linkDown; don't store
+                if (nodeID != NodeID(0)) {
+                    logger.debug("  Skipping store of NodeID(0)")
+                    store(node)
+                }
                 return node
             }            
         }

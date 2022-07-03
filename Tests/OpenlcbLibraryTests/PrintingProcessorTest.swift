@@ -25,11 +25,11 @@ class PrintingProcessorTest: XCTestCase {
             self.result = data
         }
         let processor = PrintingProcessor(handler)
-        let msg = Message(mti : MTI.InitializationComplete, source : NodeID(12))
+        let msg = Message(mti : MTI.Initialization_Complete, source : NodeID(12))
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C InitializationComplete ")
+        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C Initialization Complete ")
     }
     
     func testConsumerRangeIdentified() {
@@ -38,11 +38,11 @@ class PrintingProcessorTest: XCTestCase {
             self.result = data
         }
         let processor = PrintingProcessor(handler)
-        let msg = Message(mti : MTI.ConsumerRangeIdentified, source : NodeID(12), destination : NodeID(13))
+        let msg = Message(mti : MTI.Consumer_Range_Identified, source : NodeID(12), destination : NodeID(13))
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C ConsumerRangeIdentified ")
+        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C Consumer Range Identified ")
    }
 
     func testProducerConsumerEventReport() {
@@ -51,11 +51,11 @@ class PrintingProcessorTest: XCTestCase {
             self.result = data
         }
         let processor = PrintingProcessor(handler)
-        let msg = Message(mti : MTI.ProducerConsumerEventReport, source : NodeID(12), destination : NodeID(13))
+        let msg = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(12), destination : NodeID(13))
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C ProducerConsumerEventReport ")
+        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C Producer Consumer Event Report ")
     }
 
     func testLinkDown() {
@@ -64,11 +64,11 @@ class PrintingProcessorTest: XCTestCase {
             self.result = data
         }
         let processor = PrintingProcessor(handler)
-        let msg = Message(mti : MTI.LinkLevelDown, source : NodeID(12), destination : NodeID(13))
+        let msg = Message(mti : MTI.Link_Level_Down, source : NodeID(12), destination : NodeID(13))
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "Internal Message: LinkLevelDown ")
+        XCTAssertEqual(result, "Internal Message: Link Level Down ")
     }
 
 }

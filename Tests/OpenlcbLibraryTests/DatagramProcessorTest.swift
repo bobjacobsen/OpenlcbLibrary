@@ -20,7 +20,7 @@ class DatagramProcessorTest: XCTestCase {
     }
 
     func testInitializationComplete() {
-        let msg = Message(mti : MTI.InitializationComplete, source : NodeID(12), destination : NodeID(13))
+        let msg = Message(mti : MTI.Initialization_Complete, source : NodeID(12), destination : NodeID(13))
         // datagram processor doesn't affect node status
         processor.process(msg, node)
         
@@ -29,7 +29,7 @@ class DatagramProcessorTest: XCTestCase {
 
     func testTestsNptComplete() {
         // eventually, this will handle all MTI types, but here we check for one not coded yet
-        let msg = Message(mti : MTI.ConsumerRangeIdentified, source : NodeID(12), destination : NodeID(13))
+        let msg = Message(mti : MTI.Consumer_Range_Identified, source : NodeID(12), destination : NodeID(13))
         
         processor.process(msg, node)
     }
