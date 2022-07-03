@@ -104,7 +104,7 @@ final class OpenlcbLibraryTests: XCTestCase {
 
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19668240") // PIP Reply
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x03, 0x33, 0x40, 0x10, 0x00]) // carries nodeID & PIP Data
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x03, 0x33, 0x40, 0x10, 0x00, 0x00, 0x00, 0x00]) // carries nodeID & PIP Data
 
         canPhysicalLayer.receivedFrames = []
 

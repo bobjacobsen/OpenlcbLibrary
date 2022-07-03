@@ -104,7 +104,7 @@ class LocalNodeProcessorTest: XCTestCase {
         let msg2 = Message(mti : MTI.ProtocolSupportInquiry, source : NodeID(13), destination : NodeID(21))
         processor.process(msg2, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x44,0x10,0x00])
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x44,0x10,0x00, 0x00, 0x00, 0x00])
     }
 
     func testSnip() {

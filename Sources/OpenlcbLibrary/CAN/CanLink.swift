@@ -29,6 +29,8 @@ public class CanLink : LinkLayer {
     
     var aliasToNodeID : [UInt:NodeID] = [:]
     var nodeIdToAlias : [NodeID:UInt] = [:]
+    
+    var nextInternallyAssignedNodeID : UInt64 = 1
 
     public init(localNodeID : NodeID) {
         self.localNodeID = localNodeID
@@ -171,7 +173,12 @@ public class CanLink : LinkLayer {
         if let mapped = aliasToNodeID[frame.header&0xFFF] {
             sourceID = mapped
         } else {
-            logger.error("message from unknown source alias: \(frame), contine with 00.00.00.00.00.00")
+            sourceID = NodeID(nextInternallyAssignedNodeID)
+            nextInternallyAssignedNodeID += 1
+            logger.error("message from unknown source alias: \(frame, privacy: .public), continue with \(sourceID, privacy: .public)")
+            // register that internally-generated nodeID-alias association
+            aliasToNodeID[frame.header&0xFFF] = sourceID
+            nodeIdToAlias[sourceID] = frame.header&0xFFF
         }
         
         var destID = NodeID(0)
@@ -183,7 +190,11 @@ public class CanLink : LinkLayer {
             if let mapped = aliasToNodeID[destAlias] {
                 destID = mapped
             } else {
-                logger.error("message from unknown dest alias: \(frame), contine with 00.00.00.00.00.00")
+                destID = NodeID(nextInternallyAssignedNodeID)
+                logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
+                // register that internally-generated nodeID-alias association
+                aliasToNodeID[destAlias] = destID
+                nodeIdToAlias[destID] = destAlias
             }
             
             // check for start and end bits

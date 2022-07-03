@@ -66,7 +66,7 @@ struct LocalNodeProcessor : Processor {
         let part1 = UInt8( (pips >> 24)&0xFF)
         let part2 = UInt8( (pips >> 16)&0xFF)
         let part3 = UInt8( (pips >>  8)&0xFF)
-        let retval : [UInt8] = [part1, part2, part3]
+        let retval : [UInt8] = [part1, part2, part3, 0, 0, 0]  // JMRI wants to see 6 bytes
         
         let msg = Message(mti: MTI.ProtocolSupportReply, source: node.id, destination: message.source, data: retval)
         linkLayer!.sendMessage(msg)

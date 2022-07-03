@@ -227,6 +227,36 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages[1].data[1], 13)
     }
     
+    func testSimpleAddressedDataNoAliasYet() { // Test start=yes, end=yes frame with no alias match
+        let canPhysicalLayer = CanPhysicalLayerSimulation()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+        canLink.linkPhysicalLayer(canPhysicalLayer)
+        let messageLayer = MessageMockLayer()
+        canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
+
+        canPhysicalLayer.physicalLayerUp()
+
+        // don't map alias with AMD
+        
+        // send Verify Node ID Addressed from unknown alias
+        let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
+        var frame = CanFrame(control: 0x19488, alias: 0x247) // Verify Node ID Addressed
+        frame.data = [UInt8((ourAlias & 0x700)>>8), UInt8(ourAlias&0xFF), 12, 13]
+        canPhysicalLayer.fireListeners(frame) // from previously seen alias
+
+        XCTAssertEqual(messageLayer.receivedMessages.count, 2) // startup plus one message forwarded
+        // check for proper global MTI
+        XCTAssertEqual(messageLayer.receivedMessages[1].mti,
+                       MTI.VerifyNodeIDNumberAddressed)
+        XCTAssertEqual(messageLayer.receivedMessages[1].source,
+                       NodeID(0x00_00_00_00_00_01))
+        XCTAssertEqual(messageLayer.receivedMessages[1].destination,
+                       NodeID(0x05_01_01_01_03_01))
+        XCTAssertEqual(messageLayer.receivedMessages[1].data.count, 2)
+        XCTAssertEqual(messageLayer.receivedMessages[1].data[0], 12)
+        XCTAssertEqual(messageLayer.receivedMessages[1].data[1], 13)
+    }
+    
     // multi-frame addressed messages - SNIP reply
     func testMultiFrameAddressedData() { // Test message in 3 frames
         let canPhysicalLayer = CanPhysicalLayerSimulation()
