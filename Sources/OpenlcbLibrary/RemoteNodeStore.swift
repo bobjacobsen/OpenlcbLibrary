@@ -37,8 +37,9 @@ public class RemoteNodeStore : NodeStore {
                 logger.debug("creating node \(nodeID, privacy: .public)")
                 // NodeID(0) is a special case, used for e.g. linkUp, linkDown; don't store
                 if (nodeID != NodeID(0)) {
-                    logger.debug("  Skipping store of NodeID(0)")
                     store(node)
+                } else {
+                    logger.debug("  Skipping store of NodeID(0)")
                 }
                 return node
             }            
