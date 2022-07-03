@@ -34,29 +34,29 @@ class CanFrameTest: XCTestCase {
     
     func testCID() throws {
         let cidFrame40 = CanFrame(cid: 4, nodeID: NodeID(0x00_00_00_00_00_00), alias: 0)
-        XCTAssertEqual(cidFrame40.header, 0x4_000_000)
+        XCTAssertEqual(cidFrame40.header, 0x14_000_000)
         XCTAssertEqual(cidFrame40.data, [])
 
         let cidFrame4ABC = CanFrame(cid: 4, nodeID: NodeID(0x00_00_00_00_00_00), alias: 0xABC)
-        XCTAssertEqual(cidFrame4ABC.header, 0x4_000_ABC)
+        XCTAssertEqual(cidFrame4ABC.header, 0x14_000_ABC)
         XCTAssertEqual(cidFrame4ABC.data, [])
 
         let cidFrame4 = CanFrame(cid: 4, nodeID: NodeID(0x12_34_56_78_9A_BC), alias: 0x123)
-        XCTAssertEqual(cidFrame4.header, 0x4_ABC_123)
+        XCTAssertEqual(cidFrame4.header, 0x14_ABC_123)
         XCTAssertEqual(cidFrame4.data, [])
 
         let cidFrame5 = CanFrame(cid: 5, nodeID: NodeID(0x12_34_56_78_9A_BC), alias: 0x321)
-        XCTAssertEqual(cidFrame5.header, 0x5_789_321)
+        XCTAssertEqual(cidFrame5.header, 0x15_789_321)
         XCTAssertEqual(cidFrame5.data, [])
 
         let cidFrame7 = CanFrame(cid: 7, nodeID: NodeID(0x12_34_56_78_9A_BC), alias: 0x010)
-        XCTAssertEqual(cidFrame7.header, 0x7_123_010)
+        XCTAssertEqual(cidFrame7.header, 0x17_123_010)
         XCTAssertEqual(cidFrame7.data, [])
     }
 
     func testControlFrame() throws {
         let frame0703 = CanFrame(control : 0x0701, alias : 0x123)
-        XCTAssertEqual(frame0703.header, 0x0_701_123)
+        XCTAssertEqual(frame0703.header, 0x10_701_123)
         XCTAssertEqual(frame0703.data, [])
     }
 }

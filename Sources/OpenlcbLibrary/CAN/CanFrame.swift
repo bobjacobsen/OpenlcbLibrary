@@ -24,7 +24,7 @@ public struct CanFrame : Equatable, CustomStringConvertible {
         precondition(4 <= cid && cid <= 7)
         
         let nodeCode = UInt( ( nodeID.nodeId >> ((cid-4)*12) ) & 0xFFF )
-        header = (UInt(cid << 12) | nodeCode) << 12 | (alias & 0xFFF)
+        header = (UInt(cid << 12) | nodeCode) << 12 | (alias & 0xFFF) | 0x10_000_000
         data = []
     }
     
@@ -32,7 +32,7 @@ public struct CanFrame : Equatable, CustomStringConvertible {
     ///
     /// The  `data` parameter defaults to an empty frame
     init(control : Int, alias : UInt, data : [UInt8] = []) {
-        header = UInt(control << 12) | (alias & 0xFFF)
+        header = UInt(control << 12) | (alias & 0xFFF) | 0x10_000_000
         self.data = data
     }
 }

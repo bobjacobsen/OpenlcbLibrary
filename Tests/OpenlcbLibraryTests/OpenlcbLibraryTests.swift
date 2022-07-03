@@ -33,8 +33,8 @@ final class OpenlcbLibraryTests: XCTestCase {
         // check initialization messages
         XCTAssertEqual(lib.defaultNode.state, Node.State.Initialized)
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8) // should be 8 with the Initialization complete
-        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[5].header))", "0x00701240") // Allocation AMDefinition
-        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[6].header))", "0x00702240") // Acquire rest of network with AMEnquiry
+        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[5].header))", "0x10701240") // Allocation AMDefinition
+        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[6].header))", "0x10702240") // Acquire rest of network with AMEnquiry
 
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[7].header))", "0x19100240") // Initialization complete
         XCTAssertEqual(canPhysicalLayer.receivedFrames[7].data, [5,1,1,1,3,1]) // carries nodeID
@@ -104,7 +104,7 @@ final class OpenlcbLibraryTests: XCTestCase {
 
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19668240") // PIP Reply
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x03, 0x33, 0x40, 0x10, 0x00, 0x00, 0x00, 0x00]) // carries nodeID & PIP Data
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x03, 0x33, 0x44, 0x10, 0x00, 0x00, 0x00, 0x00]) // carries nodeID & PIP Data
 
         canPhysicalLayer.receivedFrames = []
 

@@ -35,7 +35,7 @@ class CanPhysicalLayerGridConnectTest: XCTestCase {
         let gc = CanPhysicalLayerGridConnect(callback: captureString)
 
         gc.sendCanFrame(CanFrame(cid:4, nodeID: NodeID(0x010203040506), alias: 0xABC))
-        XCTAssertEqual(capturedString, ":X04506ABCN;\n")
+        XCTAssertEqual(capturedString, ":X14506ABCN;\n")
     }
     
     func testVerifyNodeSent() {
