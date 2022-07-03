@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import os
 
 /// Handle incoming messages for a remote node, AKA an image node, representing some
 /// physical node out on the layout.
@@ -18,8 +19,11 @@ struct RemoteNodeProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil) {
         self.linkLayer = linkLayer
     }
+    
     let linkLayer : LinkLayer? // TODO: Is this needed? Does this ever send?
 
+    let logger = Logger(subsystem: "com.ardenwood", category: "RemoteNodeProcessor")
+    
     public func process( _ message : Message, _ node : Node  ) {
         // if you see anything at all from us, must be in Initialized state
         if checkSourceID(message, node) {  // Sent by node we're processing?
@@ -59,8 +63,8 @@ struct RemoteNodeProcessor : Processor {
         // affects everybody
         node.state = Node.State.Uninitialized
         // don't clear out PIP, SNIP caches, they're probably still good
-        // node.pipSet = Set<PIP>()
-        // node.snip = SNIP()
+            // node.pipSet = Set<PIP>()
+            // node.snip = SNIP()
     }
 
     private func linkDownMessage(_ message : Message, _ node : Node) {
