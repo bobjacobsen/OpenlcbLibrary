@@ -39,8 +39,12 @@ struct LocalNodeProcessor : Processor {
 
     private func linkUpMessage(_ message : Message, _ node : Node) {
         node.state = Node.State.Initialized
-        let msg = Message(mti: MTI.Initialization_Complete, source: node.id, data: node.id.toArray())
-        linkLayer!.sendMessage(msg)
+        let msgIC = Message(mti: MTI.Initialization_Complete, source: node.id, data: node.id.toArray())
+        linkLayer!.sendMessage(msgIC)
+        // ask all nodes to identify themselves
+        let msgVN = Message(mti: MTI.Verify_NodeID_Number_Global, source: node.id)
+        linkLayer!.sendMessage(msgVN)
+
     }
 
     private func linkDownMessage(_ message : Message, _ node : Node) {
