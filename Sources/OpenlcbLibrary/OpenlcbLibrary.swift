@@ -35,7 +35,8 @@ public struct OpenlcbLibrary {
         
         // local node has limited capability
         defaultNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to make memory requests
-                               PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
+                                  PIP.EVENT_EXCHANGE_PROTOCOL,
+                                  PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         defaultNode.snip.manufacturerName = "Ardenwood.net"
         defaultNode.snip.modelName        = "OpenlcbLib"
         defaultNode.snip.hardwareVersion  = "14"             // holds iOS version // TODO: rethink hardware version
