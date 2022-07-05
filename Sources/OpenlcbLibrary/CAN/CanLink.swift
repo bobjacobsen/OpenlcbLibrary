@@ -101,6 +101,12 @@ public class CanLink : LinkLayer {
     func handleReceivedLinkUp(_ frame : CanFrame) {
         // start the alias allocation in Inhibited state
         state = .Inhibited
+        defineAndReserveAlias()
+        // notify upper levels
+        linkStateChange(state: state)
+    }
+        
+    func defineAndReserveAlias() {
         sendAliasAllocationSequence()
         // TODO: wait 200 msec and declare ready to go, see https://stackoverflow.com/questions/27517632/how-to-create-a-delay-in-swift
         // send AMD frame, go to Permitted state
@@ -111,10 +117,8 @@ public class CanLink : LinkLayer {
         nodeIdToAlias[localNodeID] = localAlias
         // send AME with no NodeID to get full alias map
         link!.sendCanFrame( CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias) )
-        // notify upper levels
-        linkStateChange(state: state)
     }
-        
+    
     func handleReceivedLinkDown(_ frame : CanFrame) {
         // return to Inhibited state until link back up
         // Note: since no working link, not sending the AMR frame
@@ -129,11 +133,11 @@ public class CanLink : LinkLayer {
     }
     
     func handleReceivedRID(_ frame : CanFrame) {
-        if (abortOnAliasCollision(frame)) { return }
+        if (checkAndHandleAliasCollision(frame)) { return }
     }
     
     func handleReceivedAMD(_ frame : CanFrame) {
-        if (abortOnAliasCollision(frame)) { return }
+        if (checkAndHandleAliasCollision(frame)) { return }
         // This defines an alias, so store it
         let nodeID = NodeID(frame.data)
         let alias = frame.header & 0xFFF
@@ -142,7 +146,7 @@ public class CanLink : LinkLayer {
     }
     
     func handleReceivedAME(_ frame : CanFrame) {
-        if (abortOnAliasCollision(frame)) { return }
+        if (checkAndHandleAliasCollision(frame)) { return }
         if (state != .Permitted) { return }
         // check node ID
         var matchNodeID = localNodeID
@@ -157,7 +161,7 @@ public class CanLink : LinkLayer {
     }
     
     func handleReceivedAMR(_ frame : CanFrame) {
-        if (abortOnAliasCollision(frame)) { return }
+        if (checkAndHandleAliasCollision(frame)) { return }
         // Alias Map Reset - drop from maps
         let nodeID = NodeID(frame.data)
         let alias = frame.header & 0xFFF
@@ -166,7 +170,7 @@ public class CanLink : LinkLayer {
     }
 
     func handleReceivedData(_ frame : CanFrame) {  // mutation to accumulate multi-frame messages
-        if (abortOnAliasCollision(frame)) { return }
+        if (checkAndHandleAliasCollision(frame)) { return }
         // get proper MTI
         let mti = canHeaderToFullFormat(frame: frame)
         var sourceID = NodeID(0)
@@ -285,15 +289,17 @@ public class CanLink : LinkLayer {
     }
     
     // MARK: common code
-    func abortOnAliasCollision(_ frame : CanFrame) -> Bool {
+    func checkAndHandleAliasCollision(_ frame : CanFrame) -> Bool {
         if state != .Permitted { return false }
         let receivedAlias = frame.header & 0x0000_FFF
         let abort = (receivedAlias == localAlias)
         if (abort ) {
-            // Collision!
+            // Collision! Insist on our alias
             link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
+            // Standard 6.2.5
             state = .Inhibited
-            // TODO: Notify and restart alias process (ala LinkDown, LinkUp? )
+            // attempt to get a new alias and go back to .Permitted
+            defineAndReserveAlias()
         }
         return abort
     }

@@ -37,9 +37,11 @@ class LocalNodeProcessorTest: XCTestCase {
         processor.process(msg, node21)
 
         XCTAssertEqual(node21.state, Node.State.Initialized)
-        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 2)
         XCTAssertEqual(LinkMockLayer.sentMessages[0],
                        Message(mti: MTI.Initialization_Complete, source: node21.id, data: node21.id.toArray()))
+        XCTAssertEqual(LinkMockLayer.sentMessages[1],
+                       Message(mti: MTI.Verify_NodeID_Number_Global, source: node21.id))
 
     }
 
@@ -105,7 +107,7 @@ class LocalNodeProcessorTest: XCTestCase {
         processor.process(msg2, node21)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x44,0x10,0x00, 0x00, 0x00, 0x00])
-    }
+ }
 
     func testSnip() {
         node21.snip.manufacturerName = "Sample Nodes"

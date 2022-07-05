@@ -159,9 +159,9 @@ class CanLinkTest: XCTestCase {
         canLink.state = CanLink.State.Permitted
 
         canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8)  // includes recovery of new alias 4 CID, RID, AMR, AME
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMR.rawValue, alias: ourAlias, data: [5, 1, 1, 1, 3, 1]))
-        XCTAssertEqual(canLink.state, CanLink.State.Inhibited)
+        XCTAssertEqual(canLink.state, CanLink.State.Permitted)
     }
     
     func testCheckMTImapping() {

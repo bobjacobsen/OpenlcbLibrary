@@ -32,7 +32,7 @@ final class OpenlcbLibraryTests: XCTestCase {
         
         // check initialization messages
         XCTAssertEqual(lib.defaultNode.state, Node.State.Initialized)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8) // should be 8 with the Initialization complete
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 9) // should be 8 with the Initialization Complete and Verify Global
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[5].header))", "0x10701240") // Allocation AMDefinition
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[6].header))", "0x10702240") // Acquire rest of network with AMEnquiry
 

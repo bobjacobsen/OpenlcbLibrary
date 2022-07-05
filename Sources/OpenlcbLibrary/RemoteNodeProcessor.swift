@@ -25,6 +25,8 @@ struct RemoteNodeProcessor : Processor {
     let logger = Logger(subsystem: "com.ardenwood", category: "RemoteNodeProcessor")
     
     public func process( _ message : Message, _ node : Node  ) {
+        // TODO: do a fast drop of messages not to us, from us, or global (and may not need global) - not linklevelup message though
+        
         // if you see anything at all from us, must be in Initialized state
         if checkSourceID(message, node) {  // Sent by node we're processing?
             node.state = Node.State.Initialized // in case we came late to the party, must be in Initialized state

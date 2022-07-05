@@ -143,13 +143,13 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     }
 
     func acdiStart() {
-        // TODO: add standard-defined ACDI contents
+        // TODO: add standard-defined ACDI contents - note that JMRI seems to ignore it, and RR-Cirkits replicates the info in a Segment
     }
     func acdiEnd() {
     }
 
     func identificationStart() {
-        // TODO: add standard-defined Identification contents
+        // TODO: add standard-defined Identification contents - maps to a (virtual) segment with read-only string variables
     }
     func identificationEnd() {
     }
@@ -172,7 +172,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         memoStack.append(thisMemo)
     }
     func segmentEnd() {
-        // TODO: fill and pop
+        // fill and pop
         let current = memoStack.removeLast()
         current.type = .SEGMENT
         // add to children of parent (now last on stack)
@@ -195,7 +195,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         memoStack.append(thisMemo)
     }
     func groupEnd() {
-        // TODO: fill and pop
+        // fill and pop
         let current = memoStack.removeLast()
         current.type = .GROUP
         // add to children of parent (now last on stack)
