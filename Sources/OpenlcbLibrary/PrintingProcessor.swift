@@ -77,6 +77,14 @@ struct PrintingProcessor : Processor {
 }
 
 // ---------------------
+// To print the result
+// ---------------------
+//  let handler : (_ : String) -> () = { (data: String)  in
+//      print(data)
+//      }
+//  let pprocessor : Processor = PrintingProcessor(handler) // example that just prints info
+
+// ---------------------
 // for sending to a View
 // ---------------------
 var lotsOfLinesToDisplay : [MonitorLine] = []
