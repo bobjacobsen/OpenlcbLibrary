@@ -27,6 +27,21 @@ public struct SNIP {
     var data : [UInt8] = Array(repeating: 0, count: 253)
     var index = 0; // for loading in multiple messages
     
+    public init() {}
+    public init(_ mfgName : String, // for debug and SwiftUI preview
+                _ model : String,
+                _ hVersion : String,
+                _ sVersion : String,
+                _ uName : String,
+                _ uDesc : String) {
+        manufacturerName = mfgName
+        modelName = model
+        hardwareVersion = hVersion
+        softwareVersion = sVersion
+        userProvidedNodeName = uName
+        userProvidedDescription = uDesc
+    }
+    
     // we don't (yet) support later versions with e.g. larger strings, etc.
     // OLCB Strings are fixed length null terminated
     

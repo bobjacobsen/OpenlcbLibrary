@@ -64,7 +64,8 @@ public struct OpenlcbLibrary {
 //        }
 //        let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // example of processor that extracts info from message
-
+        // TODO: With this setup, only messages from the network are sent to pprocessor and displayed.
+        
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
         localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor]

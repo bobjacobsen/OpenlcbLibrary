@@ -12,7 +12,8 @@ import Foundation
 /// Store the available Nodes and provide multiple means of retrieval.
 ///  Storage and indexing methods are an internal detail.
 ///  You can't remove a node; once we know about it, we know about it.
-public class NodeStore {
+public class NodeStore : ObservableObject { // for SwiftUI
+    
     var byIdMap : [NodeID : Node] = [:]
     var processors : [Processor] = []
     

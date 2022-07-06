@@ -12,7 +12,10 @@ import Foundation
 ///
 ///  Concrete implementations may include a "node in this machine" and a "remote node elsewhere" a.k.a an image node.
 ///
-public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable, Comparable {
+public class Node : Equatable, Hashable, Comparable, // for Sets and sorts
+                    ObservableObject, Identifiable,  // for SwiftUI
+                    CustomStringConvertible {        // for pretty printing
+    
     public let id : NodeID  // nodeID is immutable; also serves for Identifiable
  
     // This is a computed property from SNIP
@@ -33,6 +36,16 @@ public class Node : Equatable, Hashable, CustomStringConvertible, Identifiable, 
         self.id = nodeID
     }
     
+    // two ctors for use with SwiftUI previews
+    public convenience init( _ nodeID : NodeID, pip : Set<PIP> ) {
+        self.init(nodeID)
+        pipSet = pip
+    }
+    public convenience init( _ nodeID : NodeID, snip : SNIP ) {
+        self.init(nodeID)
+        self.snip = snip
+    }
+
     public var description : String { "Node (\(id))"}
     
     // MARK: - protocols
