@@ -108,7 +108,8 @@ public class CanLink : LinkLayer {
         
     func defineAndReserveAlias() {
         sendAliasAllocationSequence()
-        // TODO: wait 200 msec and declare ready to go, see https://stackoverflow.com/questions/27517632/how-to-create-a-delay-in-swift
+        
+        // TODO: wait 200 msec and declare ready to go, see https://stackoverflow.com/questions/27517632/how-to-create-a-delay-in-swift and https://nilcoalescing.com/blog/DelayAnAsyncTaskInSwift/?utm_source=canopas-stack-weekly
         // send AMD frame, go to Permitted state
         link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray()) )
         state = .Permitted
