@@ -26,6 +26,13 @@ public struct OpenlcbLibrary {
         canLink = CanLink(localNodeID: defaultNodeID)
     }
     
+    // add sample data for SwiftUI preview
+    public init(sample: Bool) {
+        self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
+        if (sample) {
+            createSampleData()
+        }
+    }
     /// The ``configureCanTelnet`` method will set up a system with
     ///   - A CAN-protocol Telnet connection
     ///   - ``defaultNode``, a  local node in a ``localNodeStore``
@@ -56,14 +63,8 @@ public struct OpenlcbLibrary {
         let rprocessor : Processor = RemoteNodeProcessor(canLink) // track effect of messages on Remote Nodes
         let lprocessor : Processor = LocalNodeProcessor(canLink)  // track effect of messages on Local Node
         let dprocessor : Processor = DatagramProcessor(canLink)   // datagram processor doesn't affect node status
-        
-//        // printing process, well, prints
-//        let handler : (_ : String) -> () = { (data: String)  in
-//            // TODO: do something print-like with ``data``
-//            print(data)
-//        }
-//        let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
-        let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // example of processor that extracts info from message
+                
+        let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
         // TODO: With this setup, only messages from the network are sent to pprocessor and displayed.
         
         // install processors
