@@ -47,6 +47,7 @@ public class RemoteNodeStore : NodeStore {
     }
 
     /// Process a message across all nodes
+    /// First reception of a message-level transmission, i.e. VerfiedNode, will create an entry for that node
     override func invokeProcessorsOnNodes(message : Message) {
         // make sure source node is in store if it needs to be
         _ = lookup(message.source)

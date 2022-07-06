@@ -92,14 +92,22 @@ class RemoteProcessorTest: XCTestCase {
     func testSnipHandling() throws {
         node21.snip.manufacturerName = "name present"
         
+        // message not to us
         var msg = Message(mti : MTI.Simple_Node_Ident_Info_Request, source : NodeID(12), destination: NodeID(13))
+        processor.process(msg, node21)
+        
+        // should not have cleared SNIP and cache
+        XCTAssertEqual(node21.snip.manufacturerName, "name present")
+        
+        // message to us
+        msg = Message(mti : MTI.Simple_Node_Ident_Info_Request, source : NodeID(12), destination: NodeID(21))
         processor.process(msg, node21)
         
         // should have cleared SNIP and cache
         XCTAssertEqual(node21.snip.manufacturerName, "")
         
-        // add some data
-        msg = Message(mti : MTI.Simple_Node_Ident_Info_Reply, source : NodeID(12), destination: NodeID(13), data: [04,0x31,0x32,0,0,0])
+         // add some data
+        msg = Message(mti : MTI.Simple_Node_Ident_Info_Reply, source : NodeID(12), destination: NodeID(21), data: [04,0x31,0x32,0,0,0])
         processor.process(msg, node21)
 
         XCTAssertEqual(node21.snip.manufacturerName, "12")

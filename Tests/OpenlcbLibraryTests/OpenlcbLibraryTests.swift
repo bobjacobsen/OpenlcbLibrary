@@ -51,7 +51,7 @@ final class OpenlcbLibraryTests: XCTestCase {
         canPhysicalLayer.fireListeners(frame)
 
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0)  // we don't reply to AMR
-        XCTAssertFalse(lib.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created yet // TODO: consider design of this; should node exist after AMR?
+        XCTAssertFalse(lib.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created by AMR, needs a message-level reception
 
         canPhysicalLayer.receivedFrames = []
 
@@ -115,13 +115,13 @@ final class OpenlcbLibraryTests: XCTestCase {
         frame = CanFrame(header: header, data : data)
         canPhysicalLayer.fireListeners(frame)
 
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 10)
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 14)
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19A08240") // SNIP Reply
         
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x13, 0x33, 0x04, 0x41, 0x72, 0x64, 0x65, 0x6E]) // carries nodeID & SNIP Data
         XCTAssertEqual(canPhysicalLayer.receivedFrames[1].data, [0x33, 0x33, 0x77, 0x6F, 0x6F, 0x64, 0x2E, 0x6E]) // carries nodeID & SNIP Data
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[5].data, [0x33, 0x33, 0x2E, 0x30, 0x00, 0x02, 0x41, 0x70]) // carries nodeID & SNIP Data
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[9].data, [0x23, 0x33, 0x74, 0x29, 0x00, 0x00]) // carries nodeID & SNIP Data
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[5].data, [0x33, 0x33, 0x2E, 0x30, 0x00, 0x02, 0x4F, 0x6C]) // carries nodeID & SNIP Data
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[13].data,[0x23, 0x33, 0x29, 0x00]) // carries nodeID & SNIP Data
 
         canPhysicalLayer.receivedFrames = []
 

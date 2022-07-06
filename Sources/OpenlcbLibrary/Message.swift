@@ -19,13 +19,11 @@ public struct Message : Equatable, Hashable, CustomStringConvertible {
         self.source = source
         self.destination = destination
         self.data = data
-        // TODO: check consistency with MTI and log
     }
     
     /// Global message initiallization
     init(mti : MTI, source : NodeID, data: [UInt8] = []) {
         self.init(mti: mti, source : source, destination : nil, data: data)
-        // TODO: check consistency with MTI and log
     }
     
     public func isGlobal() -> Bool {

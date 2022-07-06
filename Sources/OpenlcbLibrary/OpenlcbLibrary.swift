@@ -45,10 +45,11 @@ public struct OpenlcbLibrary {
                                   PIP.EVENT_EXCHANGE_PROTOCOL,
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         defaultNode.snip.manufacturerName = "Ardenwood.net"
-        defaultNode.snip.modelName        = "OpenlcbLib"
+        defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling
         defaultNode.snip.hardwareVersion  = "14"             // holds iOS version // TODO: rethink hardware version
         defaultNode.snip.softwareVersion  = "0.0"            // TODO: Version number handling
-        defaultNode.snip.userProvidedNodeName = "App with no name (yet)"
+        defaultNode.snip.userProvidedNodeName = "OlcbTools App"
+        defaultNode.snip.userProvidedDescription = "App has no permanent name (yet)"
         defaultNode.snip.updateSnipDataFromStrings()
 
         localNodeStore.store(defaultNode)

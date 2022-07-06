@@ -56,7 +56,8 @@ public enum MTI : Int {
 
     public func simpleProtocol() -> Bool { return (self.rawValue & 0x0010) != 0 }
 
-    
+    public func isGlobal() -> Bool { return (self.rawValue & 0x0008) == 0 }
+
     var name: String {
         get { return String(describing: self) }
     }

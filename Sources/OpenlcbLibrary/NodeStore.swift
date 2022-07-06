@@ -7,7 +7,6 @@
 import Foundation
 
 // TODO: Should this also distribute locally-sent information to all the other nodes?  Local and/or remote node stores?
-// TODO: How does a new node get created dynamically?
 
 /// Store the available Nodes and provide multiple means of retrieval.
 ///  Storage and indexing methods are an internal detail.
@@ -26,7 +25,7 @@ public class NodeStore : ObservableObject { // for SwiftUI
     /// Retrieve a Node's content from the store
     /// - Parameter nodeID: Look-up key
     /// - Returns: Returns Node, creating if need be
-    // mutates to create non-existing node
+    // Some implementations may mutate to create non-existing node
     func lookup(_ nodeID : NodeID) -> Node? {
         return byIdMap[nodeID]
     }

@@ -13,19 +13,18 @@ import os
 /// Tracks node status, PIP and SNIP information, but deliberately does not track memory (config, CDI) contents due to size.
 ///
 
-// TODO: add producer/consumer tracking?
-
 struct RemoteNodeProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil) {
         self.linkLayer = linkLayer
     }
     
     let linkLayer : LinkLayer? // TODO: Is this needed? Does this ever send?
-
+    
     let logger = Logger(subsystem: "com.ardenwood", category: "RemoteNodeProcessor")
     
     public func process( _ message : Message, _ node : Node  ) {
-        // TODO: do a fast drop of messages not to us, from us, or global (and may not need global) - not linklevelup message though
+        // Do a fast drop of messages not to us, from us, or global - note linklevelup/down are marked as global
+        if (!message.mti.isGlobal() && !checkSourceID(message, node) && !checkDestID(message, node)) { return }
         
         // if you see anything at all from us, must be in Initialized state
         if checkSourceID(message, node) {  // Sent by node we're processing?
@@ -46,8 +45,8 @@ struct RemoteNodeProcessor : Processor {
             simpleNodeIdentInfoRequest(message, node)
         case .Simple_Node_Ident_Info_Reply :
             simpleNodeIdentInfoReply(message, node)
-        // TODO: Event Protocol messages - record in local event store
         default:
+            // TODO: add producer/consumer tracking
             break
         }
     }
@@ -65,10 +64,10 @@ struct RemoteNodeProcessor : Processor {
         // affects everybody
         node.state = Node.State.Uninitialized
         // don't clear out PIP, SNIP caches, they're probably still good
-            // node.pipSet = Set<PIP>()
-            // node.snip = SNIP()
+        // node.pipSet = Set<PIP>()
+        // node.snip = SNIP()
     }
-
+    
     private func linkDownMessage(_ message : Message, _ node : Node) {
         // affects everybody
         node.state = Node.State.Uninitialized
@@ -76,7 +75,7 @@ struct RemoteNodeProcessor : Processor {
         // node.pipSet = Set<PIP>()
         // node.snip = SNIP()
     }
-
+    
     private func protocolSupportReply(_ message : Message, _ node : Node) {
         if checkSourceID(message, node) { // send by us?
             let part0 : Int = (message.data.count > 0) ? (Int(message.data[0]) << 24) : 0
@@ -103,5 +102,9 @@ struct RemoteNodeProcessor : Processor {
     
     private func checkSourceID(_ message : Message, _ node : Node) -> Bool {
         return message.source == node.id
+    }
+    
+    private func checkDestID(_ message : Message, _ node : Node) -> Bool {
+        return message.destination == node.id
     }
 }

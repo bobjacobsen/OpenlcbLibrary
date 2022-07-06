@@ -38,5 +38,14 @@ class MtiTest: XCTestCase {
     func testSimpleProtocol() {
         XCTAssertTrue(MTI(rawValue: 0x08F4)!.simpleProtocol())
         XCTAssertFalse(MTI(rawValue: 0x0828)!.simpleProtocol())
-   }
+    }
+    func testIsGlobal() {
+        XCTAssertTrue(MTI(rawValue: 0x08F4)!.isGlobal())
+        XCTAssertFalse(MTI(rawValue: 0x0828)!.isGlobal())
+        XCTAssertTrue(MTI.Initialization_Complete.isGlobal())
+        XCTAssertFalse(MTI.Protocol_Support_Inquiry.isGlobal())
+        
+        XCTAssertTrue(MTI.Link_Level_Up.isGlobal())     // needs to be global so all node implementations see it
+        XCTAssertTrue(MTI.Link_Level_Down.isGlobal())   // needs to be global so all node implementations see it
+    }
 }
