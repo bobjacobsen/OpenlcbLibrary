@@ -30,6 +30,20 @@ public struct CdiSampleDataAccess {
         }
     }
 
+    public static func getDataFromBundleFile(_ file : String) -> Data? { // file is without extension, assumed .xml
+        let filePath = Bundle.main.path(forResource: file, ofType: "xml");
+        let URL = NSURL.fileURL(withPath: filePath!)
+
+        do {
+            let string = try String.init(contentsOf: URL)
+            let data = string.data(using: .utf8)!
+            return data
+        } catch  {
+            print(error);
+        }
+        return nil
+    }
+    
     /// Provide sample CDI as a ``CdiXmlMemo`` tree. Contains
     ///   - a clean sample segement
     ///   - the first segments of an RR-CirKits Tower LCC CDI
