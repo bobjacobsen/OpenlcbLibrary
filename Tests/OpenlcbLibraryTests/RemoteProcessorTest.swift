@@ -112,6 +112,20 @@ class RemoteProcessorTest: XCTestCase {
 
         XCTAssertEqual(node21.snip.manufacturerName, "12")
     }
+   
+    func testProducerIdentified() throws {
+        node21.state = .Initialized
+        let msg = Message(mti : MTI.Producer_Identified_Active, source: NodeID(0), data: [01,02,03,04,05,06,07,08])
+        processor.process(msg, node21)
+        XCTAssertTrue(node21.events.isProduced(EventID(0x01_02_03_04_05_06_07_08)))
+    }
     
+    func testConsumerIdentified() throws {
+        node21.state = .Initialized
+        let msg = Message(mti : MTI.Consumer_Identified_Active, source: NodeID(0), data: [01,02,03,04,05,06,07,08])
+        processor.process(msg, node21)
+        XCTAssertTrue(node21.events.isConsumed(EventID(0x01_02_03_04_05_06_07_08)))
+    }
     
+
 }

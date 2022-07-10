@@ -36,8 +36,7 @@ public class Node : Equatable, Hashable, Comparable, // for Sets and sorts
         self.id = nodeID
     }
     
-    let producers = LocalEventStore()
-    let consumers = LocalEventStore()
+    var events = LocalEventStore()
     
     // two ctors for use with SwiftUI previews
     public convenience init( _ nodeID : NodeID, pip : Set<PIP> ) {

@@ -18,7 +18,7 @@ struct RemoteNodeProcessor : Processor {
         self.linkLayer = linkLayer
     }
     
-    let linkLayer : LinkLayer? // TODO: Is this needed? Does this ever send?
+    let linkLayer : LinkLayer? // TODO: May not be needed, as this may never send
     
     let logger = Logger(subsystem: "com.ardenwood", category: "RemoteNodeProcessor")
     
@@ -45,8 +45,13 @@ struct RemoteNodeProcessor : Processor {
             simpleNodeIdentInfoRequest(message, node)
         case .Simple_Node_Ident_Info_Reply :
             simpleNodeIdentInfoReply(message, node)
+        case .Producer_Identified_Active, .Producer_Identified_Inactive, .Producer_Identified_Unknown, .Producer_Consumer_Event_Report :
+            producedEventIndicated(message, node)
+        case .Consumer_Identified_Active, .Consumer_Identified_Inactive, .Consumer_Identified_Unknown :
+            consumedEventIndicated(message, node)
         default:
-            // TODO: add producer/consumer tracking
+            // we ignore others
+            logger.trace("message needing no processing: \(message) on \(node)") // TODO: Globals will be logged for each node?
             break
         }
     }
@@ -99,6 +104,21 @@ struct RemoteNodeProcessor : Processor {
             node.snip.updateStringsFromSnipData()
         }
     }
+    
+    private func producedEventIndicated(_ message : Message, _ node : Node) {
+        // make an event if form data
+        let eventID = EventID(message.data)
+        // register it
+        node.events.produces(eventID)
+    }
+    
+    private func consumedEventIndicated(_ message : Message, _ node : Node) {
+        // make an event if form data
+        let eventID = EventID(message.data)
+        // register it
+        node.events.consumes(eventID)
+    }
+    
     
     private func checkSourceID(_ message : Message, _ node : Node) -> Bool {
         return message.source == node.id
