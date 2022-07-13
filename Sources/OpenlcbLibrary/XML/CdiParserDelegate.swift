@@ -157,7 +157,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     func segmentStart(attributes : [String:String]) {
         let thisMemo = CdiXmlMemo()
         thisMemo.type = .SEGMENT
-        thisMemo.space = 0 // TODO: Is this the right default? Check CDI definition
+        thisMemo.space = 0
         if let attr = attributes["space"] {
             if let space = Int(attr) {
                 thisMemo.space = space
