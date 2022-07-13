@@ -195,6 +195,31 @@ class CanLinkTest: XCTestCase {
                        NodeID(0x010203040506))
     }
 
+    func testVerifiedNodeIDsetAliasMap() {
+        // JMRI doesn't send AMD, so gets assigned 00.00.00.00.00.00
+        // This tests that a VerifiedNode will update that.
+        
+        let canPhysicalLayer = CanPhysicalLayerSimulation()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+        canLink.linkPhysicalLayer(canPhysicalLayer)
+        let messageLayer = MessageMockLayer()
+        canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
+        canLink.state = .Permitted
+        
+        // Don't map an alias with an AMD
+        
+        canPhysicalLayer.fireListeners(CanFrame(control: 0x19170, alias: 0x247, data: [08,07,06,05,04,03])) // VerifiedNodeID from unique alias
+        
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0) // nothing back down to CAN
+        XCTAssertEqual(messageLayer.receivedMessages.count, 1) // one message forwarded
+        // check for proper global MTI
+        XCTAssertEqual(messageLayer.receivedMessages[0].mti,
+                       MTI.Verified_NodeID)
+        XCTAssertEqual(messageLayer.receivedMessages[0].source,
+                       NodeID(0x080706050403))
+    }
+
+    
     func testSimpleAddressedData() { // Test start=yes, end=yes frame
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))

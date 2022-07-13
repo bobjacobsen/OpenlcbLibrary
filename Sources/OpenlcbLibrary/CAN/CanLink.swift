@@ -27,6 +27,7 @@ public class CanLink : LinkLayer {
     
     var link : CanPhysicalLayer?
     
+    // the local alias <-> NodeID mapping
     var aliasToNodeID : [UInt:NodeID] = [:]
     var nodeIdToAlias : [NodeID:UInt] = [:]
     
@@ -178,9 +179,15 @@ public class CanLink : LinkLayer {
         if let mapped = aliasToNodeID[frame.header&0xFFF] {
             sourceID = mapped
         } else {
-            sourceID = NodeID(nextInternallyAssignedNodeID)
-            nextInternallyAssignedNodeID += 1
-            logger.error("message from unknown source alias: \(frame, privacy: .public), continue with \(sourceID, privacy: .public)")
+            // special case for JMRI, which sends VerifiedNodeID but not AMD
+            if mti == MTI.Verified_NodeID {
+                sourceID = NodeID(frame.data)
+                logger.info("Verified_NodeID from unknown source alias: \(frame, privacy: .public), continue with \(sourceID, privacy: .public)")
+            } else {
+                sourceID = NodeID(nextInternallyAssignedNodeID)
+                nextInternallyAssignedNodeID += 1
+                logger.error("message from unknown source alias: \(frame, privacy: .public), continue with \(sourceID, privacy: .public)")
+            }
             // register that internally-generated nodeID-alias association
             aliasToNodeID[frame.header&0xFFF] = sourceID
             nodeIdToAlias[sourceID] = frame.header&0xFFF
