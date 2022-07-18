@@ -73,11 +73,26 @@ class CanPhysicalLayerGridConnectTest: XCTestCase {
         let bytes : [UInt8] = [0x3a, 0x58, 0x31, 0x39, 0x34, 0x39, 0x30, 0x33, 0x36, 0x35, 0x4e, 0x3b, 0x0a] // :X19490365N;
         
         gc.receiveChars(data: bytes+bytes)
-
+        
         XCTAssertEqual(receivedFrames[0], CanFrame(header: 0x19490365, data:[]))
         XCTAssertEqual(receivedFrames[1], CanFrame(header: 0x19490365, data:[]))
     }
+    
+    func testOneFrameReceivedHeaderOnlyPlusPartOfAnother() {
+        let gc = CanPhysicalLayerGridConnect(callback: captureString)
+        gc.registerFrameReceivedListener(receiveListener)
+        var bytes : [UInt8] = [0x3a, 0x58, 0x31, 0x39, 0x34, 0x39, 0x30, 0x33, 0x36, 0x35, 0x4e, 0x3b, 0x0a, // :X19490365N;
+                               0x3a, 0x58]
+        gc.receiveChars(data: bytes)
+        
+        XCTAssertEqual(receivedFrames[0], CanFrame(header: 0x19490365, data:[]))
+                               
+        bytes = [0x31, 0x39, 0x34, 0x39, 0x30, 0x33, 0x36, 0x35, 0x4e, 0x3b, 0x0a]
+        gc.receiveChars(data: bytes)
 
+        XCTAssertEqual(receivedFrames[1], CanFrame(header: 0x19490365, data:[]))
+    }
+    
     func testOneFrameReceivedInTwoChunks() {
         let gc = CanPhysicalLayerGridConnect(callback: captureString)
         gc.registerFrameReceivedListener(receiveListener)

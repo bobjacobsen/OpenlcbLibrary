@@ -50,6 +50,7 @@ public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
             // found end, now find start
             for index in 0...inboundBuffer.count-1 {
                 var outData : [UInt8] = []
+                if !inboundBuffer[index...inboundBuffer.count-1].contains(0x3B) { break }
                 if inboundBuffer[index] == 0x3A { // ':' starts message
                     // now start to accumulate data from entire message
                     var header : UInt = 0
