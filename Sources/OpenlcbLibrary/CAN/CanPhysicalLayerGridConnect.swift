@@ -30,7 +30,7 @@ public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
             output += "\(String(format:"%02X", byte))"
         }
         output += ";\n"
-        logger.debug("sending to link \(output, privacy: .public)")
+        // logger.debug("sending to link \(output, privacy: .public)")
         canSendCallback(output)
     }
     
@@ -75,7 +75,7 @@ public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
                     // lastByte is index of ; in this message
                     
                     let cf = CanFrame(header : header, data: outData)
-                    logger.debug("received from link \(cf, privacy: .public)")
+                    // logger.debug("received from link \(cf, privacy: .public)")
                     fireListeners(cf)
                 }
             }

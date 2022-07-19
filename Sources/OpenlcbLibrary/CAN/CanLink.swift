@@ -303,6 +303,7 @@ public class CanLink : LinkLayer {
         let abort = (receivedAlias == localAlias)
         if (abort ) {
             // Collision! Insist on our alias
+            logger.notice("alias collision with alias \(receivedAlias, privacy: .public), we restart with AMR and attempt to get new alias")
             link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
             // Standard 6.2.5
             state = .Inhibited
