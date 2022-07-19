@@ -6,29 +6,43 @@
 
 /// Configures a working OpenlcbLibrary system.
 ///
+import Foundation
+import os
 
-public struct OpenlcbLibrary {
+public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // class to use @Published
 
     let defaultNode : Node
     
-    public var localNodeStore : NodeStore
-    public var remoteNodeStore : RemoteNodeStore
+    var localNodeStore : LocalNodeStore
+    
+    @Published public var remoteNodeStore : RemoteNodeStore {  // TODO: remove debug
+        didSet(oldvalue) {
+            logger.info("published RemoteDataSort did change")
+        }
+    }
 
     let canLink : CanLink
+    
+    let logger = Logger(subsystem: "com.ardenwood", category: "OpenlcbLibrary")
     
     public init(defaultNodeID : NodeID) {
         
         defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01
         
-        localNodeStore   = NodeStore()
-        remoteNodeStore  = RemoteNodeStore(localNodeStore: localNodeStore)
+        localNodeStore   = LocalNodeStore()
+        remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         
         canLink = CanLink(localNodeID: defaultNodeID)
+        
+        logger.info("OpenlcbLibrary init")
     }
     
+    public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
+
     // add sample data for SwiftUI preview
-    public init(sample: Bool) {
+    public convenience init(sample: Bool) {
         self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
+        logger.info("OpenlcbLibrary init(Bool)")
         if (sample) {
             createSampleData()
         }
@@ -57,9 +71,6 @@ public struct OpenlcbLibrary {
         // connect the physical -> link layers
         canLink.linkPhysicalLayer(canPhysicalLayer)
         
-        canLink.registerMessageReceivedListener(localNodeStore.invokeProcessorsOnNodes)
-        canLink.registerMessageReceivedListener(remoteNodeStore.invokeProcessorsOnNodes)
-
         // create processors
         let rprocessor : Processor = RemoteNodeProcessor(canLink) // track effect of messages on Remote Nodes
         let lprocessor : Processor = LocalNodeProcessor(canLink)  // track effect of messages on Local Node
@@ -71,7 +82,16 @@ public struct OpenlcbLibrary {
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
         localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor]
-        
+ 
+        // register listener here which will process the node stores without copying them
+        canLink.registerMessageReceivedListener(processMessageFromLinkLevel)
+
+    }
+    
+    func processMessageFromLinkLevel(_ message: Message) {
+        localNodeStore.invokeProcessorsOnNodes(message: message)
+        remoteNodeStore.invokeProcessorsOnNodes(message: message)
+        self.objectWillChange.send() // TODO: make this less brute force with a return Bool from invokeProcessorsOnNodes?
     }
     
     var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``

@@ -19,8 +19,7 @@ class RemoteNodeStoreTest: XCTestCase {
     }
 
     func testSimpleLoadStore() {
-        let localNodeStore = NodeStore()
-        let store = RemoteNodeStore(localNodeStore:localNodeStore)
+        var store = RemoteNodeStore(localNodeID: NodeID(1))
         
         let n12 = Node(NodeID(12))
         
@@ -31,9 +30,8 @@ class RemoteNodeStoreTest: XCTestCase {
     }
 
     func testRequestCreates() {
-        let localNodeStore = NodeStore()
-        let store = RemoteNodeStore(localNodeStore:localNodeStore)
- 
+        var store = RemoteNodeStore(localNodeID: NodeID(1))
+        
         let n12 = Node(NodeID(12))
 
         // try a load
@@ -43,9 +41,8 @@ class RemoteNodeStoreTest: XCTestCase {
     }
 
     func testAccessThroughLoadStoreByID() {
-        let localNodeStore = NodeStore()
-        let store = RemoteNodeStore(localNodeStore:localNodeStore)
-
+        var store = RemoteNodeStore(localNodeID: NodeID(1))
+        
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
 
@@ -71,16 +68,12 @@ class RemoteNodeStoreTest: XCTestCase {
     }
 
     func testALocalStoreVeto() {
-        let localNodeStore = NodeStore()
-        let store = RemoteNodeStore(localNodeStore:localNodeStore)
-
         let nid12 = NodeID(12)
-        let nid13 = NodeID(13)
-
         let n12 = Node(nid12)
         
-        let n13 = Node(nid13) // node in local store
-        localNodeStore.store(n13)
+        let nid13 = NodeID(13)
+ 
+        var store = RemoteNodeStore(localNodeID: nid13)
 
         store.store(n12)
         

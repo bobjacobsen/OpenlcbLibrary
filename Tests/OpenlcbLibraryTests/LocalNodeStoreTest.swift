@@ -1,5 +1,5 @@
 //
-//  NodeStoreTest.swift
+//  LocalNodeStoreTest.swift
 //
 //  Created by Bob Jacobsen on 6/1/22.
 //
@@ -7,7 +7,7 @@
 import XCTest
 @testable import OpenlcbLibrary
 
-class NodeStoreTest: XCTestCase {
+class LocalNodeStoreTest: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -18,7 +18,7 @@ class NodeStoreTest: XCTestCase {
     }
 
     func testSimpleLoadStore() {
-        let store = NodeStore()
+        var store = LocalNodeStore()
         
         let n12 = Node(NodeID(12))
         
@@ -34,7 +34,7 @@ class NodeStoreTest: XCTestCase {
     }
 
     func testAccessThroughLoadStoreByID() {
-        let store = NodeStore()
+        var store = LocalNodeStore()
         
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
@@ -65,7 +65,7 @@ class NodeStoreTest: XCTestCase {
     }
 
     func testAccessThroughLoadStoreByName() {
-        let store = NodeStore()
+        var store = LocalNodeStore()
         
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
