@@ -308,6 +308,8 @@ public class CanLink : LinkLayer {
             // Standard 6.2.5
             state = .Inhibited
             // attempt to get a new alias and go back to .Permitted
+            localAliasSeed = CanLink.incrementAlias48(localAliasSeed)
+            localAlias = CanLink.createAlias12(localAliasSeed)
             defineAndReserveAlias()
         }
         return abort
@@ -315,7 +317,6 @@ public class CanLink : LinkLayer {
     
     /// Send the alias allocation sequence
     func sendAliasAllocationSequence() {
-        localAliasSeed = CanLink.incrementAlias48(localAliasSeed)
         link!.sendCanFrame( CanFrame(cid: 7, nodeID: localNodeID, alias: localAlias) )
         link!.sendCanFrame( CanFrame(cid: 6, nodeID: localNodeID, alias: localAlias) )
         link!.sendCanFrame( CanFrame(cid: 5, nodeID: localNodeID, alias: localAlias) )

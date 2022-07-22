@@ -161,6 +161,7 @@ class CanLinkTest: XCTestCase {
         canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8)  // includes recovery of new alias 4 CID, RID, AMR, AME
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMR.rawValue, alias: ourAlias, data: [5, 1, 1, 1, 3, 1]))
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[6], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: 0x936, data: [5, 1, 1, 1, 3, 1])) // new alias
         XCTAssertEqual(canLink.state, CanLink.State.Permitted)
     }
     
