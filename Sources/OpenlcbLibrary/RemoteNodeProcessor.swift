@@ -93,15 +93,20 @@ struct RemoteNodeProcessor : Processor {
     }
     
     private func simpleNodeIdentInfoRequest(_ message : Message, _ node : Node) {
-        // clear SNIP in the node
-        node.snip = SNIP()
+        if checkDestID(message, node) { // send by us?
+            // clear SNIP in the node
+            node.snip = SNIP()
+        }
     }
     
     private func simpleNodeIdentInfoReply(_ message : Message, _ node : Node) {
-        // accumulate data in the node
-        if message.data.count > 2 {
-            node.snip.addData(data: message.data)
-            node.snip.updateStringsFromSnipData()
+        if checkSourceID(message, node) { // send by us?
+            // accumulate data in the node
+            if message.data.count > 2 {
+                node.snip.addData(data: message.data)
+                node.snip.updateStringsFromSnipData()
+                logger.debug("SNIP data added to \(node, privacy: .public)")
+            }
         }
     }
     

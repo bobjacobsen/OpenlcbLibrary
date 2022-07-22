@@ -107,7 +107,7 @@ class RemoteProcessorTest: XCTestCase {
         XCTAssertEqual(node21.snip.manufacturerName, "")
         
          // add some data
-        msg = Message(mti : MTI.Simple_Node_Ident_Info_Reply, source : NodeID(12), destination: NodeID(21), data: [04,0x31,0x32,0,0,0])
+        msg = Message(mti : MTI.Simple_Node_Ident_Info_Reply, source : NodeID(21), destination: NodeID(12), data: [04,0x31,0x32,0,0,0])
         processor.process(msg, node21)
 
         XCTAssertEqual(node21.snip.manufacturerName, "12")
