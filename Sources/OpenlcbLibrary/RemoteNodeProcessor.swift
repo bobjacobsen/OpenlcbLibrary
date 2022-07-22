@@ -18,7 +18,7 @@ struct RemoteNodeProcessor : Processor {
         self.linkLayer = linkLayer
     }
     
-    let linkLayer : LinkLayer? // TODO: May not be needed, as this may never send
+    let linkLayer : LinkLayer?
     
     let logger = Logger(subsystem: "com.ardenwood", category: "RemoteNodeProcessor")
     
@@ -49,6 +49,8 @@ struct RemoteNodeProcessor : Processor {
             producedEventIndicated(message, node)
         case .Consumer_Identified_Active, .Consumer_Identified_Inactive, .Consumer_Identified_Unknown :
             consumedEventIndicated(message, node)
+        case .New_Node_Seen :
+            newNodeSeen(message, node)
         default:
             // we ignore others
             logger.trace("message needing no processing: \(message) on \(node)") // TODO: Globals will be logged for each node?
@@ -79,6 +81,15 @@ struct RemoteNodeProcessor : Processor {
         // don't clear out PIP, SNIP caches, they're probably still good
         // node.pipSet = Set<PIP>()
         // node.snip = SNIP()
+    }
+    
+    private func newNodeSeen(_ message : Message, _ node : Node) {
+        // send pip and snip requests
+        let pip = Message(mti: MTI.Protocol_Support_Inquiry, source: NodeID(0), destination: node.id, data: []) // TODO: wrong source node
+        linkLayer?.sendMessage(pip)
+        let snip = Message(mti: MTI.Simple_Node_Ident_Info_Request, source: NodeID(0), destination: node.id, data: [])
+        linkLayer?.sendMessage(snip)
+
     }
     
     private func protocolSupportReply(_ message : Message, _ node : Node) {

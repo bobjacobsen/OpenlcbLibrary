@@ -51,11 +51,11 @@ struct PrintingProcessor : Processor {
                 .Producer_Identified_Unknown,
                 .Producer_Identified_Active,
                 .Producer_Identified_Inactive,
-               .Identify_Events_Global,
+                .Identify_Events_Global,
                 .Learn_Event,
                 .Producer_Consumer_Event_Report :
             simpleGlobalMessage(message, node, dataString)
-        case    .Link_Level_Up, .Link_Level_Down, .Unknown :
+        case    .Link_Level_Up, .Link_Level_Down, .New_Node_Seen, .Unknown :
             internalMessage(message, dataString)
         }
     }
@@ -72,7 +72,11 @@ struct PrintingProcessor : Processor {
     
     private func internalMessage(_ message : Message, _ dataString : String) {
         let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
-        result("Internal Message: \(name) \(dataString)")
+        if message.mti.addressPresent() {
+            result("Internal Message: \(name) \(dataString) to \(message.destination ?? NodeID(0))")
+        } else {
+            result("Internal Message: \(name) \(dataString)")
+        }
     }
 }
 
