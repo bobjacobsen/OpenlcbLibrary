@@ -99,4 +99,15 @@ class NodeTest: XCTestCase {
         XCTAssertFalse(n12.pipSet.contains(PIP.STREAM_PROTOCOL))
 
     }
+    
+    func testConvenienceCtors() {
+        let pipSet = Set([PIP.DISPLAY_PROTOCOL])
+        let n1 = Node(NodeID(12), pip: pipSet)
+        XCTAssertTrue(n1.pipSet.contains(PIP.DISPLAY_PROTOCOL))
+        
+        var snip = SNIP()
+        snip.modelName = "modelX"
+        let n2 = Node(NodeID(13), snip: snip)
+        XCTAssertTrue(n2.snip.modelName == "modelX")
+    }
 }

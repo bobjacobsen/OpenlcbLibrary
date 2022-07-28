@@ -172,6 +172,13 @@ class CanLinkTest: XCTestCase {
                        MTI.Verify_NodeID_Number_Global )
     }
 
+    func testControlFrameDecode() {
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+        let frame = CanFrame(control: 0x1000, alias: 0x000)  // invalid control frame content
+        XCTAssertEqual(canLink.decodeControlFrameFormat(frame), CanLink.ControlFrame.UnknownFormat)
+        
+    }
+    
     func testSimpleGlobalData() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
@@ -207,7 +214,7 @@ class CanLinkTest: XCTestCase {
         canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
         canLink.state = .Permitted
         
-        // Don't map an alias with an AMD
+        // Don't map an alias with an AMD for this test
         
         canPhysicalLayer.fireListeners(CanFrame(control: 0x19170, alias: 0x247, data: [08,07,06,05,04,03])) // VerifiedNodeID from unique alias
         
@@ -219,8 +226,31 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages[0].source,
                        NodeID(0x080706050403))
     }
-
     
+    func testNoDestInAliasMap() {
+        // Tests handling of a message with a destination alias not in map (should not happen, but...)
+        
+        let canPhysicalLayer = CanPhysicalLayerSimulation()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+        canLink.linkPhysicalLayer(canPhysicalLayer)
+        let messageLayer = MessageMockLayer()
+        canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
+        canLink.state = .Permitted
+        
+        // Don't map an alias with an AMD for this test
+        
+        canPhysicalLayer.fireListeners(CanFrame(control: 0x19968, alias: 0x247, data: [08,07,06,05,04,03])) // Identify Events Addressed from unique alias
+        
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0) // nothing back down to CAN
+        XCTAssertEqual(messageLayer.receivedMessages.count, 1) // one message forwarded
+        // check for proper global MTI
+        XCTAssertEqual(messageLayer.receivedMessages[0].mti,
+                       MTI.Identify_Events_Addressed)
+        XCTAssertEqual(messageLayer.receivedMessages[0].source,
+                       NodeID(0x000000000001))
+    }
+    
+
     func testSimpleAddressedData() { // Test start=yes, end=yes frame
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))

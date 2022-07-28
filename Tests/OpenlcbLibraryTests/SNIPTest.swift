@@ -152,4 +152,15 @@ class SNIPTest: XCTestCase {
         s.updateStringsFromSnipData()
         XCTAssertEqual(s.userProvidedNodeName, "test 123")
     }
+    
+    func testConvenienceCtor() {
+        let s = SNIP("mfgName", "model", "hVersion", "sVersion", "uName", "uDesc")
+            
+        XCTAssertEqual(s.manufacturerName, "mfgName")
+        XCTAssertEqual(s.modelName, "model")
+        XCTAssertEqual(s.hardwareVersion, "hVersion")
+        XCTAssertEqual(s.softwareVersion, "sVersion")
+        XCTAssertEqual(s.userProvidedNodeName, "uName")
+        XCTAssertEqual(s.userProvidedDescription, "uDesc")
+    }
 }

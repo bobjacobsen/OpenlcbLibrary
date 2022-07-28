@@ -81,5 +81,9 @@ class RemoteNodeStoreTest: XCTestCase {
         XCTAssertNil(store.lookup(nid13), "don't create if in local store")
     }
 
+    func testCustomStringConvertible() { // existence test, don't check content which can change
+        let store = RemoteNodeStore(localNodeID: NodeID(13))
+        _ = store.description
+    }
 
 }

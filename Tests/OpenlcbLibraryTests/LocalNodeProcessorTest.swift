@@ -134,11 +134,7 @@ class LocalNodeProcessorTest: XCTestCase {
         let msg2 = Message(mti : MTI.Identify_Events_Addressed, source : NodeID(13), destination : NodeID(21))
         processor.process(msg2, node21)
 
-        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.Optional_Interaction_Rejected)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 4)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x10, 0x43, 0x09, 0x68])
-
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
     }
     
     func testUnsupportedMessageGlobal() {

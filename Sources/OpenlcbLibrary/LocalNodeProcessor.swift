@@ -87,10 +87,8 @@ struct LocalNodeProcessor : Processor {
     }
     
     private func identifyEventsAddressed(_ message : Message, _ node : Node) {
-        // EventProtocol not in PIP, so decode and reject those messages
-        let msg = Message(mti: MTI.Optional_Interaction_Rejected, source: node.id, destination: message.source,
-                          data: [0x10, 0x43, UInt8((message.mti.rawValue>>8)&0xFF), UInt8(message.mti.rawValue&0xFF)]) // permanent error
-        linkLayer!.sendMessage(msg)
+        // EventProtocol in PIP, but no Events here to reply about; no reply necessary
+        // TODO: Hook to eventual Event Processing architecture
     }
     
     ///
