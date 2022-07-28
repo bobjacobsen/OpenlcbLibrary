@@ -25,10 +25,16 @@ class Node
 Node : DatagramService
 Node : MemoryService
 
-struct NodeStore
+protocol NodeStore
 NodeStore : Set<Node>
 NodeStore : Set<Processor>
 NodeStore : LinkLevel
+
+struct RemoteNodeStore
+NodeStore <|-- RemoteNodeStore
+struct LocalNodeStore
+NodeStore <|-- LocalNodeStore
+
 
 Node --> DatagramService
 Node --> MemoryService

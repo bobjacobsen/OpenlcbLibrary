@@ -4,42 +4,44 @@
 //  Created by Bob Jacobsen on 6/1/22.
 //
 
-/// Configures a working OpenlcbLibrary system.
+/// Configures a working OpenlcbLibrary subsystem.
 ///
 import Foundation
 import os
 
 public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // class to use @Published
 
-    let defaultNode : Node
+    let defaultNode : Node      // the node that's implemented here
     
     var localNodeStore : LocalNodeStore
     
-    @Published public var remoteNodeStore : RemoteNodeStore {  // TODO: remove debug
+    @Published public var remoteNodeStore : RemoteNodeStore { // store of remote nodes being monitored
+        // TODO: remove debug
         didSet(oldvalue) {
             logger.info("published RemoteDataSort did change")
         }
     }
 
-    let canLink : CanLink
+    let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
     let logger = Logger(subsystem: "com.ardenwood", category: "OpenlcbLibrary")
     
+    public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
+    
+    /// Initialize a basic system
     public init(defaultNodeID : NodeID) {
         
-        defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01
+        defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01; user responsible for uniqueness of value
         
         localNodeStore   = LocalNodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         
-        canLink = CanLink(localNodeID: defaultNodeID)
+        linkLevel = CanLink(localNodeID: defaultNodeID)
         
         logger.info("OpenlcbLibrary init")
     }
     
-    public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
-
-    // add sample data for SwiftUI preview
+    /// Iniitialize and add sample data for SwiftUI preview
     public convenience init(sample: Bool) {
         self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
         logger.info("OpenlcbLibrary init(Bool)")
@@ -55,26 +57,26 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     public func configureCanTelnet(_ canPhysicalLayer : CanPhysicalLayer) { // pass in either a real or mock physical layer
         
         // local node has limited capability
-        defaultNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to make memory requests
+        defaultNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to receive replies to memory requests
                                   PIP.EVENT_EXCHANGE_PROTOCOL,
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         defaultNode.snip.manufacturerName = "Ardenwood.net"
-        defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling
+        defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling (as opposed to library name)
         defaultNode.snip.hardwareVersion  = "14"             // holds iOS version // TODO: rethink hardware version
-        defaultNode.snip.softwareVersion  = "0.0"            // TODO: Version number handling
+        defaultNode.snip.softwareVersion  = "0.0.1"            // TODO: Version number handling
         defaultNode.snip.userProvidedNodeName = "OlcbTools App"
         defaultNode.snip.userProvidedDescription = "App has no permanent name (yet)"
         defaultNode.snip.updateSnipDataFromStrings()
 
         localNodeStore.store(defaultNode)
         
-        // connect the physical -> link layers
-        canLink.linkPhysicalLayer(canPhysicalLayer)
+        // connect the physical -> link layers using the CAN-overTCP form (Native Telnet not yet available)
+        linkLevel.linkPhysicalLayer(canPhysicalLayer)
         
         // create processors
-        let rprocessor : Processor = RemoteNodeProcessor(canLink) // track effect of messages on Remote Nodes
-        let lprocessor : Processor = LocalNodeProcessor(canLink)  // track effect of messages on Local Node
-        let dprocessor : Processor = DatagramProcessor(canLink)   // datagram processor doesn't affect node status
+        let rprocessor : Processor = RemoteNodeProcessor(linkLevel) // track effect of messages on Remote Nodes
+        let lprocessor : Processor = LocalNodeProcessor(linkLevel)  // track effect of messages on Local Node
+        let dprocessor : Processor = DatagramProcessor(linkLevel)   // datagram processor doesn't affect node status
                 
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
         // TODO: With this setup, only messages from the network are sent to pprocessor and displayed.
@@ -84,19 +86,19 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor]
  
         // register listener here which will process the node stores without copying them
-        canLink.registerMessageReceivedListener(processMessageFromLinkLevel)
+        linkLevel.registerMessageReceivedListener(processMessageFromLinkLevel)
 
     }
     
     func processMessageFromLinkLevel(_ message: Message) {
         localNodeStore.invokeProcessorsOnNodes(message: message)
         remoteNodeStore.invokeProcessorsOnNodes(message: message)
-        self.objectWillChange.send() // TODO: make this less brute force with a return Bool from invokeProcessorsOnNodes?
+        self.objectWillChange.send() // TODO: Every message publishes; make this less brute force with a return Bool from invokeProcessorsOnNodes?
     }
     
     var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``
     
-    /// Load some sample nodes, but don't activate them
+    /// Load some sample nodes, but don't activate them - for use by testing of library clients
     public func createSampleData() {
         // create two remote nodes
         sampleNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,
@@ -143,7 +145,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         }
     }
     
-    /// Once configuration (and optional sample data) is complete, bring the link up
+    /// Once configuration (and optional sample data) is complete, bring the link up starting at the physical layer
     public func bringLinkUp(_ canPhysicalLayer : CanPhysicalLayer) {
         canPhysicalLayer.physicalLayerUp()
     }

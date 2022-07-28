@@ -120,8 +120,8 @@ final class OpenlcbLibraryTests: XCTestCase {
         
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x13, 0x33, 0x04, 0x41, 0x72, 0x64, 0x65, 0x6E]) // carries nodeID & SNIP Data
         XCTAssertEqual(canPhysicalLayer.receivedFrames[1].data, [0x33, 0x33, 0x77, 0x6F, 0x6F, 0x64, 0x2E, 0x6E]) // carries nodeID & SNIP Data
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[5].data, [0x33, 0x33, 0x2E, 0x30, 0x00, 0x02, 0x4F, 0x6C]) // carries nodeID & SNIP Data
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[13].data,[0x23, 0x33, 0x29, 0x00]) // carries nodeID & SNIP Data
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[5].data, [0x33, 0x33, 0x2E, 0x30, 0x2E, 0x31, 0x00, 0x02]) // carries nodeID & SNIP Data
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[13].data,[0x23, 0x33, 0x65, 0x74, 0x29, 0x00]) // carries nodeID & SNIP Data
 
         canPhysicalLayer.receivedFrames = []
 

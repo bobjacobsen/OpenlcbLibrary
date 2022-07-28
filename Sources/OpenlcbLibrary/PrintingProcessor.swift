@@ -8,9 +8,11 @@
 
 import Foundation
 
+///
 /// Provide String versions of the received messages
+///
 struct PrintingProcessor : Processor {
-    /// Pass in something to process output
+    /// Pass in result routine to process output
     public init ( _ result : @escaping ( _ : String) -> (), _ linkLayer: LinkLayer? = nil) {
         self.result = result
         self.linkLayer = linkLayer
@@ -81,18 +83,21 @@ struct PrintingProcessor : Processor {
 }
 
 // ---------------------
-// To print the result
+// MARK: Directly print the result
 // ---------------------
 //  let handler : (_ : String) -> () = { (data: String)  in
 //      print(data)
 //      }
 //  let pprocessor : Processor = PrintingProcessor(handler) // example that just prints info
 
+
 // ---------------------
-// for sending to a View
+// MARK: Send to a View
 // ---------------------
 var lotsOfLinesToDisplay : [MonitorLine] = []
 
+///
+/// Pass this routine into init(..) to publish the messages to an ObservedObject
 public func printingProcessorPublishLine(string : String) { // set this as ``result`` handler
     let NUMBER_OF_LINES = 100
 
@@ -104,12 +109,16 @@ public func printingProcessorPublishLine(string : String) { // set this as ``res
     }
 
     // publish to ObservedObject
-    MonitorModel.sharedInstance.printingProcessorContentArray = lotsOfLinesToDisplay // was globaleVariable
+    MonitorModel.sharedInstance.printingProcessorContentArray = lotsOfLinesToDisplay
 }
+
+/// ObservableObject publlishing the last `NIMBER_OF_LINES` of messages
 public class MonitorModel: ObservableObject {
     public static let sharedInstance = MonitorModel()
     @Published public var printingProcessorContentArray: [MonitorLine] = [MonitorLine(line: "No Content Yet")]
 }
+
+/// Represents a single message line
 public struct MonitorLine {
     public let id = UUID()
     public let line : String
