@@ -37,6 +37,9 @@ public enum MTI : Int {
     case Simple_Node_Ident_Info_Request     = 0x0DE8
     case Simple_Node_Ident_Info_Reply       = 0x0A08
     
+    case Remote_Button_Request              = 0x0948
+    case Remote_Button_Reply                = 0x0549
+
     case Datagram                           = 0x1C48
     case Datagram_Received_OK               = 0x0A28
     case Datagram_Rejected                  = 0x0A48

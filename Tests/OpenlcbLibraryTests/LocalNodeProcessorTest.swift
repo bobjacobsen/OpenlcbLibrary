@@ -140,4 +140,39 @@ class LocalNodeProcessorTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x10, 0x43, 0x09, 0x68])
 
     }
+    
+    func testUnsupportedMessageGlobal() {
+        // global, testing with an MTI we don't understand
+        let msg1 = Message(mti : MTI.Identify_Producer, source : NodeID(13))
+        processor.process(msg1, node21)
+        
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
+    }
+        
+    func testUnsupportedMessageAddressed() {
+        // addressed to node, testing with an MTI we don't understand
+        let msg2 = Message(mti : MTI.Remote_Button_Request, source : NodeID(13), destination : NodeID(21))
+        processor.process(msg2, node21)
+        
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.Optional_Interaction_Rejected)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 4)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x10, 0x43, 0x09, 0x48])  // error code, MTI
+        
+    }
+
+    func testDontRejectOIR() {
+        let msg1 = Message(mti : MTI.Optional_Interaction_Rejected, source : NodeID(13), destination : NodeID(21))
+        processor.process(msg1, node21)
+        
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
+    }
+ 
+    func testDontRejectTDE() {
+        let msg1 = Message(mti : MTI.Terminate_Due_To_Error, source : NodeID(13), destination : NodeID(21))
+        processor.process(msg1, node21)
+        
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
+    }
+
 }

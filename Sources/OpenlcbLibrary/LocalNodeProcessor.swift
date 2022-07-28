@@ -6,13 +6,15 @@
 //
 
 import Foundation
+import os
 
 struct LocalNodeProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil) {
         self.linkLayer = linkLayer
     }
     let linkLayer : LinkLayer?
-
+    let logger = Logger(subsystem: "com.ardenwood", category: "LocalNodeProcessor")
+    
     func process( _ message : Message, _ node : Node ) {
         if ( !checkDestID(message, node) ) { return }  // not to us
         // specific message handling
@@ -31,7 +33,10 @@ struct LocalNodeProcessor : Processor {
             simpleNodeIdentInfoRequest(message, node)
         case .Identify_Events_Addressed :
             identifyEventsAddressed(message, node)
+        case .Terminate_Due_To_Error, .Optional_Interaction_Rejected :
+            errorMessageReceived(message, node)
         default:
+            unrecognizedMTI(message, node)
             break
         }
         // datagrams and datagram replies are handled in the DatagramProcessor/DatagramService
@@ -88,6 +93,23 @@ struct LocalNodeProcessor : Processor {
         linkLayer!.sendMessage(msg)
     }
     
+    ///
+    /// Handle a message with an unrecognized MTI by returning OptionalInteractionRejected
+    private func unrecognizedMTI(_ message : Message, _ node : Node) {
+        // global messages are ignored
+        if message.isGlobal() { return }
+        // addressed messages get an OptionalInteractionRejected
+        logger.notice("received unexpected \(message, privacy: .public), sent OIR")
+        let msg = Message(mti: MTI.Optional_Interaction_Rejected, source: node.id, destination: message.source,
+                          data: [0x10, 0x43, UInt8((message.mti.rawValue>>8)&0xFF), UInt8(message.mti.rawValue&0xFF)]) // permanent error
+        linkLayer!.sendMessage(msg)
+   }
+    
+    private func errorMessageReceived(_ message : Message, _ node : Node) {
+        // these are just logged until we have more complex interactions
+        logger.notice("received unexpected \(message, privacy: .public)")
+    }
+
     // MARK: -
     
     // is this addressed to this node, or a global message?

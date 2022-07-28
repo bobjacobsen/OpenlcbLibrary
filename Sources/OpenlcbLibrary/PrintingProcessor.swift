@@ -36,7 +36,9 @@ struct PrintingProcessor : Processor {
                 .Simple_Node_Ident_Info_Reply,
                 .Datagram,
                 .Datagram_Received_OK,
-                .Datagram_Rejected :
+                .Datagram_Rejected,
+                .Remote_Button_Request,
+                .Remote_Button_Reply :
             simpleAddressedMessage(message, node, dataString)
             
         case    .Initialization_Complete,
