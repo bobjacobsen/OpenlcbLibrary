@@ -14,7 +14,7 @@
 import Foundation
 import os
 
-public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
+final public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
     
     let logger = Logger(subsystem: "org.ardenwood.OpenlcbLibrary", category: "CanPhysicalLayerGridConnect")
     // callback to send a string-formatted frame over the link

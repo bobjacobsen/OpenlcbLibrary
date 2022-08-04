@@ -12,7 +12,7 @@ import Foundation
 ///
 ///  Concrete implementations may include a "node in this machine" and a "remote node elsewhere" a.k.a an image node.
 ///
-public class Node : Equatable, Hashable, Comparable, // for Sets and sorts
+final public class Node : Equatable, Hashable, Comparable, // for Sets and sorts
                     ObservableObject, Identifiable,  // for SwiftUI
                     CustomStringConvertible {        // for pretty printing
     
