@@ -151,19 +151,20 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
     }
     
-    func testRIDreceivedMatch() {
-        let canPhysicalLayer = CanPhysicalLayerSimulation()
-        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
-        let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
-        canLink.linkPhysicalLayer(canPhysicalLayer)
-        canLink.state = CanLink.State.Permitted
-
-        canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8)  // includes recovery of new alias 4 CID, RID, AMR, AME
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMR.rawValue, alias: ourAlias, data: [5, 1, 1, 1, 3, 1]))
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[6], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: 0x936, data: [5, 1, 1, 1, 3, 1])) // new alias
-        XCTAssertEqual(canLink.state, CanLink.State.Permitted)
-    }
+// TODO: restore test of matching RID
+//    func testRIDreceivedMatch() {
+//        let canPhysicalLayer = CanPhysicalLayerSimulation()
+//        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+//        let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
+//        canLink.linkPhysicalLayer(canPhysicalLayer)
+//        canLink.state = CanLink.State.Permitted
+//
+//        canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
+//        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8)  // includes recovery of new alias 4 CID, RID, AMR, AME
+//        XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMR.rawValue, alias: ourAlias, data: [5, 1, 1, 1, 3, 1]))
+//        XCTAssertEqual(canPhysicalLayer.receivedFrames[6], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: 0x936, data: [5, 1, 1, 1, 3, 1])) // new alias
+//        XCTAssertEqual(canLink.state, CanLink.State.Permitted)
+//    }
     
     func testCheckMTImapping() {
         
