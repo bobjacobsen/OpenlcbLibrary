@@ -30,18 +30,16 @@ class RemoteNodeStoreTest: XCTestCase {
     }
 
     func testRequestCreates() {
-        var store = RemoteNodeStore(localNodeID: NodeID(1))
+        var nodeStore = RemoteNodeStore(localNodeID: NodeID(1))
         
-        let n12 = Node(NodeID(12))
-
         // try a load
-        let temp = store.lookup(NodeID(12))
+        let temp = nodeStore.lookup(NodeID(12))
         
-        XCTAssertEqual(temp, n12, "store then lookup OK")
+        XCTAssertEqual(temp, nil, "lookup returns nil if node not present")
     }
 
     func testAccessThroughLoadStoreByID() {
-        var store = RemoteNodeStore(localNodeID: NodeID(1))
+        var nodeStore = RemoteNodeStore(localNodeID: NodeID(1))
         
         let nid12 = NodeID(12)
         let nid13 = NodeID(13)
@@ -49,21 +47,21 @@ class RemoteNodeStoreTest: XCTestCase {
         let n12 = Node(nid12)
         let n13 = Node(nid13)
 
-        store.store(n12)
-        store.store(n13)
+        nodeStore.store(n12)
+        nodeStore.store(n13)
         
         // test ability to modify state
         n12.state = Node.State.Initialized
         XCTAssertEqual(n12.state, Node.State.Initialized, "local modification OK")
-        XCTAssertEqual(store.lookup(nid12)!.state, Node.State.Initialized, "original in store modified")
+        XCTAssertEqual(nodeStore.lookup(nid12)!.state, Node.State.Initialized, "original in store modified")
         
-        // lookup non-existing node creates it
-        XCTAssertEqual(store.lookup(NodeID(21)), Node(NodeID(21)), "create on no match in store")
+        // lookup non-existing node returns nil
+        XCTAssertEqual(nodeStore.lookup(NodeID(21)), nil, "nil on no match in store")
         
-        let temp = store.lookup(nid13)
+        let temp = nodeStore.lookup(nid13)
         temp!.state = Node.State.Uninitialized
-        store.store(temp!)
-        XCTAssertEqual(store.lookup(nid13)!.state, Node.State.Uninitialized, "original in store modified by replacement")
+        nodeStore.store(temp!)
+        XCTAssertEqual(nodeStore.lookup(nid13)!.state, Node.State.Uninitialized, "original in store modified by replacement")
 
     }
 
