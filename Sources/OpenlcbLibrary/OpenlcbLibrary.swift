@@ -8,6 +8,7 @@
 ///
 import Foundation
 import os
+import UIKit
 
 public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // class to use @Published
 
@@ -64,8 +65,8 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling (as opposed to library name)
         defaultNode.snip.hardwareVersion  = "14"             // holds iOS version // TODO: rethink hardware version
         defaultNode.snip.softwareVersion  = "0.0.1"            // TODO: Version number handling
-        defaultNode.snip.userProvidedNodeName = "OlcbTools App"
-        defaultNode.snip.userProvidedDescription = "App has no permanent name (yet)"
+        defaultNode.snip.userProvidedNodeName = UIDevice.current.name
+        defaultNode.snip.userProvidedDescription = "OlcbTools app"
         defaultNode.snip.updateSnipDataFromStrings()
 
         localNodeStore.store(defaultNode)
