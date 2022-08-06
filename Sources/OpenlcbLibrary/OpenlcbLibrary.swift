@@ -8,7 +8,10 @@
 ///
 import Foundation
 import os
+
+#if canImport(UIKit)
 import UIKit
+#endif
 
 public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // class to use @Published
 
@@ -65,7 +68,15 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling (as opposed to library name)
         defaultNode.snip.hardwareVersion  = "14"             // holds iOS version // TODO: rethink hardware version
         defaultNode.snip.softwareVersion  = "0.0.1"            // TODO: Version number handling
+        #if canImport(UIKit)
         defaultNode.snip.userProvidedNodeName = UIDevice.current.name
+        #else
+        if let deviceName = Host.current().localizedName {
+            defaultNode.snip.userProvidedNodeName = deviceName
+        } else {
+            defaultNode.snip.userProvidedNodeName = "Some Mac"
+        }
+        #endif
         defaultNode.snip.userProvidedDescription = "OlcbTools app"
         defaultNode.snip.updateSnipDataFromStrings()
 
