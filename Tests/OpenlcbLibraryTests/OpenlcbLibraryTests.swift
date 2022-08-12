@@ -117,14 +117,13 @@ final class OpenlcbLibraryTests: XCTestCase {
         data = [0x02, 0x40]
         frame = CanFrame(header: header, data : data)
         canPhysicalLayer.fireListeners(frame)
-
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 14)
-        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19A08240") // SNIP Reply
         
+        // Check the first few and last frames of SNIP reply - content is variable with where test is run due to how node name is generated
+        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19A08240") // SNIP Reply
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x13, 0x33, 0x04, 0x41, 0x72, 0x64, 0x65, 0x6E]) // carries nodeID & SNIP Data
         XCTAssertEqual(canPhysicalLayer.receivedFrames[1].data, [0x33, 0x33, 0x77, 0x6F, 0x6F, 0x64, 0x2E, 0x6E]) // carries nodeID & SNIP Data
         XCTAssertEqual(canPhysicalLayer.receivedFrames[5].data, [0x33, 0x33, 0x2E, 0x30, 0x2E, 0x31, 0x00, 0x02]) // carries nodeID & SNIP Data
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[13].data,[0x23, 0x33, 0x65, 0x74, 0x29, 0x00]) // carries nodeID & SNIP Data
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[canPhysicalLayer.receivedFrames.count-1].data[0], 0x23) // end of snip data
 
         canPhysicalLayer.receivedFrames = []
 
