@@ -11,12 +11,12 @@ import Foundation
 //
 // Interface is via Date objects to that hours and minutes etc can be passed simultaneously.
 //  Service routines are provided to convert from/to hours and minutes.
-// TODO: Add day and year handling
-final public class Clock {
+// TODO: Add day and year convenience methods
+final public class Clock : ObservableObject {
     internal var initialized = false
     
-    internal var internalRun = false
-    var run: Bool {
+    internal var internalRun = true  // TODO: what should this start as?
+    public var run: Bool {
         get { return internalRun }
         set(run) {
             updateTimeCalculation()
@@ -24,8 +24,8 @@ final public class Clock {
         }
     }
     
-    internal var internalRate = 1.0
-    var rate: Double {
+    internal var internalRate = 10.0   // TODO: what should this start as?
+    public var rate: Double {
         get { return internalRate }
         set(rate) {
             updateTimeCalculation()
@@ -39,15 +39,17 @@ final public class Clock {
     private var lastTimeSet = Date()  // default is now
     
     // Default argument is the usual case; argument is
-    // provided for testing.
-    func setTime(_ time: Date, _ now : Date = Date()) {
+    // provided for testing. This structure prevents this
+    // from being a computed property.
+    public func setTime(_ time: Date, _ now : Date = Date()) {
         lastTimeSet = time
         timeLastSet = now
     }
     
     // Default argument is the usual case; argument is
-    // provided for testing.
-    func getTime(_ now : Date = Date()) -> Date {
+    // provided for testing. This structure prevents this
+    // from being a computed property.
+    public func getTime(_ now : Date = Date()) -> Date {
         if run {
             return lastTimeSet+(now-timeLastSet)*rate
         } else {
@@ -62,7 +64,7 @@ final public class Clock {
     //
     // Default arguments are the usual case; argument is
     // provided for testing.
-    func updateTimeCalculation(time: Date? = nil, now: Date? = nil ) {
+    private func updateTimeCalculation(time: Date? = nil, now: Date? = nil ) {
         timeLastSet = now ?? Date()
         lastTimeSet = time ?? getTime()
     }
@@ -83,10 +85,15 @@ final public class Clock {
             return Calendar.current.component(.hour, from:getTime())
         }
     }
+    public func getSecond(_ date : Date? = nil) -> Int {
+        if let date { // date was provided, use it
+            return Calendar.current.component(.second, from:date)
+        } else { // date not provided, use current fast time from getTime()
+            return Calendar.current.component(.second, from:getTime())
+        }
+    }
 
 }
-
-
 
 // provide a - operator for times:
 //   Date - Date = TimeInterval

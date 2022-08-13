@@ -25,7 +25,9 @@ struct ClockProcessor : Processor {
             break
         }
     }
-
+    // TODO: needs to handle Producer Identified for status report
+    // TODO: needs to make a status request at startup (now starting in Stopped mode)
+    
     func eventReport(_ message : Message, _ node : Node) {
         let event = message.data
         if !(event[0] == 1 && event[1] == 1 && event[2] == 0 && event[3] == 0 && event[4] == 1) {

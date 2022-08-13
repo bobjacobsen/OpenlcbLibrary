@@ -20,12 +20,17 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     var localNodeStore : LocalNodeStore
     
     @Published public var remoteNodeStore : RemoteNodeStore { // store of remote nodes being monitored
-        // TODO: remove debug
         didSet(oldvalue) {
-            logger.info("published RemoteDataSort did change")
+            logger.info("published remoteNodeStore was set")  // TODO: remove debug
         }
     }
 
+    @Published public var clock0 : Clock { // store of fastclock
+        didSet(oldvalue) {
+            logger.info("published clock0 was set")  // TODO: remove debug
+        }
+    }
+    
     let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
     let logger = Logger(subsystem: "com.ardenwood", category: "OpenlcbLibrary")
@@ -39,6 +44,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         
         localNodeStore   = LocalNodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
+        clock0 = Clock()
         
         linkLevel = CanLink(localNodeID: defaultNodeID)
         
@@ -89,13 +95,14 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         let rprocessor : Processor = RemoteNodeProcessor(linkLevel) // track effect of messages on Remote Nodes
         let lprocessor : Processor = LocalNodeProcessor(linkLevel)  // track effect of messages on Local Node
         let dprocessor : Processor = DatagramProcessor(linkLevel)   // datagram processor doesn't affect node status
-                
+        let cprocessor : Processor = ClockProcessor(linkLevel, [clock0])   // clock processor doesn't affect node status
+
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
         // TODO: With this setup, only messages from the network are sent to pprocessor and displayed.
         
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
-        localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor]
+        localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor, cprocessor]
  
         // register listener here which will process the node stores without copying them
         linkLevel.registerMessageReceivedListener(processMessageFromLinkLevel)
