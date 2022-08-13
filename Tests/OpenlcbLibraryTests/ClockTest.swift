@@ -23,7 +23,7 @@ final class ClockTest: XCTestCase {
     func testInitialState() throws {
         let clock = Clock()
         XCTAssertEqual(clock.initialized, false, "clock starts uninitialized")
-        XCTAssertEqual(clock.run, false, "clock starts not running")
+        XCTAssertEqual(clock.run, true, "clock starts running")
         XCTAssertEqual(clock.rate, 1.0, "clock starts with rate = 1.0")
     }
     
@@ -99,12 +99,13 @@ final class ClockTest: XCTestCase {
         let clock = Clock()
         // TODO: test run / not run
         clock.rate = 4
+        clock.run = false
         clock.setTime(setTime)
         
         // wait 3 seconds
         let delayExpectation1 = XCTestExpectation()
         delayExpectation1.isInverted = true
-        wait(for: [delayExpectation1], timeout: 3)
+        wait(for: [delayExpectation1], timeout: 2)
 
         // clock should not advance if not running
         XCTAssertEqual(clock.getTime(), setTime, "clock matches")
@@ -115,7 +116,7 @@ final class ClockTest: XCTestCase {
         // wait 3 seconds
         let delayExpectation2 = XCTestExpectation()
         delayExpectation2.isInverted = true
-        wait(for: [delayExpectation2], timeout: 3)
+        wait(for: [delayExpectation2], timeout: 2)
 
         XCTAssertNotEqual(clock.getTime(), setTime, "clock advances")
 

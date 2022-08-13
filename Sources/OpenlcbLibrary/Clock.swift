@@ -24,7 +24,7 @@ final public class Clock : ObservableObject {
         }
     }
     
-    internal var internalRate = 10.0   // TODO: what should this start as?
+    internal var internalRate = 1.0
     public var rate: Double {
         get { return internalRate }
         set(rate) {

@@ -14,20 +14,31 @@ struct ClockProcessor : Processor {
         self.clocks = clocks
     }
     let linkLayer : LinkLayer?
-    let clocks : [Clock]
+    let clocks : [Clock]  // provided array of valid clocks, 0 to 4 entries
 
     public func process( _ message : Message, _ node : Node ) {
         switch message.mti {
-        case .Producer_Consumer_Event_Report :
+        case .Producer_Consumer_Event_Report,
+                .Producer_Identified_Active,
+                .Producer_Identified_Inactive,
+                .Producer_Identified_Unknown :
             eventReport(message, node)
+        
+        case .Link_Level_Up :
+            linkUp(message, node)
+        
         default:
             // no need to do anything
             break
         }
     }
-    // TODO: needs to handle Producer Identified for status report
-    // TODO: needs to make a status request at startup (now starting in Stopped mode)
     
+    func linkUp(_ message : Message, _ node : Node) {
+        // send Query Event ID for primary clock // TODO: handle all clocks in Clocks array?
+        let msg = Message(mti: .Producer_Consumer_Event_Report, source: node.id, data: [1,1,0,0,1  ,0, 0xF0,0x00 ])
+        linkLayer?.sendMessage(msg)
+    }
+
     func eventReport(_ message : Message, _ node : Node) {
         let event = message.data
         if !(event[0] == 1 && event[1] == 1 && event[2] == 0 && event[3] == 0 && event[4] == 1) {
