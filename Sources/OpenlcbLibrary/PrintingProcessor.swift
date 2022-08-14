@@ -4,7 +4,7 @@
 //  Created by Bob Jacobsen on 6/1/22.
 //
 
-// TODO: Does this display messages being sent?
+// TODO:This does not display messages being sent from the program - more general issue with local -> remote
 
 import Foundation
 
@@ -38,7 +38,9 @@ struct PrintingProcessor : Processor {
                 .Datagram_Received_OK,
                 .Datagram_Rejected,
                 .Remote_Button_Request,
-                .Remote_Button_Reply :
+                .Remote_Button_Reply,
+                .Traction_Control_Command,
+                .Traction_Control_Reply :
             simpleAddressedMessage(message, node, dataString)
             
         case    .Initialization_Complete,
