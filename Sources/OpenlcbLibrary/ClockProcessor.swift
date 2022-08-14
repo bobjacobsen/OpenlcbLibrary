@@ -34,9 +34,11 @@ struct ClockProcessor : Processor {
     }
     
     func linkUp(_ message : Message, _ node : Node) {
+        let msg1 = Message(mti: .Consumer_Range_Identified, source: node.id, data: [1,1,0,0,1  ,0x03, 0xFF,0xFF ])  // full range for four clocks
+        linkLayer?.sendMessage(msg1)
         // send Query Event ID for primary clock // TODO: handle all clocks in Clocks array?
-        let msg = Message(mti: .Producer_Consumer_Event_Report, source: node.id, data: [1,1,0,0,1  ,0, 0xF0,0x00 ])
-        linkLayer?.sendMessage(msg)
+        let msg2 = Message(mti: .Producer_Consumer_Event_Report, source: node.id, data: [1,1,0,0,1  ,0, 0xF0,0x00 ])
+        linkLayer?.sendMessage(msg2)
     }
 
     func eventReport(_ message : Message, _ node : Node) {
@@ -51,7 +53,6 @@ struct ClockProcessor : Processor {
             // not a valid clock number, so not really a clock event
             return
         }
-        
         let clock = clocks[index]
         
         // prep for changing the clock's Date
