@@ -14,6 +14,7 @@ final class ClockTest: XCTestCase {
 
     override func setUpWithError() throws {
         dateFormatter.dateFormat = "yyyy/MM/dd HH:mm"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
     }
     
     override func tearDownWithError() throws {
@@ -22,7 +23,6 @@ final class ClockTest: XCTestCase {
     
     func testInitialState() throws {
         let clock = Clock()
-        XCTAssertEqual(clock.initialized, false, "clock starts uninitialized")
         XCTAssertEqual(clock.run, true, "clock starts running")
         XCTAssertEqual(clock.rate, 1.0, "clock starts with rate = 1.0")
     }
@@ -81,13 +81,16 @@ final class ClockTest: XCTestCase {
     }
     
     func testSetAndGetClock() {
-        let now = dateFormatter.date(from: "2022/01/01 00:00")!
-        let setTime = dateFormatter.date(from: "2022/01/01 12:34")!
+        let now = dateFormatter.date(from: "2022/01/02 00:00")!
+        let setTime = dateFormatter.date(from: "2022/01/02 12:34")!
         
         let clock = Clock()
         clock.setTime(setTime, now)
         
         XCTAssertEqual(clock.getTime(now), setTime, "clock matches")
+        XCTAssertEqual(clock.getYear(setTime), 2022)
+        XCTAssertEqual(clock.getMonth(setTime), 1)
+        XCTAssertEqual(clock.getDay(setTime), 2)
         XCTAssertEqual(clock.getHour(setTime), 12)
         XCTAssertEqual(clock.getMinute(setTime), 34)
 

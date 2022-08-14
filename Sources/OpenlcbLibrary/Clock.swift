@@ -11,11 +11,21 @@ import Foundation
 //
 // Interface is via Date objects to that hours and minutes etc can be passed simultaneously.
 //  Service routines are provided to convert from/to hours and minutes.
+//
+// Date and time throughout use the UTC timezone; so long as that's used consistently,
+// it avoids issues with properly selecting the local timezone if operating remotely.
+
 // TODO: Add day and year convenience methods
 final public class Clock : ObservableObject {
-    internal var initialized = false
     
-    internal var internalRun = true  // TODO: what should this start as?
+    public init() {
+        calendar = Calendar.current
+        calendar.timeZone = TimeZone(abbreviation: "UTC")!
+    }
+    internal var calendar : Calendar
+    
+    /// 'run' determines whetther the clock is running or not.  This is generally set from the
+    ///  clock master.
     public var run: Bool {
         get { return internalRun }
         set(run) {
@@ -23,8 +33,10 @@ final public class Clock : ObservableObject {
             internalRun = run
         }
     }
-    
-    internal var internalRate = 1.0
+    internal var internalRun = true  // TODO: what should this start as?
+
+    /// 'rate' determines the rate at which the clock advances.  This is generally set from the
+    ///  clock master.
     public var rate: Double {
         get { return internalRate }
         set(rate) {
@@ -32,12 +44,15 @@ final public class Clock : ObservableObject {
             internalRate = rate
         }
     }
+    internal var internalRate = 1.0
 
     
     // fast fime is lastTimeSet+(now-timeLastSet)*rate
     private var timeLastSet = Date()  // default is now
     private var lastTimeSet = Date()  // default is now
     
+    /// Sets the current time in the clock.  This is generally set from the
+    /// clock master.
     // Default argument is the usual case; argument is
     // provided for testing. This structure prevents this
     // from being a computed property.
@@ -46,6 +61,7 @@ final public class Clock : ObservableObject {
         timeLastSet = now
     }
     
+    /// Gets the current time in the clock.  
     // Default argument is the usual case; argument is
     // provided for testing. This structure prevents this
     // from being a computed property.
@@ -71,25 +87,46 @@ final public class Clock : ObservableObject {
     
     // convenience methods - NOT atomic, prefer getTime for accuracy,
     // or do e.g. date = clock.getDate(); hour = clock.getHour(date); minute = clock.getMinute(date);
-    public func getMinute(_ date : Date? = nil) -> Int {
+    public func getYear(_ date : Date? = nil) -> Int {
         if let date { // date was provided, use it
-            return Calendar.current.component(.minute, from:date)
+            return calendar.component(.year, from:date)
         } else { // date not provided, use current fast time from getTime()
-            return Calendar.current.component(.minute, from:getTime())
+            return calendar.component(.year, from:getTime())
+        }
+    }
+    public func getMonth(_ date : Date? = nil) -> Int {
+        if let date { // date was provided, use it
+            return calendar.component(.month, from:date)
+        } else { // date not provided, use current fast time from getTime()
+            return calendar.component(.month, from:getTime())
+        }
+    }
+    public func getDay(_ date : Date? = nil) -> Int {
+        if let date { // date was provided, use it
+            return calendar.component(.day, from:date)
+        } else { // date not provided, use current fast time from getTime()
+            return calendar.component(.day, from:getTime())
         }
     }
     public func getHour(_ date : Date? = nil) -> Int {
         if let date { // date was provided, use it
-            return Calendar.current.component(.hour, from:date)
+            return calendar.component(.hour, from:date)
         } else { // date not provided, use current fast time from getTime()
-            return Calendar.current.component(.hour, from:getTime())
+            return calendar.component(.hour, from:getTime())
+        }
+    }
+    public func getMinute(_ date : Date? = nil) -> Int {
+        if let date { // date was provided, use it
+            return calendar.component(.minute, from:date)
+        } else { // date not provided, use current fast time from getTime()
+            return calendar.component(.minute, from:getTime())
         }
     }
     public func getSecond(_ date : Date? = nil) -> Int {
         if let date { // date was provided, use it
-            return Calendar.current.component(.second, from:date)
+            return calendar.component(.second, from:date)
         } else { // date not provided, use current fast time from getTime()
-            return Calendar.current.component(.second, from:getTime())
+            return calendar.component(.second, from:getTime())
         }
     }
 
