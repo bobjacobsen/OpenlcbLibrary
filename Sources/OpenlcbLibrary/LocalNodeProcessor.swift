@@ -13,7 +13,7 @@ struct LocalNodeProcessor : Processor {
         self.linkLayer = linkLayer
     }
     let linkLayer : LinkLayer?
-    let logger = Logger(subsystem: "com.ardenwood", category: "LocalNodeProcessor")
+    let logger = Logger(subsystem: "org.ardenwood.OpenlcbLibrary", category: "LocalNodeProcessor")
     
     func process( _ message : Message, _ node : Node ) {
         if ( !checkDestID(message, node) ) { return }  // not to us

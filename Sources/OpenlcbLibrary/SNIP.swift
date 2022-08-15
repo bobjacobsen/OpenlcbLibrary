@@ -199,5 +199,5 @@ public struct SNIP {
         return retval
     }
     
-    static let logger = Logger(subsystem: "com.ardenwood", category: "SNIP")
+    static let logger = Logger(subsystem: "com.ardenwood.OpenlcbLibrary", category: "SNIP")
 }

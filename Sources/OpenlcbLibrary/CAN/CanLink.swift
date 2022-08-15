@@ -401,5 +401,5 @@ public class CanLink : LinkLayer {
     }
     var accumulator : [AccumKey: [UInt8]] = [:]
 
-    let logger = Logger(subsystem: "org.ardenwood.openlcblibrary", category: "CanLink")
+    let logger = Logger(subsystem: "org.ardenwood.OpenlcbLibrary", category: "CanLink")
 }

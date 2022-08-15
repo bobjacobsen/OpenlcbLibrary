@@ -33,7 +33,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     
     let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
-    let logger = Logger(subsystem: "com.ardenwood", category: "OpenlcbLibrary")
+    let logger = Logger(subsystem: "com.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
     
     public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
     
