@@ -56,8 +56,7 @@ struct ClockProcessor : Processor {
         let clock = clocks[index]
         
         // prep for changing the clock's Date
-        var calendar = Calendar.current // user calendar
-        calendar.timeZone = TimeZone(abbreviation: "UTC")!
+        let calendar = Calendar.current // user calendar
         let requestedComponents: Set<Calendar.Component> = [
             .year,
             .month,

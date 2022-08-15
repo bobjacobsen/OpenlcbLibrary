@@ -7,20 +7,20 @@
 
 import Foundation
 
-// Store and maintain the status of a clock, real time or fast.
-//
+/// Store and maintain the status of a clock, real time or fast.
+///
+/// Works with `ClockProcessor` which handles the OpenLCB network interactions
+
 // Interface is via Date objects to that hours and minutes etc can be passed simultaneously.
 //  Service routines are provided to convert from/to hours and minutes.
 //
-// Date and time throughout use the UTC timezone; so long as that's used consistently,
+// Internal date and time throughout use the default UTC timezone; so long as that's used consistently,
 // it avoids issues with properly selecting the local timezone if operating remotely.
 
-// TODO: Add day and year convenience methods
 final public class Clock : ObservableObject {
     
     public init() {
         calendar = Calendar.current
-        calendar.timeZone = TimeZone(abbreviation: "UTC")!
     }
     internal var calendar : Calendar
     
