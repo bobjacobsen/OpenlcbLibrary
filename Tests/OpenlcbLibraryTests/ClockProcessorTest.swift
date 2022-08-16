@@ -28,6 +28,7 @@ final class ClockProcessorTest: XCTestCase {
     
     // TODO: Rework this test to be run/start event received
     func testRunStop() {
+        clock0.run = false
         let msg1 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 0xF0,02]) // start
         processor.process(msg1, node21)
         XCTAssertEqual(clock0.run, true, "clock started")
@@ -43,7 +44,13 @@ final class ClockProcessorTest: XCTestCase {
         processor.process(msg2, node21)
         let msg3 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 12, 34]) // 12:34
         processor.process(msg3, node21)
-        XCTAssertEqual(clock0.getTime().description, "2020-02-23 12:34:00 +0000", "clock time set")
+
+        let setTime = clock0.getTime()
+        XCTAssertEqual(clock0.getYear(setTime), 2020)
+        XCTAssertEqual(clock0.getMonth(setTime), 2)
+        XCTAssertEqual(clock0.getDay(setTime), 23)
+        XCTAssertEqual(clock0.getHour(setTime), 12)
+        XCTAssertEqual(clock0.getMinute(setTime), 34)
     }
 
     func testInvalidClockNumber() {

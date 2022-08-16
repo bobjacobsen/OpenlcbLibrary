@@ -14,7 +14,7 @@ final class ClockTest: XCTestCase {
 
     override func setUpWithError() throws {
         dateFormatter.dateFormat = "yyyy/MM/dd HH:mm"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        dateFormatter.timeZone = TimeZone.current
     }
     
     override func tearDownWithError() throws {
@@ -134,7 +134,7 @@ final class ClockTest: XCTestCase {
         clock.setTime(setTime)
         
         XCTAssertEqual(clock.getMinute(), 34, "minute matches by default")
-        XCTAssertEqual(clock.getHour(), 12, "hour matches by default")
+         XCTAssertEqual(clock.getHour(), 12, "hour matches by default")
 
         XCTAssertEqual(clock.getMinute(checkTime), 12, "minute matches")
         XCTAssertEqual(clock.getHour(checkTime), 2, "hour matches")
