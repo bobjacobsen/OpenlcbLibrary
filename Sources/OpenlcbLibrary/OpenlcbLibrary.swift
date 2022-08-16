@@ -64,7 +64,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         defaultNode.snip.manufacturerName = "Ardenwood.net"
         defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling (as opposed to library name)
-        defaultNode.snip.hardwareVersion  = "14"             // holds required iOS version
+        defaultNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
         defaultNode.snip.softwareVersion  = "0.0.1"          // TODO: Version number handling
         #if canImport(UIKit)
         defaultNode.snip.userProvidedNodeName = UIDevice.current.name
