@@ -211,9 +211,17 @@ public class CanLink : LinkLayer {
             
             // check for start and end bits
             let key = AccumKey(mti:mti, source:sourceID, dest:destID)
-            if (frame.data[0] & 0x20 == 0) {   // TODO: handle case of never got first bit, so no entry here at next step
+            if (frame.data[0] & 0x20 == 0) {
                 // is start, create the entry in the accumulator
                 accumulator[key] = []
+            } else {
+                // not start frame
+                // check for first-first bit set never seen condition
+                guard accumulator[key] != nil else {
+                    // have not-start frame, but never started
+                    logger.error("Dropping non-start frame without accumulation started: \(frame, privacy: .public)")
+                    return // early return to stop processing of this grame
+                }
             }
             // add this data
             if (frame.data.count > 2) {
