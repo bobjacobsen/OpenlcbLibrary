@@ -53,7 +53,7 @@ struct RemoteNodeProcessor : Processor {
             newNodeSeen(message, node)
         default:
             // we ignore others
-            logger.trace("message needing no processing: \(message) on \(node)") // TODO: Globals will be logged for each node?
+            // logger.trace("message needing no processing: \(message) on \(node)") // TODO: Globals will be logged for each node?
             break
         }
     }

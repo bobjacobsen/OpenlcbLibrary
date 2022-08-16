@@ -46,7 +46,7 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     mutating func invokeProcessorsOnNodes(message : Message) {
         // make sure source node is in store if it needs to be
         if let _ = lookup(message.source) {
-            logger.debug("found node")
+            // logger.trace("found node")
         }
         else {
             // need to create the node and process it's New_Node_Seen
