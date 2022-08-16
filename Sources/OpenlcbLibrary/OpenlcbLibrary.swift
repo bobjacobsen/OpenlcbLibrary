@@ -19,17 +19,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     
     var localNodeStore : LocalNodeStore
     
-    @Published public var remoteNodeStore : RemoteNodeStore { // store of remote nodes being monitored
-        didSet(oldvalue) {
-            logger.info("published remoteNodeStore was set")  // TODO: remove debug
-        }
-    }
+    @Published public var remoteNodeStore : RemoteNodeStore
 
-    @Published public var clock0 : Clock { // store of fastclock
-        didSet(oldvalue) {
-            logger.info("published clock0 was set")  // TODO: remove debug
-        }
-    }
+    @Published public var clock0 : Clock 
     
     let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
@@ -72,8 +64,8 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         defaultNode.snip.manufacturerName = "Ardenwood.net"
         defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling (as opposed to library name)
-        defaultNode.snip.hardwareVersion  = "14"             // holds iOS version // TODO: rethink hardware version
-        defaultNode.snip.softwareVersion  = "0.0.1"            // TODO: Version number handling
+        defaultNode.snip.hardwareVersion  = "14"             // holds required iOS version
+        defaultNode.snip.softwareVersion  = "0.0.1"          // TODO: Version number handling
         #if canImport(UIKit)
         defaultNode.snip.userProvidedNodeName = UIDevice.current.name
         #else
@@ -110,9 +102,16 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     }
     
     func processMessageFromLinkLevel(_ message: Message) {
+        let publish = true
+        
         localNodeStore.invokeProcessorsOnNodes(message: message)
         remoteNodeStore.invokeProcessorsOnNodes(message: message)
-        self.objectWillChange.send() // TODO: Every message publishes; make this less brute force with a return Bool from invokeProcessorsOnNodes?
+        
+        if publish {
+            self.objectWillChange.send()
+                // TODO: Every message publishes; make this less brute force with a return Bool from invokeProcessorsOnNodes?
+                // TODO: Granularity too large, this is publishing entire node store and clock
+        }
     }
     
     var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``
