@@ -171,7 +171,7 @@ public class CanLink : LinkLayer {
         nodeIdToAlias.removeValue(forKey: nodeID)
     }
 
-    func handleReceivedData(_ frame : CanFrame) {  // mutation to accumulate multi-frame messages
+    func handleReceivedData(_ frame : CanFrame) {
         if (checkAndHandleAliasCollision(frame)) { return }
         // get proper MTI
         let mti = canHeaderToFullFormat(frame: frame)
@@ -195,48 +195,93 @@ public class CanLink : LinkLayer {
         
         var destID = NodeID(0)
         // handle destination for addressed messages
-        if (frame.header & 0x008_000 != 0) {
-            var destAlias : UInt = 0
-            if (frame.data.count > 0) { destAlias |= UInt(frame.data[0] & 0x0F ) << 8 } // rm f bits
-            if (frame.data.count > 1) { destAlias |= UInt(frame.data[1] & 0xFF ) }
-            if let mapped = aliasToNodeID[destAlias] {
-                destID = mapped
-            } else {
-                destID = NodeID(nextInternallyAssignedNodeID)
-                logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
-                // register that internally-generated nodeID-alias association
-                aliasToNodeID[destAlias] = destID
-                nodeIdToAlias[destID] = destAlias
-            }
-            
-            // check for start and end bits
-            let key = AccumKey(mti:mti, source:sourceID, dest:destID)
-            if (frame.data[0] & 0x20 == 0) {
-                // is start, create the entry in the accumulator
-                accumulator[key] = []
-            } else {
-                // not start frame
-                // check for first-first bit set never seen condition
-                guard accumulator[key] != nil else {
-                    // have not-start frame, but never started
-                    logger.error("Dropping non-start frame without accumulation started: \(frame, privacy: .public)")
-                    return // early return to stop processing of this grame
-                }
-            }
-            // add this data
-            if (frame.data.count > 2) {
-                for byte in frame.data[2...frame.data.count-1] {
-                    accumulator[key]!.append(byte)
-                }
-            }
-            if (frame.data[0] & 0x10 == 0) {
-                // is end, ship and remove accumulation
-                let msg = Message(mti: mti, source: sourceID, destination: destID, data: accumulator[key]!)
-                fireListeners(msg)
+        let dgCode = frame.header & 0x00F_000_000
+        if (frame.header & 0x008_000 != 0 || (dgCode >= 0x00A_000_000 && dgCode <= 0x00F_000_000)) {  // Addressed bit is active 1
+            // decoder regular addressed message from Datagram
+            if (dgCode >= 0x00A_000_000 && dgCode <= 0x00F_000_000) {
+                // datagram case
 
-                // remove accumulution
-                accumulator[key] = nil
-            }
+                let destAlias : UInt = (frame.header & 0x00_FFF_000 ) >> 12
+                if let mapped = aliasToNodeID[destAlias] {
+                    destID = mapped
+                } else {
+                    destID = NodeID(nextInternallyAssignedNodeID)
+                    logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
+                    // register that internally-generated nodeID-alias association
+                    aliasToNodeID[destAlias] = destID
+                    nodeIdToAlias[destID] = destAlias
+                }
+                // check for start and end bits
+                let key = AccumKey(mti:mti, source:sourceID, dest:destID)
+                if (dgCode == 0x00A_000_000 || dgCode == 0x00B_000_000 ) {
+                    // start of message, create the entry in the accumulator
+                    accumulator[key] = []
+                } else {
+                    // not start frame
+                    // check for never properly started, this is an errorn
+                    guard accumulator[key] != nil else {
+                        // have not-start frame, but never started
+                        logger.error("Dropping non-start datagram frame without accumulation started: \(frame, privacy: .public)")
+                        return // early return to stop processing of this grame
+                    }
+                }
+                // add this data
+                if (frame.data.count > 0) {
+                    accumulator[key]!.append(contentsOf: frame.data)
+                }
+                if (dgCode == 0x00A_000_000 || dgCode == 0x00D_000_000 ) {
+                    // is end, ship and remove accumulation
+                    let msg = Message(mti: mti, source: sourceID, destination: destID, data: accumulator[key]!)
+                    fireListeners(msg)
+                    
+                    // remove accumulution
+                    accumulator[key] = nil
+                }
+
+            } else {
+                // addressed message case
+                var destAlias : UInt = 0
+                if (frame.data.count > 0) { destAlias |= UInt(frame.data[0] & 0x0F ) << 8 } // rm f bits
+                if (frame.data.count > 1) { destAlias |= UInt(frame.data[1] & 0xFF ) }
+                if let mapped = aliasToNodeID[destAlias] {
+                    destID = mapped
+                } else {
+                    destID = NodeID(nextInternallyAssignedNodeID)
+                    logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
+                    // register that internally-generated nodeID-alias association
+                    aliasToNodeID[destAlias] = destID
+                    nodeIdToAlias[destID] = destAlias
+                }
+                
+                // check for start and end bits
+                let key = AccumKey(mti:mti, source:sourceID, dest:destID)
+                if (frame.data[0] & 0x20 == 0) {
+                    // is start, create the entry in the accumulator
+                    accumulator[key] = []
+                } else {
+                    // not start frame
+                    // check for first bit set never seen
+                    guard accumulator[key] != nil else {
+                        // have not-start frame, but never started
+                        logger.error("Dropping non-start frame without accumulation started: \(frame, privacy: .public)")
+                        return // early return to stop processing of this grame
+                    }
+                }
+                // add this data
+                if (frame.data.count > 2) {
+                    for byte in frame.data[2...frame.data.count-1] {
+                        accumulator[key]!.append(byte)
+                    }
+                }
+                if (frame.data[0] & 0x10 == 0) {
+                    // is end, ship and remove accumulation
+                    let msg = Message(mti: mti, source: sourceID, destination: destID, data: accumulator[key]!)
+                    fireListeners(msg)
+                    
+                    // remove accumulution
+                    accumulator[key] = nil
+                }
+            } // end addressed message case
             
         } else {
             // forward global message
@@ -247,41 +292,105 @@ public class CanLink : LinkLayer {
     
     override func sendMessage(_ msg : Message) {
         
-        // Remap the mti
-        var header = UInt( 0x19_000_000 | ((msg.mti.rawValue & 0xFFF) << 12) )
- 
-        if let alias = nodeIdToAlias[msg.source] { // might not know it if error
-            header |= (alias & 0xFFF)
-        } else {
-            logger.error("Did not know source = \(msg.source) on global send")
-        }
-
-        // Is a destination address needed? Could be long message
-        if (msg.isAddressed()) {
-            if let alias = nodeIdToAlias[msg.destination ?? NodeID(0)] { // might not know it?
-                // address and have alias, break up data
-                let dataSegments = segmentDataArray(alias, msg.data)
-                for content in dataSegments {
-                    // send the resulting frame
-                    let frame = CanFrame(header: header, data: content)
-                    link!.sendCanFrame( frame )
-                }
+        // special case for datagram
+        if msg.mti == .Datagram {
+            var header = UInt(0x10_000_000)
+            // datagram headers are
+            //          1Adddsss - one frame
+            //          1Bdddsss - first frame
+            //          1Cdddsss - middle frame
+            //          1Ddddsss - last frame
+            if let sssAlias = nodeIdToAlias[msg.source] { // might not know it if error
+                header |= (UInt(sssAlias) & 0xFFF)
             } else {
-                logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0))")
+                logger.error("Did not know source = \(msg.source) on datagram send")
+            }
+            if let dddAlias = nodeIdToAlias[msg.destination!] { // might not know it if error
+                header |= (UInt(dddAlias) & 0xFFF) << 12
+            } else {
+                logger.error("Did not know destination = \(msg.source) on datagram send")
+            }
+            
+            if msg.data.count <= 8 {
+                // single frame
+                header |= 0x0A_000_000
+                let frame = CanFrame(header: header, data: msg.data)
+                link!.sendCanFrame( frame )
+            } else {
+                // multi-frame datagram
+                let dataSegments = segmentDatagramDataArray(msg.data)
+                // send the first one
+                var frame = CanFrame(header: header|0x0B_000_000, data: dataSegments[0])
+                link!.sendCanFrame( frame )
+                // send middles
+                if (dataSegments.count >= 3) {
+                    for index in 1...dataSegments.count - 2 { // upper limit leaves one
+                        frame = CanFrame(header: header|0x0C_000_000, data: dataSegments[index])
+                        link!.sendCanFrame( frame )
+                    }
+                }
+                // send last one
+                frame = CanFrame(header: header|0x0D_000_000, data: dataSegments[dataSegments.count - 1])
+                link!.sendCanFrame( frame )
             }
         } else {
-            // global still can hold data; assume length is correct by protocol
-            // send the resulting frame
-            let frame = CanFrame(header: header, data: msg.data)
-            link!.sendCanFrame( frame )
+            // all non-datagram cases
+            // Remap the mti
+            var header = UInt( 0x19_000_000 | ((msg.mti.rawValue & 0xFFF) << 12) )
+            
+            if let alias = nodeIdToAlias[msg.source] { // might not know it if error
+                header |= (alias & 0xFFF)
+            } else {
+                logger.error("Did not know source = \(msg.source) on message send")
+            }
+            
+            // Is a destination address needed? Could be long message
+            if (msg.isAddressed()) {
+                if let alias = nodeIdToAlias[msg.destination ?? NodeID(0)] { // might not know it?
+                    // address and have alias, break up data
+                    let dataSegments = segmentAddressedDataArray(alias, msg.data)
+                    for content in dataSegments {
+                        // send the resulting frame
+                        let frame = CanFrame(header: header, data: content)
+                        link!.sendCanFrame( frame )
+                    }
+                } else {
+                    logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0))")
+                }
+            } else {
+                // global still can hold data; assume length is correct by protocol
+                // send the resulting frame
+                let frame = CanFrame(header: header, data: msg.data)
+                link!.sendCanFrame( frame )
+            }
+            
         }
-        
-
-        // TODO: reformat datagrams
     }
-    
-    // segment data into zero or more arrays of no more than 8 bytes, with the alias at the start of each
-    final func segmentDataArray(_ alias : UInt, _ data : [UInt8]) ->[[UInt8]] {
+   
+    // segment data into zero or more arrays of no more than 8 bytes for datagram
+    final func segmentDatagramDataArray(_ data : [UInt8]) ->[[UInt8]] {
+        let nSegments = (data.count+7) / 8 // the +7 is since integer division takes the floor value
+        if (nSegments == 0 ) {
+            return [[]]
+        }
+        if (nSegments == 1 ) {
+            return [data]
+        }
+        // multiple frames
+        var retval : [[UInt8]] = []
+        for i in 0...nSegments-2 { // first enty of 2 has full data
+            let nextEntry = Array(data[i*8 ... i*8+7])
+            retval.append(nextEntry)
+        }
+        // add the last
+        let lastEntry = Array(data[8*(nSegments-1) ... data.count-1])
+        retval.append(lastEntry)
+        
+        return retval
+    }
+
+    // segment data into zero or more arrays of no more than 8 bytes, with the alias at the start of each, for addressed non-datagram messages
+    final func segmentAddressedDataArray(_ alias : UInt, _ data : [UInt8]) ->[[UInt8]] {
         let part0 = UInt8( (alias >> 8) & 0xF)
         let part1 = UInt8( alias & 0xFF )
         let nSegments = (data.count+5) / 6 // the +5 is since integer division takes the floor value
