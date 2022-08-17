@@ -14,7 +14,7 @@ import os
 public struct CdiSampleDataAccess {
     // holds no common data, this is really a collection of methods
     
-    static let logger = Logger(subsystem: "net.ardenwood", category: "CdiSampleDataAccess")
+    static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiSampleDataAccess")
     
     // for testing and sample data
     // reads from ~/Documents and creates an Data element from the file contents

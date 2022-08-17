@@ -20,7 +20,7 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     
     // local variables
     
-    let logger = Logger(subsystem: "com.ardenwood.OpenlcbLibrary", category: "RemoteNodeStore")
+    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeStore")
     
     let localNodeID : NodeID
 
