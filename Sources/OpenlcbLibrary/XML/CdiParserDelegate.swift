@@ -13,7 +13,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     func parserDidStartDocument(_ parser : XMLParser) {
     }
     func parserDidEndDocument(_ parser : XMLParser) {
-        print ("parserDidEndDocument")
+        // print ("parserDidEndDocument")
     }
     func parser(_: XMLParser, didStartElement: String, namespaceURI: String?, qualifiedName: String?, attributes: [String : String]) {
         switch didStartElement {

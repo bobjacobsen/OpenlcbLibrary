@@ -24,7 +24,7 @@ class CdiXmlMemoTest: XCTestCase {
         //let file = "tower-lcc-cdi.xml" //this is the file we will read from in ~/Documents
         let file = "cdi-pretty.xml" //this is the file we will read from in ~/Documents
         let data = CdiSampleDataAccess.getDataFromFile(file)
-        print (data as Any)
+        // print (data as Any)
 
         let _ = CdiXmlMemo.process(data!)
 

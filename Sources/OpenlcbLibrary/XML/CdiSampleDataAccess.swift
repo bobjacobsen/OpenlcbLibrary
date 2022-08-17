@@ -9,15 +9,18 @@
 ///  file tree so that it can provide sample data to users of the library as example screens, etc.
 
 import Foundation
+import os
 
 public struct CdiSampleDataAccess {
     // holds no common data, this is really a collection of methods
+    
+    static let logger = Logger(subsystem: "net.ardenwood", category: "CdiSampleDataAccess")
     
     // for testing and sample data
     // reads from ~/Documents and creates an Data element from the file contents
     public static func getDataFromFile(_ file : String) -> Data? {
         guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            print ("problem with directory")
+            logger.error("problem with directory")
             return nil
         }
         do {
@@ -25,7 +28,7 @@ public struct CdiSampleDataAccess {
             let data = try Data(contentsOf: fileURL)
             return data
         } catch {
-            print ("caught \(error)")
+            logger.error("caught \(error, privacy:.public)")
             return nil
         }
     }
@@ -39,7 +42,7 @@ public struct CdiSampleDataAccess {
             let data = string.data(using: .utf8)!
             return data
         } catch  {
-            print(error);
+            logger.error("caught \(error, privacy:.public)")
         }
         return nil
     }
