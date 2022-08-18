@@ -21,7 +21,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     
     @Published public var remoteNodeStore : RemoteNodeStore
 
-    @Published public var clockModel0 : ClockModel 
+    @Published public var clockModel0 : ClockModel
+    
+    @Published public var throttleModel0 : ThrottleModel
     
     let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
@@ -37,6 +39,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         localNodeStore   = LocalNodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         clockModel0 = ClockModel()
+        throttleModel0 = ThrottleModel()
         
         linkLevel = CanLink(localNodeID: defaultNodeID)
         
