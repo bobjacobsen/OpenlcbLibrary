@@ -11,10 +11,12 @@ import Foundation
 /// Works with ``DatagramService`` which holds context; this struct must remain immutable
 /// 
 struct DatagramProcessor : Processor {
-    public init ( _ linkLayer: LinkLayer? = nil) {
+    public init ( _ linkLayer: LinkLayer? = nil, _ service : DatagramService) {
         self.linkLayer = linkLayer
+        self.service = service
     }
     let linkLayer : LinkLayer?
+    let service : DatagramService
 
     public func process( _ message : Message, _ node : Node ) {
         switch message.mti {

@@ -85,8 +85,12 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         
         // create processors
         let rprocessor : Processor = RemoteNodeProcessor(linkLevel) // track effect of messages on Remote Nodes
+
         let lprocessor : Processor = LocalNodeProcessor(linkLevel)  // track effect of messages on Local Node
-        let dprocessor : Processor = DatagramProcessor(linkLevel)   // datagram processor doesn't affect node status
+
+        let dservice = DatagramService()
+        let dprocessor : Processor = DatagramProcessor(linkLevel, dservice)   // datagram processor doesn't affect node status
+
         let cprocessor : Processor = ClockProcessor(linkLevel, [clock0])   // clock processor doesn't affect node status
 
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
