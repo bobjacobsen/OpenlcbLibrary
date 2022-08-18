@@ -136,12 +136,4 @@ struct RemoteNodeProcessor : Processor {
         node.events.consumes(eventID)
     }
     
-    
-    private func checkSourceID(_ message : Message, _ node : Node) -> Bool {
-        return message.source == node.id
-    }
-    
-    private func checkDestID(_ message : Message, _ node : Node) -> Bool {
-        return message.destination == node.id
-    }
 }
