@@ -18,9 +18,16 @@ final public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CanPhysicalLayerGridConnect")
     // callback to send a string-formatted frame over the link
-    let canSendCallback : (_ : String) -> ()  // argument is the text to be send, including \n as needed
+    var canSendCallback : ((_ : String) -> ())? = nil // argument is the text to be send, including \n as needed
     
-    public init( callback : @escaping (_ : String) -> () ) {
+    convenience public init( callback : @escaping (_ : String) -> () ) {
+        self.init()
+        canSendCallback = callback
+    }
+    
+    override public init() {}
+    
+    public func setCallBack( callback : @escaping (_ : String) -> () ) {
         canSendCallback = callback
     }
     
@@ -31,7 +38,7 @@ final public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
         }
         output += ";\n"
         // logger.debug("sending to link \(output, privacy: .public)")
-        canSendCallback(output)
+        canSendCallback!(output)
     }
     
     var inboundBuffer : [UInt8] = []
