@@ -15,12 +15,18 @@ public class ThrottleModel {
     @Published var speed = 0.0         // for Sliders
     {
         didSet(oldvalue) {
-            logger.info("ThrottleModel.speed did change")
+            logger.info("ThrottleModel.speed did change") // TODO: remove debug
         }
     }
     
     @Published var forward = true   // TODO: get initial state from somewhere?
-    
+    {
+        didSet(oldvalue) {
+            logger.info("ThrottleModel.forward did change") // TODO: remove debug
+        }
+    }
+
     @Published var reverse = false
     
+    var trainNodes  = Set<NodeID>([])
 }
