@@ -9,12 +9,12 @@ import Foundation
 
 // a slave clock with limited ability to send commands (just run, basically)
 struct ClockProcessor : Processor {
-    public init ( _ linkLayer: LinkLayer?, _ clocks: [Clock]) {
+    public init ( _ linkLayer: LinkLayer?, _ clocks: [ClockModel]) {
         self.linkLayer = linkLayer
         self.clocks = clocks
     }
     let linkLayer : LinkLayer?
-    let clocks : [Clock]  // provided array of valid clocks, 0 to 4 entries
+    let clocks : [ClockModel]  // provided array of valid clocks, 0 to 4 entries
 
     public func process( _ message : Message, _ node : Node ) {
         switch message.mti {

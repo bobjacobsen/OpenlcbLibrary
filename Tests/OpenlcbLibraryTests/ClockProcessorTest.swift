@@ -11,14 +11,14 @@ import XCTest
 final class ClockProcessorTest: XCTestCase {
 
     var node21 = Node(NodeID(12))
-    var clock0 = Clock()
-    var clock1 = Clock()
+    var clock0 = ClockModel()
+    var clock1 = ClockModel()
     var processor : Processor = ClockProcessor(nil, [])
         
     override func setUpWithError() throws {
         node21 = Node(NodeID(21))
-        clock0 = Clock()
-        clock1 = Clock()
+        clock0 = ClockModel()
+        clock1 = ClockModel()
         processor = ClockProcessor(nil, [clock0, clock1])
     }
     

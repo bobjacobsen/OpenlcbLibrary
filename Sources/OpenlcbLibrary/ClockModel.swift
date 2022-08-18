@@ -1,5 +1,5 @@
 //
-//  Clock.swift
+//  ClockModel.swift
 //  
 //
 //  Created by Bob Jacobsen on 7/12/22.
@@ -9,7 +9,7 @@ import Foundation
 
 /// Store and maintain the status of a clock, real time or fast.
 ///
-/// Works with `ClockProcessor` which handles the OpenLCB network interactions
+/// Works with `ClockProcessor which handles the OpenLCB network interactions
 
 // Interface is via Date objects to that hours and minutes etc can be passed simultaneously.
 //  Service routines are provided to convert from/to hours and minutes.
@@ -17,7 +17,7 @@ import Foundation
 // Internal date and time throughout use the default UTC timezone; so long as that's used consistently,
 // it avoids issues with properly selecting the local timezone if operating remotely.
 
-final public class Clock : ObservableObject {
+final public class ClockModel : ObservableObject {
     
     public init() {
         calendar = Calendar.current

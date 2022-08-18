@@ -22,7 +22,7 @@ final class ClockTest: XCTestCase {
     }
     
     func testInitialState() throws {
-        let clock = Clock()
+        let clock = ClockModel()
         XCTAssertEqual(clock.run, true, "clock starts running")
         XCTAssertEqual(clock.rate, 1.0, "clock starts with rate = 1.0")
     }
@@ -64,7 +64,7 @@ final class ClockTest: XCTestCase {
         XCTAssertEqual(getComponents.second,setComponents.second, "clock minutes matches")
         
         // now that we have a good time, use it to test
-        let clock = Clock()
+        let clock = ClockModel()
         clock.setTime(getDateTime)
         
         // compare string forms to avoid nsec clicks // TODO: make this use explicit "now" to avoid ticks
@@ -84,7 +84,7 @@ final class ClockTest: XCTestCase {
         let now = dateFormatter.date(from: "2022/01/02 00:00")!
         let setTime = dateFormatter.date(from: "2022/01/02 12:34")!
         
-        let clock = Clock()
+        let clock = ClockModel()
         clock.setTime(setTime, now)
         
         XCTAssertEqual(clock.getTime(now), setTime, "clock matches")
@@ -99,7 +99,7 @@ final class ClockTest: XCTestCase {
     func testRun1MinuteRate4() {
         let setTime = dateFormatter.date(from: "2022/01/01 12:34")! // which became 4 minutes fast
  
-        let clock = Clock()
+        let clock = ClockModel()
         // TODO: test run / not run
         clock.rate = 4
         clock.run = false
@@ -129,7 +129,7 @@ final class ClockTest: XCTestCase {
         let setTime = dateFormatter.date(from: "2022/01/01 12:34")!
         let checkTime = dateFormatter.date(from: "2022/01/01 02:12")!
 
-        let clock = Clock()
+        let clock = ClockModel()
         clock.rate = 4
         clock.setTime(setTime)
         

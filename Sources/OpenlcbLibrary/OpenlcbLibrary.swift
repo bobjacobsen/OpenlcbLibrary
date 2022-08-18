@@ -21,7 +21,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     
     @Published public var remoteNodeStore : RemoteNodeStore
 
-    @Published public var clock0 : Clock 
+    @Published public var clockModel0 : ClockModel 
     
     let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
@@ -36,7 +36,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         
         localNodeStore   = LocalNodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
-        clock0 = Clock()
+        clockModel0 = ClockModel()
         
         linkLevel = CanLink(localNodeID: defaultNodeID)
         
@@ -91,7 +91,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         let dservice = DatagramService()
         let dprocessor : Processor = DatagramProcessor(linkLevel, dservice)   // datagram processor doesn't affect node status
 
-        let cprocessor : Processor = ClockProcessor(linkLevel, [clock0])   // clock processor doesn't affect node status
+        let cprocessor : Processor = ClockProcessor(linkLevel, [clockModel0])   // clock processor doesn't affect node status
 
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
         // TODO: With this setup, only messages from the network are sent to pprocessor and displayed.
