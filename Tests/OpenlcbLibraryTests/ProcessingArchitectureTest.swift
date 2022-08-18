@@ -38,7 +38,7 @@ class ProcessingArchitectureTest: XCTestCase {
         rprocessor.process(msg, rnode)
         XCTAssertEqual(rnode.state, Node.State.Initialized, "node state goes initialized")
 
-        let dprocessor : Processor = DatagramProcessor() // datagram processor doesn't affect node status
+        let dprocessor : Processor = DatagramProcessor(nil, DatagramService()) // datagram processor doesn't affect node status
         let dnode = Node(NodeID(12))
         dprocessor.process(msg, dnode)
         XCTAssertEqual(dnode.state, Node.State.Uninitialized, "node state should be unchanged")

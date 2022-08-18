@@ -8,7 +8,7 @@ import XCTest
 @testable import OpenlcbLibrary
 class DatagramProcessorTest: XCTestCase {
 
-    let processor : Processor = DatagramProcessor()
+    let processor : Processor = DatagramProcessor(nil, DatagramService())
     var node = Node(NodeID(12))
 
     override func setUpWithError() throws {

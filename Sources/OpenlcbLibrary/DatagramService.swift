@@ -23,9 +23,11 @@ public class DatagramService {
     }
     
     func sendDatagram(_ memo : DatagramMemo) {
-        let message = Message(mti: MTI.Datagram, source: memo.srcNode.id, destination: memo.destNode.id, data: memo.data)
+        //let message = Message(mti: MTI.Datagram, source: memo.srcNode.id, destination: memo.destNode.id, data: memo.data)
         
         // TODO: Make a record of memo for reply
+        
+        // TODO: Send datagram message
     }
     
     func registerDatagramReceivedListener(_ listener : @escaping ( (_ : Datagram) -> () )) {
