@@ -130,6 +130,8 @@ public class CanLink : LinkLayer {
     }
     
     func handleReceivedCID(_ frame : CanFrame) {
+        // Does this carry our alias?
+        if (frame.header & 0xFFF) != localAlias {return} // no match
         // send an RID in response
         link!.sendCanFrame( CanFrame(control: ControlFrame.RID.rawValue, alias: localAlias) )
     }
