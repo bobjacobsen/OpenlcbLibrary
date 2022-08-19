@@ -19,19 +19,19 @@ class NodeIDTest: XCTestCase {
 
     func testInitString() {
         let nid = NodeID("0A.0B.0C.0D.0E.0F")
-        XCTAssertEqual(nid.description, "NodeID 0A.0B.0C.0D.0E.0F")
+        XCTAssertEqual(nid.description, "0A.0B.0C.0D.0E.0F")
     }
 
     func testInvalidInitString() {
         let nid = NodeID("foo")
-        XCTAssertEqual(nid.description, "NodeID 00.00.00.00.00.00")
+        XCTAssertEqual(nid.description, "00.00.00.00.00.00")
     }
     func testDescription() {
         let nid = NodeID(0x0A_0B_0C_0D_0E_0F)
-        XCTAssertEqual(nid.description, "NodeID 0A.0B.0C.0D.0E.0F")
+        XCTAssertEqual(nid.description, "0A.0B.0C.0D.0E.0F")
  
         let nid2 = NodeID(0xFA_FB_FC_FD_FE_FF)
-        XCTAssertEqual(nid2.description, "NodeID FA.FB.FC.FD.FE.FF")
+        XCTAssertEqual(nid2.description, "FA.FB.FC.FD.FE.FF")
     }
     
     func testEquality() {

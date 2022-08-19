@@ -29,7 +29,7 @@ class NodeTest: XCTestCase {
 
     func testDescription() {
         let nid = NodeID(0x0A0B0C0D0E0F)
-        XCTAssertEqual(Node(nid).description, "Node (NodeID 0A.0B.0C.0D.0E.0F)")
+        XCTAssertEqual(Node(nid).description, "Node (0A.0B.0C.0D.0E.0F)")
     }
     
     func testName() {

@@ -20,13 +20,12 @@ public struct NodeID : Equatable, Hashable, CustomStringConvertible {
         let part5 = (nodeId / 0x00_00_00_00_01_00 ) & 0xFF
         let part6 = (nodeId / 0x00_00_00_00_00_01 ) & 0xFF
         
-        return "NodeID " +
-        "\(String(format:"%02X", part1))." +
-        "\(String(format:"%02X", part2))." +
-        "\(String(format:"%02X", part3))." +
-        "\(String(format:"%02X", part4))." +
-        "\(String(format:"%02X", part5))." +
-        "\(String(format:"%02X", part6))"
+        return  "\(String(format:"%02X", part1))." +
+                "\(String(format:"%02X", part2))." +
+                "\(String(format:"%02X", part3))." +
+                "\(String(format:"%02X", part4))." +
+                "\(String(format:"%02X", part5))." +
+                "\(String(format:"%02X", part6))"
     }
     
     /// Convert an integer to a NodeID

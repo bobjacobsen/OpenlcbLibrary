@@ -68,12 +68,12 @@ struct PrintingProcessor : Processor {
     
     private func simpleAddressedMessage(_ message : Message, _ node : Node, _ dataString : String) {
         let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
-        result("\(message.source) \(name) \(dataString) to \(message.destination ?? NodeID(0))")
+        result("\(message.source): \(name) \(dataString) to \(message.destination ?? NodeID(0))")
     }
 
     private func simpleGlobalMessage(_ message : Message, _ node : Node, _ dataString : String) {
         let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
-        result("\(message.source) \(name) \(dataString)")
+        result("\(message.source): \(name) \(dataString)")
     }
     
     private func internalMessage(_ message : Message, _ dataString : String) {

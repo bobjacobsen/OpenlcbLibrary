@@ -10,7 +10,7 @@ import XCTest
 class RemoteProcessorTest: XCTestCase {
 
     var node21 = Node(NodeID(21))
-    let processor : Processor = RemoteNodeProcessor()
+    let processor : Processor = RemoteNodeProcessor(CanLink(localNodeID: NodeID(100)))
 
     override func setUpWithError() throws {
         node21 = Node(NodeID(21))

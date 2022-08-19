@@ -70,8 +70,8 @@ final class OpenlcbLibraryTests: XCTestCase {
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 3)
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19170240") // Verified Node
         // TODO: the following two have zero source alias - see RemoteNodeProcessor
-        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[1].header))", "0x19828000") // PIP reqeust
-        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[2].header))", "0x19DE8000") // SNIP request
+        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[1].header))", "0x19828240") // PIP reqeust
+        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[2].header))", "0x19DE8240") // SNIP request
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [5,1,1,1,3,1]) // carries nodeID
 
         canPhysicalLayer.receivedFrames = []

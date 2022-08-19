@@ -29,7 +29,7 @@ class PrintingProcessorTest: XCTestCase {
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C Initialization Complete ")
+        XCTAssertEqual(result, "00.00.00.00.00.0C: Initialization Complete ")
     }
     
     func testConsumerRangeIdentified() {
@@ -42,7 +42,7 @@ class PrintingProcessorTest: XCTestCase {
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C Consumer Range Identified ")
+        XCTAssertEqual(result, "00.00.00.00.00.0C: Consumer Range Identified ")
    }
 
     func testProducerConsumerEventReport() {
@@ -55,7 +55,7 @@ class PrintingProcessorTest: XCTestCase {
         
         processor.process(msg, node)
         
-        XCTAssertEqual(result, "NodeID 00.00.00.00.00.0C Producer Consumer Event Report ")
+        XCTAssertEqual(result, "00.00.00.00.00.0C: Producer Consumer Event Report ")
     }
 
     func testLinkDown() {
