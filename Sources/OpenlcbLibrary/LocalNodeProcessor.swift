@@ -29,6 +29,10 @@ struct LocalNodeProcessor : Processor {
             verifyNodeIDNumberAddressed(message, node)
         case .Protocol_Support_Inquiry :
             protocolSupportInquiry(message, node)
+        case .Protocol_Support_Reply,
+                .Simple_Node_Ident_Info_Reply :
+            // this is handled in the RemoteNodeProcessor, ignored here
+            break
         case .Simple_Node_Ident_Info_Request :
             simpleNodeIdentInfoRequest(message, node)
         case .Identify_Events_Addressed :
