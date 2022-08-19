@@ -13,11 +13,20 @@ public class ThrottleModel : ObservableObject {
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
     // Data to construct a throttle
     
-    @Published public var speed : Float16 = 0.0  // for Sliders
-    
+    @Published public var speed : Float16 = 0.0 {
+        didSet(speed) {
+            sendSetSpeed(to: speed)
+        }
+    }
+
     @Published public var forward = true   // TODO: get initial state from somewhere?
     @Published public var reverse = false
-    
+
+    // Operations methods
+    public func sendSetSpeed(to: Float16) {
+        print ("sendSetSpeed to \(to)")
+    }
+
     let maxFn = 28
     @Published public var fnModels : [FnModel] = []  // TODO: associate these with state from throttle
     
@@ -38,10 +47,17 @@ public class ThrottleModel : ObservableObject {
 public class FnModel : ObservableObject {
     public let label : String
     public let id = UUID()
-    @Published public var pressed : Bool = false
+    @Published public var pressed : Bool = false {
+        didSet(pressed) {
+            sendFunctionSet(to: pressed)
+        }
+    }
     @Published public var momentary : Bool = false
     
     public init(_ label : String) {
         self.label = label
+    }
+    public func sendFunctionSet(to: Bool) {
+        print ("sendFunctionSet \(label) \(to)")
     }
 }
