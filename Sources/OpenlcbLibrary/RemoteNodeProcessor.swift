@@ -14,11 +14,11 @@ import os
 ///
 
 struct RemoteNodeProcessor : Processor {
-    public init ( _ linkLayer: LinkLayer? = nil) {
+    public init ( _ linkLayer: CanLink? = nil) {
         self.linkLayer = linkLayer
     }
     
-    let linkLayer : LinkLayer?
+    let linkLayer : CanLink?
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeProcessor")
     
@@ -85,10 +85,10 @@ struct RemoteNodeProcessor : Processor {
     
     private func newNodeSeen(_ message : Message, _ node : Node) {
         // send pip and snip requests
-        let pip = Message(mti: MTI.Protocol_Support_Inquiry, source: NodeID(0), destination: node.id, data: []) // TODO: wrong source node
+        let pip = Message(mti: MTI.Protocol_Support_Inquiry, source: linkLayer!.localNodeID, destination: node.id, data: []) // TODO: wrong source node
         linkLayer?.sendMessage(pip)
         // TODO:  Should the SNIP message wait for the node to be displayed?  Or do we want the name earlier than that? Think about big networks
-        let snip = Message(mti: MTI.Simple_Node_Ident_Info_Request, source: NodeID(0), destination: node.id, data: []) // TODO: wrong source node
+        let snip = Message(mti: MTI.Simple_Node_Ident_Info_Request, source: linkLayer!.localNodeID, destination: node.id, data: []) // TODO: wrong source node
         linkLayer?.sendMessage(snip)
 
     }
