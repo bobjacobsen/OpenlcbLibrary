@@ -33,8 +33,8 @@ struct ThrottleProcessor : Processor {
             if message.data == isTrainIDarray {
                 logger.debug("eventID matches")
                 
-                // retain the source ID
-                model.trainNodes.insert(message.source)
+                // retain the source ID as a roster entry with the low bits holding the address
+                model.roster.append(RosterEntry("\(message.source.nodeId & 0xFFFF)", message.source))
             }
             return
         case .Traction_Control_Reply :

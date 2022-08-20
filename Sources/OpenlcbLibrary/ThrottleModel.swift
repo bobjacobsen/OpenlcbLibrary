@@ -40,7 +40,34 @@ public class ThrottleModel : ObservableObject {
         logger.debug("init of ThrottleModel")
     }
 
-    var trainNodes  = Set<NodeID>([])
+    public var roster = [RosterEntry("4137", NodeID(4137)), RosterEntry("2111", NodeID(2111))]
+
+    // Have to ensure entries are unique when added to the roster
+    public func addToRoster(item : RosterEntry) {
+        if roster.contains(item) { return }
+        roster.append(item)
+        roster.sort()
+    }
+}
+
+public struct RosterEntry : Hashable, Equatable, Comparable {
+    public let label : String
+    public let nodeID : NodeID
+    public init(_ label : String, _ nodeID : NodeID) {
+        self.label = label
+        self.nodeID = nodeID
+    }
+    /// Equality is defined on the NodeID only.
+    public static func ==(lhs: RosterEntry, rhs:RosterEntry) -> Bool {
+        return lhs.nodeID == rhs.nodeID
+    }
+    public func hash(into hasher : inout Hasher) {
+        hasher.combine(nodeID)
+    }
+    // Comparable is defined on the NodeID
+    public static func <(lhs: RosterEntry, rhs: RosterEntry) -> Bool {
+        return lhs.nodeID.nodeId < rhs.nodeID.nodeId
+    }
 }
 
 // Data to construct a single function button
