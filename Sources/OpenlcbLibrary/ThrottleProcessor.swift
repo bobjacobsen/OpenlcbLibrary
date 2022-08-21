@@ -29,7 +29,10 @@ struct ThrottleProcessor : Processor {
                 
         // specific message handling
         switch message.mti {
-        case .Producer_Consumer_Event_Report :
+        case .Producer_Consumer_Event_Report,
+                .Producer_Identified_Active,
+                .Producer_Identified_Inactive,
+                .Producer_Identified_Unknown:
             if message.data == isTrainIDarray {
                 logger.debug("eventID matches")
                 
@@ -38,13 +41,17 @@ struct ThrottleProcessor : Processor {
             }
             return
         case .Traction_Control_Reply :
-            let subCommand = message.data[0]
+            let subCommand = TC_Reply_Type(rawValue: message.data[0])
             switch subCommand {
-            case 0x10:
-                // speed message // TODO: decode speed message in IEEE16 / Float16
+            case .QuerySpeeds:
+                // speed message
+                let speed : Float16 = Float16(message.data[1] << 8 | message.data[2])
+                model.speed = speed // TODO: confirm that this publishes
                 return
-            case 0x20:
-                // function message // TODO: decode function message
+            case .QueryFunction:
+                // function message
+                let fn = Int(message.data[3]) // TODO: check for function space in bytes 1,2
+                model.fnModels[fn].pressed = (message.data[5] != 0)
                 return
             default:
                 return // not of interest
@@ -52,5 +59,23 @@ struct ThrottleProcessor : Processor {
         default:
             return
         }
+    }
+    
+    public enum TC_Request_Type : UInt8 {
+        case SetSpeed               = 0x00
+        case SetFunction            = 0x01
+        case EStop                  = 0x02
+        case QuerySpeeds            = 0x10
+        case QueryFunction          = 0x11
+        case ControllerConfig       = 0x20
+        case ListenerConfig         = 0x30
+        case TractionManagement     = 0x40
+    }
+    public enum TC_Reply_Type : UInt8 {
+        case QuerySpeeds            = 0x10
+        case QueryFunction          = 0x11
+        case ControllerConfig       = 0x20
+        case ListenerConfig         = 0x30
+        case TractionManagement     = 0x40
     }
 }

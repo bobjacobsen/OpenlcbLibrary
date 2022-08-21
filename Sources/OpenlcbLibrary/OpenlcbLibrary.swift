@@ -78,7 +78,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
             defaultNode.snip.userProvidedNodeName = "Some Mac"
         }
         #endif
-        defaultNode.snip.userProvidedDescription = "OlcbTools app"
+        defaultNode.snip.userProvidedDescription = "Full OlcbTools App"
         defaultNode.snip.updateSnipDataFromStrings()
 
         localNodeStore.store(defaultNode)
@@ -97,11 +97,14 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         let cprocessor : Processor = ClockProcessor(linkLevel, [clockModel0])   // clock processor doesn't affect node status
 
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
+        
+        let tprocessor : Processor = ThrottleProcessor(linkLevel, model: throttleModel0)
+        
         // TODO: With this setup, only messages from the network are sent to pprocessor and displayed.
         
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
-        localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor, cprocessor]
+        localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor, cprocessor, tprocessor]
  
         // register listener here which will process the node stores without copying them
         linkLevel.registerMessageReceivedListener(processMessageFromLinkLevel)

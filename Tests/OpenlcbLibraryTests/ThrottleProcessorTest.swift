@@ -21,17 +21,22 @@ final class ThrottleProcessorTest: XCTestCase {
     func testPCERmatch() throws {
         let node1 = Node(NodeID(1))
         let model = ThrottleModel()
+        // clear debug content, if any
+        model.roster = []
         
         let put = ThrottleProcessor(nil, model: model)
         
-        let pcerMatch =   Message(mti:.Producer_Consumer_Event_Report, source: NodeID(10), data: [1,1,0,0,0,0,3,3])
+        let pcerMatch =   Message(mti:.Producer_Consumer_Event_Report, source: NodeID(10), data: [1,1,0,0,0,0,3,3]) // isATrain event
         let pcerNoMatch = Message(mti:.Producer_Consumer_Event_Report, source: NodeID(11), data: [1,1,0,0,0,0,3,0]) // mismatch in last entry
-        
+        let piaMatch =   Message(mti:.Producer_Identified_Active, source: NodeID(12), data: [1,1,0,0,0,0,3,3]) // isATrain event
+
         put.process(pcerMatch, node1)
         put.process(pcerNoMatch, node1)
-        
-        XCTAssertEqual(model.trainNodes.count, 1)
-        XCTAssertTrue(model.trainNodes.contains(NodeID(10)))
-        XCTAssertFalse(model.trainNodes.contains(NodeID(11)))
+        put.process(piaMatch, node1)
+
+        XCTAssertEqual(model.roster.count, 2)
+        XCTAssertTrue(model.roster.contains(RosterEntry("10", NodeID(10))))
+        XCTAssertFalse(model.roster.contains(RosterEntry("11", NodeID(11))))
+        XCTAssertTrue(model.roster.contains(RosterEntry("12", NodeID(12))))
     }
 }
