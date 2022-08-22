@@ -9,12 +9,12 @@ import Foundation
 import os
 
 struct ThrottleProcessor : Processor {
-    public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
+    public init ( _ linkLayer: CanLink? = nil, model: ThrottleModel) {
         self.linkLayer = linkLayer
         self.model = model
     }
     
-    let linkLayer : LinkLayer?
+    let linkLayer : CanLink?
     let model : ThrottleModel
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleProcessor")
@@ -29,6 +29,11 @@ struct ThrottleProcessor : Processor {
                 
         // specific message handling
         switch message.mti {
+        case .Link_Level_Up :
+            // link level up, ask for isATrain producers
+            let message = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: isTrainIDarray)
+            linkLayer?.sendMessage(message)
+            return
         case .Producer_Consumer_Event_Report,
                 .Producer_Identified_Active,
                 .Producer_Identified_Inactive,
@@ -40,6 +45,15 @@ struct ThrottleProcessor : Processor {
                 model.roster.append(RosterEntry("\(message.source.nodeId & 0xFFFF)", message.source))
             }
             return
+        case .Verified_NodeID :
+            // TODO: make sure this has the right node ID
+            model.tc_state = .Wait_on_TC_Reply
+            let header : [UInt8] = [0x20, 0x01, 0x01]
+            let data = header + (linkLayer!.localNodeID.toArray())
+            let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                                        destination: model.selected_nodeId, data: data)
+            print("\(message)")
+            linkLayer!.sendMessage(message)
         case .Traction_Control_Reply :
             let subCommand = TC_Reply_Type(rawValue: message.data[0])
             switch subCommand {
@@ -53,6 +67,17 @@ struct ThrottleProcessor : Processor {
                 let fn = Int(message.data[3]) // TODO: check for function space in bytes 1,2
                 model.fnModels[fn].pressed = (message.data[5] != 0)
                 return
+            case .ControllerConfig:
+                // check combination of message subtype and state
+                if model.tc_state == .Wait_on_TC_Reply && message.data[1] == 0x01 {
+                    // TODO: check and react to failure flag; now assuming success
+                    // TC Assign Controller reply - now selected
+                    model.tc_state = .Selected
+                    // model.selectedLoco was set at start 
+                    model.selected = true
+                    
+                }
+                
             default:
                 return // not of interest
             }

@@ -20,7 +20,7 @@ final class ThrottleProcessorTest: XCTestCase {
 
     func testPCERmatch() throws {
         let node1 = Node(NodeID(1))
-        let model = ThrottleModel()
+        let model = ThrottleModel(nil)
         // clear debug content, if any
         model.roster = []
         

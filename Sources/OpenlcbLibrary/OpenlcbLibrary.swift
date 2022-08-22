@@ -36,13 +36,13 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         
         defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01; user responsible for uniqueness of value
         
+        linkLevel = CanLink(localNodeID: defaultNodeID)
+
         localNodeStore   = LocalNodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         clockModel0 = ClockModel()
-        throttleModel0 = ThrottleModel()
-        
-        linkLevel = CanLink(localNodeID: defaultNodeID)
-        
+        throttleModel0 = ThrottleModel(linkLevel)
+                
         logger.info("OpenlcbLibrary init")
     }
     

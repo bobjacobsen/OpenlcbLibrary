@@ -32,7 +32,7 @@ final class OpenlcbLibraryTests: XCTestCase {
         
         // check initialization messages
         XCTAssertEqual(lib.defaultNode.state, Node.State.Initialized)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 11) // should be 10 with the Initialization Complete, Verify Global, ID clock range and clock query
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 12) // should be 12 with the Initialization Complete, Verify Global, ID clock range and clock query, request for isATrain events
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[5].header))", "0x10701240") // Allocation AMDefinition
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[6].header))", "0x10702240") // Acquire rest of network with AMEnquiry
 
@@ -43,6 +43,8 @@ final class OpenlcbLibraryTests: XCTestCase {
         
         XCTAssertEqual(canPhysicalLayer.receivedFrames[ 9].data, [1,1,0,0,1, 0x3, 0xFF,0xFF]) // carries clock range
         XCTAssertEqual(canPhysicalLayer.receivedFrames[10].data, [1,1,0,0,1, 0,   0xF0,0x00]) // carries clock query
+
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[11].data, [1,1,0,0,0, 0,   0x03,0x03]) // carries isATrain event
 
         canPhysicalLayer.receivedFrames = []
         

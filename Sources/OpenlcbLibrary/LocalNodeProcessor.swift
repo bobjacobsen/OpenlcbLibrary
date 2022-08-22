@@ -33,6 +33,9 @@ struct LocalNodeProcessor : Processor {
                 .Simple_Node_Ident_Info_Reply :
             // this is handled in the RemoteNodeProcessor, ignored here
             break
+        case .Traction_Control_Reply :
+            // this is handled in the ThrottleProcessor, ignored here
+            break
         case .Simple_Node_Ident_Info_Request :
             simpleNodeIdentInfoRequest(message, node)
         case .Identify_Events_Addressed :

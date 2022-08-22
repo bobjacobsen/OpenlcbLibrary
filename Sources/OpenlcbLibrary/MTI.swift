@@ -40,8 +40,8 @@ public enum MTI : Int {
     case Remote_Button_Request              = 0x0948
     case Remote_Button_Reply                = 0x0549
 
-    case Traction_Control_Command           = 0x05E8
-    case Traction_Control_Reply             = 0x01E8
+    case Traction_Control_Command           = 0x05EB
+    case Traction_Control_Reply             = 0x01E9
     
     case Datagram                           = 0x1C48
     case Datagram_Received_OK               = 0x0A28
