@@ -52,7 +52,6 @@ struct ThrottleProcessor : Processor {
             let data = header + (linkLayer!.localNodeID.toArray())
             let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
                                         destination: model.selected_nodeId, data: data)
-            print("\(message)")
             linkLayer!.sendMessage(message)
         case .Traction_Control_Reply :
             let subCommand = TC_Reply_Type(rawValue: message.data[0])
@@ -75,9 +74,15 @@ struct ThrottleProcessor : Processor {
                     model.tc_state = .Selected
                     // model.selectedLoco was set at start 
                     model.selected = true
-                    
                 }
-                
+            case .TractionManagement :
+                // check for heartbeat request
+                if message.data[1] == 0x03 {
+                    // send no-op
+                    let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                                          destination: model.selected_nodeId, data: [0x40, 0x03])
+                    linkLayer!.sendMessage(message)
+                }
             default:
                 return // not of interest
             }
