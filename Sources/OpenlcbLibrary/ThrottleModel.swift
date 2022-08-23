@@ -15,6 +15,8 @@ public class ThrottleModel : ObservableObject {
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
     
+    /// Speed here is in meters/second.  Views that work in MPH need to do the conversion before
+    /// changing `speed` here
     @Published public var speed : Float16 = 0.0 {
         willSet(speed) {
             sendSetSpeed(to: speed)
@@ -25,6 +27,9 @@ public class ThrottleModel : ObservableObject {
     @Published public var reverse = false
     
     // Operations methods
+
+    /// Speed here is in meters/second.  Views that work in MPH need to do the conversion before
+    /// changing `speed` here
     public func sendSetSpeed(to: Float16) {
         print ("sendSetSpeed to \(to)")
         let signedSpeed = reverse ? -1.0 * to : to
