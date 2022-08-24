@@ -39,7 +39,6 @@ public class ThrottleModel : ObservableObject {
     
     /// Speed here is in MPH, and conversion to meters/sec is done here
     public func sendSetSpeed(to mphSpeed: Float16) {
-        print ("sendSetSpeed to \(mphSpeed) MPH")
         let mpsSpeed = mphSpeed * ThrottleModel.MPH_to_mps
         let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
         let bytes = signedSpeed.bytes               // see extension to Float16 below
@@ -94,7 +93,6 @@ public class ThrottleModel : ObservableObject {
     
     // handle a function call
     public func sendFunctionSet(function: Int, to: Bool) {
-        print ("sendFunctionSet \(function) \(to)")
         let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId,
                               data: [0x01, 0x00, 0x00, UInt8(function), 0x00, to ? 0x01 : 0x00])
         linkLayer!.sendMessage(message)
