@@ -74,6 +74,7 @@ struct ThrottleProcessor : Processor {
                     model.tc_state = .Selected
                     // model.selectedLoco was set at start 
                     model.selected = true
+                    model.showingSelectSheet = false // reset the selection sheet, closing it
                 }
             case .TractionManagement :
                 // check for heartbeat request

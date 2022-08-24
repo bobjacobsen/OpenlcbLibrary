@@ -26,12 +26,17 @@ public class ThrottleModel : ObservableObject {
     @Published public var forward = true   // TODO: get initial state from somewhere?
     @Published public var reverse = false
     
+    // Is the selection view showing?  This is set true
+    // when a View presents the selection sheet, and
+    // reset to false when selection succeeds.
+    @Published public var showingSelectSheet = false
+    
     // Operations methods
-
+    
     /// 1 scale mph to meters per second for the speed commands.
     /// The screen works in MPH; the model works in meters/sec
     static let MPH_to_mps : Float16 = 0.44704
-
+    
     /// Speed here is in MPH, and conversion to meters/sec is done here
     public func sendSetSpeed(to mphSpeed: Float16) {
         print ("sendSetSpeed to \(mphSpeed) MPH")
@@ -53,13 +58,13 @@ public class ThrottleModel : ObservableObject {
         // construct the array of function models
         for index in 0...maxFn {
             // default fn labels are just the numbers
-            fnModels.append(FnModel("\(index)"))
+            fnModels.append(FnModel(index, "\(index)", self))
         }
         
         logger.debug("init of ThrottleModel complete")
     }
     
-    @Published public var roster : [RosterEntry] = []
+    @Published public var roster : [RosterEntry] = [RosterEntry("<none>", NodeID(0))]
     
     // Have to ensure entries are unique when added to the roster
     public func addToRoster(item : RosterEntry) {
@@ -86,6 +91,14 @@ public class ThrottleModel : ObservableObject {
     
     @Published public var selected : Bool = false
     @Published public var selectedLoco : String = "Select"  // "Select" goes with !selected
+    
+    // handle a function call
+    public func sendFunctionSet(function: Int, to: Bool) {
+        print ("sendFunctionSet \(function) \(to)")
+        let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId,
+                              data: [0x01, 0x00, 0x00, UInt8(function), 0x00, to ? 0x01 : 0x00])
+        linkLayer!.sendMessage(message)
+    }
 }
 
 // For converting Float16 to bytes and vice versa
@@ -128,18 +141,20 @@ public struct RosterEntry : Hashable, Equatable, Comparable {
 // Data to construct a single function button
 public class FnModel : ObservableObject {
     public let label : String
+    public let number : Int
+    var model: ThrottleModel
     public let id = UUID()
+    
     @Published public var pressed : Bool = false {
         didSet(pressed) {
-            sendFunctionSet(to: pressed)
+            model.sendFunctionSet(function: number, to: pressed)
         }
     }
     @Published public var momentary : Bool = false
     
-    public init(_ label : String) {
+    public init(_ number : Int, _ label : String, _ model : ThrottleModel) {
+        self.number = number
         self.label = label
-    }
-    public func sendFunctionSet(to: Bool) {
-        print ("sendFunctionSet \(label) \(to)")
+        self.model = model
     }
 }
