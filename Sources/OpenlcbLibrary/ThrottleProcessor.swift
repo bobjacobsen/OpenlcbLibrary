@@ -43,6 +43,7 @@ struct ThrottleProcessor : Processor {
                 
                 // retain the source ID as a roster entry with the low bits holding the address
                 model.roster.append(RosterEntry("\(message.source.nodeId & 0xFFFF)", message.source))
+                model.roster.sort()
             }
             return
         case .Verified_NodeID :
@@ -63,7 +64,7 @@ struct ThrottleProcessor : Processor {
                 let speed = alignedBytes.withUnsafeBytes {
                     $0.load(fromByteOffset: 0, as: Float16.self)
                 }
-                print ("speed \(speed) from \(message.data[1]) \(message.data[2])")
+
                 model.speed = abs(speed) // TODO: confirm that this publishes
                 
                 if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
