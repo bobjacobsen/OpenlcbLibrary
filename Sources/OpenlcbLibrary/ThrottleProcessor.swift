@@ -47,7 +47,7 @@ struct ThrottleProcessor : Processor {
             return
         case .Verified_NodeID :
             // TODO: make sure this has the right node ID
-            model.tc_state = .Wait_on_TC_Reply
+            model.tc_state = .Wait_on_TC_Assign_Reply
             let header : [UInt8] = [0x20, 0x01, 0x01]
             let data = header + (linkLayer!.localNodeID.toArray())
             let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
@@ -82,7 +82,7 @@ struct ThrottleProcessor : Processor {
                 return
             case .ControllerConfig:
                 // check combination of message subtype and state
-                if model.tc_state == .Wait_on_TC_Reply && message.data[1] == 0x01 {
+                if model.tc_state == .Wait_on_TC_Assign_Reply && message.data[1] == 0x01 {
                     // TODO: check and react to failure flag; now assuming success
                     // TC Assign Controller reply - now selected
                     model.tc_state = .Selected

@@ -110,12 +110,14 @@ extension Float16 {
 }
 
 
-// the state, referenced here and in ThrottleProcessor
+// the selection state, referenced here and in ThrottleProcessor
 public enum TC_Selection_State {
     case Idle_no_selection
     case Wait_on_Verified_Node      // have sent VerifyNode to make sure we have alias
-    case Wait_on_TC_Reply           // have sent TC Command Assign, wait on TC Reply assign OK
+    case Wait_on_TC_Assign_Reply    // have sent TC Command Assign, wait on TC Reply assign OK
     case Selected                   // selection complete
+    
+    case Wait_on_TC_Deassign_Reply  // have sent TC Command Desassign, wait on TC Reply OK
 }
 
 public struct RosterEntry : Hashable, Equatable, Comparable {
