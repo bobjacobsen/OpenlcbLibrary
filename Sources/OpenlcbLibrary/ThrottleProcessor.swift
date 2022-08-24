@@ -57,9 +57,23 @@ struct ThrottleProcessor : Processor {
             let subCommand = TC_Reply_Type(rawValue: message.data[0])
             switch subCommand {
             case .QuerySpeeds:
-                // speed message
-                let speed : Float16 = Float16(message.data[1] << 8 | message.data[2])
-                model.speed = speed // TODO: confirm that this publishes
+                // speed message - convert from bytes to Float16
+                // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
+                let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
+                let speed = alignedBytes.withUnsafeBytes {
+                    $0.load(fromByteOffset: 0, as: Float16.self)
+                }
+                print ("speed \(speed) from \(message.data[1]) \(message.data[2])")
+                model.speed = abs(speed) // TODO: confirm that this publishes
+                
+                if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
+                    model.forward = true
+                    model.reverse = false
+                } else {
+                    model.forward = false
+                    model.reverse = true
+                }
+                
                 return
             case .QueryFunction:
                 // function message

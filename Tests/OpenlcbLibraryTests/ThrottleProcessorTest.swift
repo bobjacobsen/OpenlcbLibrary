@@ -39,4 +39,41 @@ final class ThrottleProcessorTest: XCTestCase {
         XCTAssertFalse(model.roster.contains(RosterEntry("11", NodeID(11))))
         XCTAssertTrue(model.roster.contains(RosterEntry("12", NodeID(12))))
     }
+
+    func testSpeedReplt() throws {
+        let node1 = Node(NodeID(1))
+        let model = ThrottleModel(CanLink(localNodeID: NodeID(0)))
+        
+        let put = ThrottleProcessor(nil, model: model)
+        
+        // 0 mps test
+        let replyMsg0 = Message(mti:.Traction_Control_Reply, source: NodeID(10), destination: NodeID(1), data: [0x10, 0x00, 0x00, 0x00, 0x80, 0x00, 0xFF, 0xFF]) // speed reply
+        
+        put.process(replyMsg0, node1)
+        
+        XCTAssertEqual(model.speed, 0.0)
+        XCTAssertTrue(model.forward)
+        XCTAssertFalse(model.reverse)
+
+        // 100 mps test
+        let replyMsg100 = Message(mti:.Traction_Control_Reply, source: NodeID(10), destination: NodeID(1), data: [0x10, 0x56, 0x40, 0x00, 0x80, 0x00, 0xFF, 0xFF]) // speed reply
+        
+        put.process(replyMsg100, node1)
+        
+        XCTAssertEqual(model.speed, 100.0)
+        XCTAssertTrue(model.forward)
+        XCTAssertFalse(model.reverse)
+
+        // reverse 0 mps test
+        let replyMsgR0 = Message(mti:.Traction_Control_Reply, source: NodeID(10), destination: NodeID(1), data: [0x10, 0x80, 0x00, 0x00, 0x80, 0x00, 0xFF, 0xFF]) // speed reply
+        
+        put.process(replyMsgR0, node1)
+        
+        XCTAssertEqual(model.speed, 0.0)
+        XCTAssertTrue(model.reverse)
+        XCTAssertFalse(model.forward)
+
+    }
+
+    
 }
