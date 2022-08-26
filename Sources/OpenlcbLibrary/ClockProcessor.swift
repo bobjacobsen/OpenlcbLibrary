@@ -26,6 +26,8 @@ struct ClockProcessor : Processor {
         
         // TODO: We should reply to Identify_Producer, Identify_Consumer, Identify_Events?
             
+        // TODO: Do we need to react if a clock is added after startup?  How?
+            
         case .Link_Level_Up :
             linkUp(message, node)
         
