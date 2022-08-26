@@ -63,7 +63,7 @@ class CanLinkTest: XCTestCase {
         
         canPhysicalLayer.physicalLayerUp()
         
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 7)  // TODO: includes AMD, AME w/o delay now
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 7)
         XCTAssertEqual(canLink.state, CanLink.State.Permitted)
         
         XCTAssertEqual(messageLayer.receivedMessages.count, 1)

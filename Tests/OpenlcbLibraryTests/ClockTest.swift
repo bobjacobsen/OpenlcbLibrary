@@ -67,7 +67,7 @@ final class ClockTest: XCTestCase {
         let clock = ClockModel()
         clock.setTime(getDateTime)
         
-        // compare string forms to avoid nsec clicks // TODO: make this use explicit "now" to avoid ticks
+        // compare string forms to avoid nsec clicks
         XCTAssertEqual(clock.getTime().description, getDateTime.description, "match times")
     }
     
@@ -100,7 +100,6 @@ final class ClockTest: XCTestCase {
         let setTime = dateFormatter.date(from: "2022/01/01 12:34")! // which became 4 minutes fast
  
         let clock = ClockModel()
-        // TODO: test run / not run
         clock.rate = 4
         clock.run = false
         clock.setTime(setTime)

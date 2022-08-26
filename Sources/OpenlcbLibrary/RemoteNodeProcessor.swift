@@ -53,7 +53,7 @@ struct RemoteNodeProcessor : Processor {
             newNodeSeen(message, node)
         default:
             // we ignore others
-            // logger.trace("message needing no processing: \(message) on \(node)") // TODO: Globals will be logged for each node?
+            // logger.trace("message needing no processing: \(message) on \(node)")
             break
         }
     }
@@ -87,7 +87,7 @@ struct RemoteNodeProcessor : Processor {
         // send pip and snip requests
         let pip = Message(mti: MTI.Protocol_Support_Inquiry, source: linkLayer!.localNodeID, destination: node.id, data: [])
         linkLayer?.sendMessage(pip)
-        // TODO:  Should the SNIP message wait for the node to be displayed?  Or do we want the name earlier than that? Think about big networks
+        // We request SNIP data on startup so that we can display node names.  Can consider deferring this is it's a issue on big networks
         let snip = Message(mti: MTI.Simple_Node_Ident_Info_Request, source: linkLayer!.localNodeID, destination: node.id, data: [])
         linkLayer?.sendMessage(snip)
 

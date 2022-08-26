@@ -26,7 +26,6 @@ final class ClockProcessorTest: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
     
-    // TODO: Rework this test to be run/start event received
     func testRunStop() {
         clock0.run = false
         let msg1 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 0xF0,02]) // start
