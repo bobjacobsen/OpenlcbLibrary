@@ -47,7 +47,7 @@ struct ThrottleProcessor : Processor {
             }
             return
         case .Verified_NodeID :
-            // TODO: make sure this has the right node ID
+            // TODO: make sure this reply has the right node ID, i.e. is the one we're waiting for
             model.tc_state = .Wait_on_TC_Assign_Reply
             let header : [UInt8] = [0x20, 0x01, 0x01]
             let data = header + (linkLayer!.localNodeID.toArray())

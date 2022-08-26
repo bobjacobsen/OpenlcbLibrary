@@ -24,6 +24,8 @@ struct ClockProcessor : Processor {
                 .Producer_Identified_Unknown :
             eventReport(message, node)
         
+        // TODO: We should reply to Identify_Producer, Identify_Consumer, Identify_Events?
+            
         case .Link_Level_Up :
             linkUp(message, node)
         

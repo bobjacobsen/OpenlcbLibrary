@@ -23,7 +23,7 @@ public class ThrottleModel : ObservableObject {
         }
     }
     
-    @Published public var forward = true   // TODO: get initial state from somewhere?
+    @Published public var forward = true   // TODO: send TC update request to get initial state from command station
     @Published public var reverse = false
     
     // Is the selection view showing?  This is set true
@@ -49,7 +49,7 @@ public class ThrottleModel : ObservableObject {
     }
     
     let maxFn = 28
-    @Published public var fnModels : [FnModel] = []  // TODO: associate these with state from throttle
+    @Published public var fnModels : [FnModel] = []
     
     public init(_ linkLayer : CanLink?) {
         self.linkLayer = linkLayer
@@ -67,7 +67,6 @@ public class ThrottleModel : ObservableObject {
     
     // Have to ensure entries are unique when added to the roster
     public func addToRoster(item : RosterEntry) {
-        // TODO: add handling for a "<none>" case, including setting the Picker at start?
         if roster.contains(item) { return }
         roster.append(item)
         roster.sort()

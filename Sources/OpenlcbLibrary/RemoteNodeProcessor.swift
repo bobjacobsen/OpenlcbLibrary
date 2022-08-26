@@ -85,10 +85,10 @@ struct RemoteNodeProcessor : Processor {
     
     private func newNodeSeen(_ message : Message, _ node : Node) {
         // send pip and snip requests
-        let pip = Message(mti: MTI.Protocol_Support_Inquiry, source: linkLayer!.localNodeID, destination: node.id, data: []) // TODO: wrong source node
+        let pip = Message(mti: MTI.Protocol_Support_Inquiry, source: linkLayer!.localNodeID, destination: node.id, data: [])
         linkLayer?.sendMessage(pip)
         // TODO:  Should the SNIP message wait for the node to be displayed?  Or do we want the name earlier than that? Think about big networks
-        let snip = Message(mti: MTI.Simple_Node_Ident_Info_Request, source: linkLayer!.localNodeID, destination: node.id, data: []) // TODO: wrong source node
+        let snip = Message(mti: MTI.Simple_Node_Ident_Info_Request, source: linkLayer!.localNodeID, destination: node.id, data: [])
         linkLayer?.sendMessage(snip)
 
     }

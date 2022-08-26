@@ -62,7 +62,7 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
                 // NodeID(0) is a special case, used for e.g. linkUp, linkDown; don't store
                 if (nodeID != NodeID(0)) {
                     store(node)
-                    // TODO: send New_Node_seen before sending message to process - how to make sure all process it
+                    // All nodes process a notification that there's a new node
                     let newNodeMessage = Message(mti: MTI.New_Node_Seen, source: nodeID)
                     for processor in processors {
                             processor.process(newNodeMessage, node)

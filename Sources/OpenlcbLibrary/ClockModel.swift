@@ -33,7 +33,8 @@ final public class ClockModel : ObservableObject {
             internalRun = run
         }
     }
-    internal var internalRun = true  // TODO: what should this start as?
+    internal var internalRun = true  // Starts as true to make real-time clock if no actual clock on bus
+                                     // LCC fasts clock will override on 1st access
 
     /// 'rate' determines the rate at which the clock advances.  This is generally set from the
     ///  clock master.
