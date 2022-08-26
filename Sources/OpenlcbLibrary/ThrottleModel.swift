@@ -146,7 +146,7 @@ public class FnModel : ObservableObject {
     public let id = UUID()
     
     @Published public var pressed : Bool = false {
-        didSet(pressed) {
+        willSet(pressed) {
             model.sendFunctionSet(function: number, to: pressed)
         }
     }
