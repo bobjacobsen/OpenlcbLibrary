@@ -418,22 +418,20 @@ public class CanLink : LinkLayer {
     // MARK: common code
     func checkAndHandleAliasCollision(_ frame : CanFrame) -> Bool {
         if state != .Permitted { return false }
-        // TODO: Figure out why we're seeing aborts. Due to echo'd frames from hub?
-//        let receivedAlias = frame.header & 0x0000_FFF
-//        let abort = (receivedAlias == localAlias)
-//        if (abort ) {
-//            // Collision! Insist on our alias
-//            logger.notice("alias collision with alias \(receivedAlias, privacy: .public), we restart with AMR and attempt to get new alias")
-//            link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
-//            // Standard 6.2.5
-//            state = .Inhibited
-//            // attempt to get a new alias and go back to .Permitted
-//            localAliasSeed = CanLink.incrementAlias48(localAliasSeed)
-//            localAlias = CanLink.createAlias12(localAliasSeed)
-//            defineAndReserveAlias()
-//        }
-//        return abort
-        return false
+        let receivedAlias = frame.header & 0x0000_FFF
+        let abort = (receivedAlias == localAlias)
+        if (abort ) {
+            // Collision! Insist on our alias
+            logger.notice("alias collision with alias \(receivedAlias, privacy: .public), we restart with AMR and attempt to get new alias")
+            link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
+            // Standard 6.2.5
+            state = .Inhibited
+            // attempt to get a new alias and go back to .Permitted
+            localAliasSeed = CanLink.incrementAlias48(localAliasSeed)
+            localAlias = CanLink.createAlias12(localAliasSeed)
+            defineAndReserveAlias()
+        }
+        return abort
     }
     
     /// Send the alias allocation sequence
