@@ -117,7 +117,7 @@ struct RemoteNodeProcessor : Processor {
             if message.data.count > 2 {
                 node.snip.addData(data: message.data)
                 node.snip.updateStringsFromSnipData()
-                logger.debug("SNIP data added to \(node, privacy: .public)")
+                // logger.trace("SNIP data added to \(node, privacy: .public)")
             }
         }
     }
