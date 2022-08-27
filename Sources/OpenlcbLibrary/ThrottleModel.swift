@@ -79,7 +79,7 @@ public class ThrottleModel : ObservableObject {
         logger.debug("start selection with \(selection.nodeId, privacy: .public) and \(nodeID, privacy: .public)")
         // first step is making sure you have the alias for this node
         selected_nodeId = nodeID
-        tc_state = .Idle_no_selection
+        tc_state = .Wait_on_Verified_Node
         let message = Message(mti: .Verify_NodeID_Number_Global, source: linkLayer!.localNodeID, data: nodeID.toArray())
         linkLayer?.sendMessage(message)
     }
