@@ -39,7 +39,7 @@ struct ThrottleProcessor : Processor {
                 .Producer_Identified_Inactive,
                 .Producer_Identified_Unknown:
             if message.data == isTrainIDarray {
-                logger.debug("eventID matches")
+                // logger.trace("eventID matches")
                 
                 // retain the source ID as a roster entry with the low bits holding the address
                 model.roster.append(RosterEntry("\(message.source.nodeId & 0xFFFF)", message.source))
@@ -47,7 +47,10 @@ struct ThrottleProcessor : Processor {
             }
             return
         case .Verified_NodeID :
-            // TODO: make sure this reply has the right node ID, i.e. is the one we're waiting for
+            // make sure in right state
+            guard model.tc_state == .Wait_on_Verified_Node else { return }
+            // make sure this reply has the right node ID, i.e. is the one we're waiting for
+            guard message.source == model.selected_nodeId else { return }
             model.tc_state = .Wait_on_TC_Assign_Reply
             let header : [UInt8] = [0x20, 0x01, 0x01]
             let data = header + (linkLayer!.localNodeID.toArray())
