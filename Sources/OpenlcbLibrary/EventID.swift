@@ -33,9 +33,9 @@ public struct EventID : Equatable, Hashable, CustomStringConvertible {
         "\(String(format:"%02X", part8))"
     }
     
-    /// Convert an integer to a NodeID
-    public init(_ nodeID : UInt64) {
-        self.eventID = nodeID
+    /// Convert an integer to an eventID
+    public init(_ eventID : UInt64) {
+        self.eventID = eventID
     }
     
     /// Convert a standard-format string 08.09.0A.0B.0C.0D.0E.0F to a NodeID
@@ -43,7 +43,7 @@ public struct EventID : Equatable, Hashable, CustomStringConvertible {
         let hex = eventID.replacingOccurrences(of: ".", with: "")
         self.eventID = UInt64(hex, radix: 16) ?? 0
     }
-
+    
     /// Convert data bytes to eventID
     public init(_ data : [UInt8]) {
         var eventID : UInt64 = 0
@@ -57,5 +57,19 @@ public struct EventID : Equatable, Hashable, CustomStringConvertible {
         if (data.count > 7) {eventID |= UInt64(data[7] & 0xFF)      }
         self.init(eventID)
     }
+    
+    func toArray() -> [UInt8] {
+        return [
+            UInt8( (eventID / 0x01_00_00_00_00_00_00_00 ) & 0xFF ),
+            UInt8( (eventID / 0x00_01_00_00_00_00_00_00 ) & 0xFF ),
+            UInt8( (eventID / 0x00_00_01_00_00_00_00_00 ) & 0xFF ),
+            UInt8( (eventID / 0x00_00_00_01_00_00_00_00 ) & 0xFF ),
+            UInt8( (eventID / 0x00_00_00_00_01_00_00_00 ) & 0xFF ),
+            UInt8( (eventID / 0x00_00_00_00_00_01_00_00 ) & 0xFF ),
+            UInt8( (eventID / 0x00_00_00_00_00_00_01_00 ) & 0xFF ),
+            UInt8( (eventID / 0x00_00_00_00_00_00_00_01 ) & 0xFF )
+        ]
+    }
+    
 }
 

@@ -31,32 +31,36 @@ struct ThrottleProcessor : Processor {
         switch message.mti {
         case .Link_Level_Up :
             // link level up, ask for isATrain producers
-            let message = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: isTrainIDarray)
-            linkLayer?.sendMessage(message)
+            let request = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: isTrainIDarray)
+            linkLayer?.sendMessage(request)
             return
-        case .Producer_Consumer_Event_Report,
-                .Producer_Identified_Active,
+        case .Producer_Consumer_Event_Report:
+            processPossibleTrainEvent(message)
+            return
+        case    .Producer_Identified_Active,
                 .Producer_Identified_Inactive,
                 .Producer_Identified_Unknown:
-            if message.data == isTrainIDarray {
-                // logger.trace("eventID matches")
-                
-                // retain the source ID as a roster entry with the low bits holding the address
-                model.roster.append(RosterEntry("\(message.source.nodeId & 0xFFFF)", message.source))
-                model.roster.sort()
-            }
-            return
-        case .Verified_NodeID :
+
+            // check for isTrain event and handle
+            processPossibleTrainEvent(message)
+            
+            // check for Traction Search reply event
             // make sure in right state
-            guard model.tc_state == .Wait_on_Verified_Node else { return }
-            // make sure this reply has the right node ID, i.e. is the one we're waiting for
-            guard message.source == model.selected_nodeId else { return }
-            model.tc_state = .Wait_on_TC_Assign_Reply
-            let header : [UInt8] = [0x20, 0x01, 0x01]
-            let data = header + (linkLayer!.localNodeID.toArray())
-            let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
-                                        destination: model.selected_nodeId, data: data)
-            linkLayer!.sendMessage(message)
+            if model.tc_state == .Wait_on_TC_Search_reply {
+                // TODO: make sure this has the right query string
+                if model.queryEventID == EventID(message.data) {
+                    // now have the node ID on message.source, need to store it away
+                    model.selected_nodeId = message.source
+                    
+                    // next step, send the TC_Control_Command to assign the locomotive to here
+                    model.tc_state = .Wait_on_TC_Assign_Reply
+                    let header : [UInt8] = [0x20, 0x01, 0x01]
+                    let data = header + (linkLayer!.localNodeID.toArray())
+                    let command = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                                          destination: model.selected_nodeId, data: data)
+                    linkLayer!.sendMessage(command)
+                }
+            }
         case .Traction_Control_Reply :
             let subCommand = TC_Reply_Type(rawValue: message.data[0])
             switch subCommand {
@@ -98,9 +102,9 @@ struct ThrottleProcessor : Processor {
                 // check for heartbeat request
                 if message.data[1] == 0x03 {
                     // send no-op
-                    let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                    let heartbeat = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
                                           destination: model.selected_nodeId, data: [0x40, 0x03])
-                    linkLayer!.sendMessage(message)
+                    linkLayer!.sendMessage(heartbeat)
                 }
             default:
                 return // not of interest
@@ -109,6 +113,17 @@ struct ThrottleProcessor : Processor {
             return
         }
     }
+    
+    func processPossibleTrainEvent(_ message : Message) {
+        if message.data == isTrainIDarray {
+            // logger.trace("eventID matches")
+            
+            // retain the source ID as a roster entry with the low bits holding the address
+            model.roster.append(RosterEntry("\(message.source.nodeId & 0xFFFF)", message.source))
+            model.roster.sort()
+        }
+    }
+    
     
     public enum TC_Request_Type : UInt8 {
         case SetSpeed               = 0x00

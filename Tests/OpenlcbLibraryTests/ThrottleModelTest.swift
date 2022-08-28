@@ -6,6 +6,7 @@
 //
 
 import XCTest
+@testable import OpenlcbLibrary
 
 final class ThrottleModelTest: XCTestCase {
 
@@ -17,12 +18,18 @@ final class ThrottleModelTest: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    func testcreateQueryEventID() throws {
+        var eventID = ThrottleModel.createQueryEventID(matching: 2)
+        XCTAssertEqual(EventID([0x09, 0x00, 0x99, 0xFF, 0x2F, 0xFF, 0xFF, 0xE0]), eventID)
+
+        eventID = ThrottleModel.createQueryEventID(matching: 12)
+        XCTAssertEqual(EventID([0x09, 0x00, 0x99, 0xFF, 0x12, 0xFF, 0xFF, 0xE0]), eventID)
+
+        eventID = ThrottleModel.createQueryEventID(matching: 123)
+        XCTAssertEqual(EventID([0x09, 0x00, 0x99, 0xFF, 0x12, 0x3F, 0xFF, 0xE0]), eventID)
+
+        eventID = ThrottleModel.createQueryEventID(matching: 1234)
+        XCTAssertEqual(EventID([0x09, 0x00, 0x99, 0xFF, 0x12, 0x34, 0xFF, 0xE0]), eventID)
     }
 
     func testPerformanceExample() throws {

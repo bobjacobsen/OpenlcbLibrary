@@ -31,6 +31,9 @@ public class ThrottleModel : ObservableObject {
     // reset to false when selection succeeds.
     @Published public var showingSelectSheet = false
     
+    // EventID used when querying for (existance of or creation as needed) a locomotive
+    var queryEventID : EventID = EventID(0)
+    
     // Operations methods
     
     /// 1 scale mph to meters per second for the speed commands.
@@ -72,16 +75,46 @@ public class ThrottleModel : ObservableObject {
         roster.sort()
     }
     
+    /// Convert a numeric address to a Train Search Protocol search EventID
+    /// The default flags are Allocate, Exact, Address Only, DCC, default address space, any speed steps
+    static func createQueryEventID(matching : UInt64, flags : UInt8 = 0x0E0) -> EventID {
+        // convert matching value to BCD
+        var binaryInput = matching
+        var bcdResult : UInt64 = 0
+        var shift = 0
+        while (binaryInput > 0) {
+            bcdResult |= (binaryInput % 10) << (shift << 2);
+            shift += 1
+            binaryInput /= 10;
+        }
+
+        // shift result into position and add unused indicators
+        while (bcdResult >> 20 ) & 0xF == 0 { // shift to have MSNibble in position
+            bcdResult = ( bcdResult << 4) | 0xF
+        }
+        let match1 : UInt8 = UInt8( ( bcdResult >> 16 ) & 0xFF )
+        let match2 : UInt8 = UInt8( ( bcdResult >> 8  ) & 0xFF )
+        let match3 : UInt8 = UInt8( ( bcdResult       ) & 0xFF )
+        return EventID([0x09, 0x00, 0x99, 0xFF, match1, match2, match3, flags])
+    }
+    
     // works with ThrottleProcessor to execute a state machine
-    public func startSelection(_ selection : NodeID) {  // selection has low 16 bits of address, needs to be augmented
-        selectedLoco = "\(selection.nodeId)"
-        let nodeID = NodeID(selection.nodeId | 0x06_01_00_00_00_00)
-        logger.debug("start selection with \(selection.nodeId, privacy: .public) and \(nodeID, privacy: .public)")
-        // first step is making sure you have the alias for this node
-        selected_nodeId = nodeID
-        tc_state = .Wait_on_Verified_Node
-        let message = Message(mti: .Verify_NodeID_Number_Global, source: linkLayer!.localNodeID, data: nodeID.toArray())
+    public func startSelection(_ selection : UInt64) {  // selection has low 16 bits of address, needs to be augmented
+        // send a Traction Search event request
+        tc_state = .Wait_on_TC_Search_reply
+        queryEventID = ThrottleModel.createQueryEventID(matching: selection)
+        let message = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: queryEventID.toArray())
         linkLayer?.sendMessage(message)
+        
+        // following is the obsolete "send Verified node" first
+//        selectedLoco = "\(selection.nodeId)"
+//        let nodeID = NodeID(selection.nodeId | 0x06_01_00_00_00_00)
+//        logger.debug("start selection with \(selection.nodeId, privacy: .public) and \(nodeID, privacy: .public)")
+//        // first step is making sure you have the alias for this node
+//        selected_nodeId = nodeID
+//        tc_state = .Wait_on_Verified_Node
+//        let message = Message(mti: .Verify_NodeID_Number_Global, source: linkLayer!.localNodeID, data: nodeID.toArray())
+//        linkLayer?.sendMessage(message)
     }
     
     var tc_state : TC_Selection_State = .Idle_no_selection
@@ -110,7 +143,8 @@ extension Float16 {
 // the selection state, referenced here and in ThrottleProcessor
 public enum TC_Selection_State {
     case Idle_no_selection
-    case Wait_on_Verified_Node      // have sent VerifyNode to make sure we have alias
+    // case Wait_on_Verified_Node    // have sent VerifyNode to make sure we have alias - this is now obsolete, as Traction Search event is used instead
+    case Wait_on_TC_Search_reply
     case Wait_on_TC_Assign_Reply    // have sent TC Command Assign, wait on TC Reply assign OK
     case Selected                   // selection complete
     
