@@ -26,13 +26,6 @@ public class ThrottleModel : ObservableObject {
     @Published public var forward = true   // TODO: send TC update request to get initial state from command station
     @Published public var reverse = false
     
-    // Is the selection view showing?  This is set true
-    // when a View presents the selection sheet, and
-    // reset to false when selection succeeds.
-    @Published public var showingSelectSheet = false
-    
-    // EventID used when querying for (existance of or creation as needed) a locomotive
-    var queryEventID : EventID = EventID(0)
     
     // Operations methods
     
@@ -99,22 +92,14 @@ public class ThrottleModel : ObservableObject {
     }
     
     // works with ThrottleProcessor to execute a state machine
-    public func startSelection(_ selection : UInt64) {  // selection has low 16 bits of address, needs to be augmented
+    public func startSelection(_ selection : UInt64, forceLongAddr : Bool = false) {  // selection has low 16 bits of address, needs to be augmented
         // send a Traction Search event request
         tc_state = .Wait_on_TC_Search_reply
-        queryEventID = ThrottleModel.createQueryEventID(matching: selection)
+        let shortLongLabel : String = forceLongAddr ? "L" : (selection > 127 ? "L" : "S")
+        requestedLocoID = "\(selection) \(shortLongLabel)"
+        queryEventID = ThrottleModel.createQueryEventID(matching: selection, flags: forceLongAddr ? 0xEC : 0xE8 )
         let message = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: queryEventID.toArray())
         linkLayer?.sendMessage(message)
-        
-        // following is the obsolete "send Verified node" first
-//        selectedLoco = "\(selection.nodeId)"
-//        let nodeID = NodeID(selection.nodeId | 0x06_01_00_00_00_00)
-//        logger.debug("start selection with \(selection.nodeId, privacy: .public) and \(nodeID, privacy: .public)")
-//        // first step is making sure you have the alias for this node
-//        selected_nodeId = nodeID
-//        tc_state = .Wait_on_Verified_Node
-//        let message = Message(mti: .Verify_NodeID_Number_Global, source: linkLayer!.localNodeID, data: nodeID.toArray())
-//        linkLayer?.sendMessage(message)
     }
     
     var tc_state : TC_Selection_State = .Idle_no_selection
@@ -122,6 +107,16 @@ public class ThrottleModel : ObservableObject {
     
     @Published public var selected : Bool = false
     @Published public var selectedLoco : String = "Select"  // "Select" goes with !selected
+
+    // Is the selection view showing?  This is set true
+    // when a View presents the selection sheet, and
+    // reset to false when selection succeeds.
+    @Published public var showingSelectSheet = false
+    
+    // EventID used when querying for (existance of or creation as needed) a locomotive
+    var queryEventID : EventID = EventID(0)
+    // hold the name of the requested loco during selection
+    var requestedLocoID : String = ""
     
     // handle a function call
     public func sendFunctionSet(function: Int, to: Bool) {

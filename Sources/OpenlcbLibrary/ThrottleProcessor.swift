@@ -35,19 +35,20 @@ struct ThrottleProcessor : Processor {
             linkLayer?.sendMessage(request)
             return
         case .Producer_Consumer_Event_Report:
+            // check for isTrain event and handle
             processPossibleTrainEvent(message)
             return
         case    .Producer_Identified_Active,
                 .Producer_Identified_Inactive,
                 .Producer_Identified_Unknown:
-
+            
             // check for isTrain event and handle
             processPossibleTrainEvent(message)
             
             // check for Traction Search reply event
             // make sure in right state
             if model.tc_state == .Wait_on_TC_Search_reply {
-                // TODO: make sure this has the right query string
+                // make sure this has the right query string
                 if model.queryEventID == EventID(message.data) {
                     // now have the node ID on message.source, need to store it away
                     model.selected_nodeId = message.source
@@ -72,8 +73,7 @@ struct ThrottleProcessor : Processor {
                     $0.load(fromByteOffset: 0, as: Float16.self)
                 }
 
-                model.speed = abs(speed) // TODO: confirm that this publishes
-                
+                model.speed = abs(speed)
                 if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
                     model.forward = true
                     model.reverse = false
@@ -85,7 +85,7 @@ struct ThrottleProcessor : Processor {
                 return
             case .QueryFunction:
                 // function message
-                let fn = Int(message.data[3]) // TODO: check for function space in bytes 1,2
+                let fn = Int(message.data[3]) // TODO: check for function space 0 in bytes 1,2
                 model.fnModels[fn].pressed = (message.data[5] != 0)
                 return
             case .ControllerConfig:
@@ -94,7 +94,7 @@ struct ThrottleProcessor : Processor {
                     // TODO: check and react to failure flag; now assuming success
                     // TC Assign Controller reply - now selected
                     model.tc_state = .Selected
-                    // model.selectedLoco was set at start 
+                    model.selectedLoco = model.requestedLocoID // display requested loco in the View
                     model.selected = true
                     model.showingSelectSheet = false // reset the selection sheet, closing it
                 }
