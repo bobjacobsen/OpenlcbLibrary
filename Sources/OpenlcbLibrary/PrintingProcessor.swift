@@ -4,7 +4,7 @@
 //  Created by Bob Jacobsen on 6/1/22.
 //
 
-// TODO:This does not display messages being sent from the program - more general issue with local -> remote
+// TODO: This does not display messages being sent from the program - more general issue with local -> remote
 
 import Foundation
 
