@@ -93,10 +93,10 @@ public class ThrottleModel : ObservableObject {
     
     // works with ThrottleProcessor to execute a state machine
     public func startSelection(_ selection : UInt64, forceLongAddr : Bool = false) {  // selection has low 16 bits of address, needs to be augmented
-        // send a Traction Search event request
         tc_state = .Wait_on_TC_Search_reply
         let shortLongLabel : String = forceLongAddr ? "L" : (selection > 127 ? "L" : "S")
-        requestedLocoID = "\(selection) \(shortLongLabel)"
+        requestedLocoID = "\(selection) \(shortLongLabel)"  // for placing in display label when Assign succeeds
+        // send a Traction Search event request
         queryEventID = ThrottleModel.createQueryEventID(matching: selection, flags: forceLongAddr ? 0xEC : 0xE8 )
         let message = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: queryEventID.toArray())
         linkLayer?.sendMessage(message)

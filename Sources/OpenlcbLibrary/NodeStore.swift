@@ -25,7 +25,7 @@ extension NodeStore {
     mutating func store(_ node : Node) {
         byIdMap[node.id] = node
         nodes.append(node)
-        nodes.sort()
+        nodes.sort() // TODO: Would be nice to sort these in node name order, if there is a node name yet, instead of just by ID
     }
     
     /// Retrieve a Node's content from the store
