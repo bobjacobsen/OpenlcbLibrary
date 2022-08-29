@@ -244,8 +244,11 @@ public class FnModel : ObservableObject {
     public let id = UUID()
     
     @Published public var pressed : Bool = false {
-        willSet(pressed) {
-            model.sendFunctionSet(function: number, to: pressed)
+        willSet(newValue) {
+            if newValue != pressed {
+                // send on change only
+                model.sendFunctionSet(function: number, to: pressed)
+            }
         }
     }
     @Published public var momentary : Bool = false
