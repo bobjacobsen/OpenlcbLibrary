@@ -119,8 +119,7 @@ struct ThrottleProcessor : Processor {
             // logger.trace("eventID matches")
             
             // retain the source ID as a roster entry with the low bits holding the address
-            model.roster.append(RosterEntry("\(message.source.nodeId & 0xFFFF)", message.source))
-            model.roster.sort()
+            model.addToRoster(item: RosterEntry(message.source))
         }
     }
     

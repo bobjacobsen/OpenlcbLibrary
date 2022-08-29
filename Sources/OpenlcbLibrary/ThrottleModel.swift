@@ -59,7 +59,7 @@ public class ThrottleModel : ObservableObject {
         logger.debug("init of ThrottleModel complete")
     }
     
-    @Published public var roster : [RosterEntry] = [RosterEntry("<none>", NodeID(0))]
+    @Published public var roster : [RosterEntry] = [RosterEntry(NodeID(0))]
     
     // Have to ensure entries are unique when added to the roster
     public func addToRoster(item : RosterEntry) {
@@ -147,10 +147,14 @@ public enum TC_Selection_State {
 }
 
 public struct RosterEntry : Hashable, Equatable, Comparable {
-    public let label : String
+    public let label : String // TODO: eventually this should be computed from SNIP
     public let nodeID : NodeID
-    public init(_ label : String, _ nodeID : NodeID) {
-        self.label = label
+    public init(_ nodeID : NodeID) {
+        if (nodeID.nodeId == 0) {
+            self.label = "<none>"
+        } else {
+            self.label = "\(nodeID.nodeId & 0xFFFF)"
+        }
         self.nodeID = nodeID
     }
     /// Equality is defined on the NodeID only.
