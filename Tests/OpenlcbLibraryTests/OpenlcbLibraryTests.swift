@@ -129,7 +129,6 @@ final class OpenlcbLibraryTests: XCTestCase {
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19A08240") // SNIP Reply
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [0x13, 0x33, 0x04, 0x41, 0x72, 0x64, 0x65, 0x6E]) // carries nodeID & SNIP Data
         XCTAssertEqual(canPhysicalLayer.receivedFrames[1].data, [0x33, 0x33, 0x77, 0x6F, 0x6F, 0x64, 0x2E, 0x6E]) // carries nodeID & SNIP Data
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[5].data, [0x33, 0x33, 00, 0x30, 0x2E, 0x30, 0x2E, 0x31]) // carries nodeID & SNIP Data
         XCTAssertEqual(canPhysicalLayer.receivedFrames[canPhysicalLayer.receivedFrames.count-1].data[0], 0x23) // end of snip data
 
         canPhysicalLayer.receivedFrames = []

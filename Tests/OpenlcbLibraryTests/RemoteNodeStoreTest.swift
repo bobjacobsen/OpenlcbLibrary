@@ -30,7 +30,7 @@ class RemoteNodeStoreTest: XCTestCase {
     }
 
     func testRequestCreates() {
-        var nodeStore = RemoteNodeStore(localNodeID: NodeID(1))
+        let nodeStore = RemoteNodeStore(localNodeID: NodeID(1))
         
         // try a load
         let temp = nodeStore.lookup(NodeID(12))

@@ -97,6 +97,15 @@ struct ThrottleProcessor : Processor {
                     model.selectedLoco = model.requestedLocoID // display requested loco in the View
                     model.selected = true
                     model.showingSelectSheet = false // reset the selection sheet, closing it
+                    // Send query for speed and functions
+                    var reply = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                                    destination: model.selected_nodeId, data: [0x10])  // query speed
+                    linkLayer!.sendMessage(reply)
+                    for fn in 0...model.maxFn {
+                        reply = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                                            destination: model.selected_nodeId, data: [0x11, 0x00, 0x00, UInt8(fn)])  // query function
+                        linkLayer!.sendMessage(reply)
+                    }
                 }
             case .TractionManagement :
                 // check for heartbeat request
