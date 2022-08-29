@@ -73,6 +73,17 @@ public class ThrottleModel : ObservableObject {
         roster.sort()
     }
     
+    /// Load the labels in roster entries from SNIP if it's now been updated
+    public func reloadRoster() {
+        for index in 0...roster.count-1 {
+            let newEntry = createRosterEntry(for: roster[index].nodeID)
+            if newEntry.label != roster[index].label {
+                print ("Need to update roster entry due to new label: \(newEntry.label)")
+                roster[index].label = newEntry.label
+            }
+        }
+    }
+    
     /// Convert a numeric address to a Train Search Protocol search EventID
     /// The default flags are Allocate, Exact, Address Only, DCC, default address space, any speed steps
     static func createQueryEventID(matching : UInt64, flags : UInt8 = 0x0E0) -> EventID {
@@ -145,7 +156,7 @@ public class ThrottleModel : ObservableObject {
                 // create one from NodeID
                 let addr = nodeID.nodeId & 0x3FFF
                 if addr <= 127 && (nodeID.nodeId & 0xC000 == 0) {
-                    label = "\(addr)S"
+                    label = "\(addr) S"
                 } else {
                     label = "\(addr)"
                 }
@@ -203,9 +214,14 @@ public enum TC_Selection_State {
     case Wait_on_TC_Deassign_Reply  // have sent TC Command Desassign, wait on TC Reply OK
 }
 
-public struct RosterEntry : Hashable, Equatable, Comparable {
-    public let label : String // TODO: eventually this should be computed from SNIP
+public class RosterEntry : Hashable, Equatable, Comparable {
+    public var label : String
     public let nodeID : NodeID
+    
+    init(label : String, nodeID : NodeID){
+        self.label = label
+        self.nodeID = nodeID
+    }
 
     /// Equality is defined on the NodeID only.
     public static func ==(lhs: RosterEntry, rhs:RosterEntry) -> Bool {
