@@ -12,6 +12,7 @@ import os
 public class ThrottleModel : ObservableObject {
     
     var linkLayer : CanLink?
+    var openlcbLibrary : OpenlcbLibrary?
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
     
@@ -59,7 +60,7 @@ public class ThrottleModel : ObservableObject {
         logger.debug("init of ThrottleModel complete")
     }
     
-    @Published public var roster : [RosterEntry] = [RosterEntry(NodeID(0))]
+    @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0))]
     
     // Have to ensure entries are unique when added to the roster
     public func addToRoster(item : RosterEntry) {
@@ -92,14 +93,49 @@ public class ThrottleModel : ObservableObject {
     }
     
     // works with ThrottleProcessor to execute a state machine
-    public func startSelection(_ selection : UInt64, forceLongAddr : Bool = false) {  // selection has low 16 bits of address, needs to be augmented
+    public func startSelection(address : UInt64, forceLongAddr : Bool = false) {
+        // start search for requested number
         tc_state = .Wait_on_TC_Search_reply
-        let shortLongLabel : String = forceLongAddr ? "L" : (selection > 127 ? "L" : "S")
-        requestedLocoID = "\(selection) \(shortLongLabel)"  // for placing in display label when Assign succeeds
+        let shortLongLabel : String = forceLongAddr ? "L" : (address > 127 ? "L" : "S")
+        requestedLocoID = "\(address) \(shortLongLabel)"  // for placing in display label when Assign succeeds
         // send a Traction Search event request
-        queryEventID = ThrottleModel.createQueryEventID(matching: selection, flags: forceLongAddr ? 0xEC : 0xE8 )
+        queryEventID = ThrottleModel.createQueryEventID(matching: address, flags: forceLongAddr ? 0xEC : 0xE8 )
         let message = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: queryEventID.toArray())
         linkLayer?.sendMessage(message)
+    }
+    
+    public func startSelection(entry: RosterEntry) {
+        // selection has actual node ID, go straight to sending Assign
+        tc_state = .Wait_on_TC_Assign_Reply
+        requestedLocoID = entry.label
+        selected_nodeId = entry.nodeID
+        let header : [UInt8] = [0x20, 0x01, 0x01]
+        let data = header + (linkLayer!.localNodeID.toArray())
+        let command = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                              destination: entry.nodeID, data: data)
+        linkLayer!.sendMessage(command)
+
+    }
+    
+    func createRosterEntry(for nodeID: NodeID) -> RosterEntry {
+        var label = ""
+        if (nodeID.nodeId == 0) {
+            label = "<none>"
+        } else {
+            label = openlcbLibrary!.lookUpNodeName(for: nodeID)
+            if label == "" {
+                // probably too early, and SNIP not loaded yet
+                // create one from NodeID
+                let addr = nodeID.nodeId & 0x3FFF
+                if addr <= 127 && (nodeID.nodeId & 0xC000 == 0) {
+                    label = "\(addr)S"
+                } else {
+                    label = "\(addr)"
+                }
+            }
+        }
+        return RosterEntry(label: label, nodeID: nodeID)
+
     }
     
     var tc_state : TC_Selection_State = .Idle_no_selection
@@ -149,14 +185,7 @@ public enum TC_Selection_State {
 public struct RosterEntry : Hashable, Equatable, Comparable {
     public let label : String // TODO: eventually this should be computed from SNIP
     public let nodeID : NodeID
-    public init(_ nodeID : NodeID) {
-        if (nodeID.nodeId == 0) {
-            self.label = "<none>"
-        } else {
-            self.label = "\(nodeID.nodeId & 0xFFFF)"
-        }
-        self.nodeID = nodeID
-    }
+
     /// Equality is defined on the NodeID only.
     public static func ==(lhs: RosterEntry, rhs:RosterEntry) -> Bool {
         return lhs.nodeID == rhs.nodeID

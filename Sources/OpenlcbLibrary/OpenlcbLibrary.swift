@@ -42,8 +42,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         clockModel0 = ClockModel()
         throttleModel0 = ThrottleModel(linkLevel)
-                
+        // stored values initialized, 'self' available below here
         logger.info("OpenlcbLibrary init")
+        throttleModel0.openlcbLibrary = self
     }
     
     /// Iniitialize and add sample data for SwiftUI preview
@@ -66,12 +67,14 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
                                   PIP.EVENT_EXCHANGE_PROTOCOL,
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         defaultNode.snip.manufacturerName = "Ardenwood.net"
-        defaultNode.snip.modelName        = "OpenlcbLib"     // TODO: App name handling (as opposed to library name)
+        defaultNode.snip.modelName        = "OlcbTools"     // TODO: App name handling (as opposed to library name)
         defaultNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
         defaultNode.snip.softwareVersion  = "0.0.1"          // TODO: Version number handling
         #if canImport(UIKit)
+        // iOS case
         defaultNode.snip.userProvidedNodeName = UIDevice.current.name
         #else
+        // macOS case
         if let deviceName = Host.current().localizedName {
             defaultNode.snip.userProvidedNodeName = deviceName
         } else {
@@ -109,6 +112,17 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         // register listener here which will process the node stores without copying them
         linkLevel.registerMessageReceivedListener(processMessageFromLinkLevel)
 
+    }
+    
+    /// Look up the SNIP node name from the RemoteNodeStore
+    // Because removeNodeStore is an active struct (for swiftui) you can't pass it to e.g. ThrottleModel at initialization time
+    func lookUpNodeName(for nodeId: NodeID) -> String {
+        // return the node ID if there's no SNIP information
+        if let node = remoteNodeStore.lookup(nodeId) {
+            return node.snip.userProvidedNodeName
+        } else {
+            return ""
+        }
     }
     
     func processMessageFromLinkLevel(_ message: Message) {
@@ -171,8 +185,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
             nextNode.snip.updateStringsFromSnipData()
             remoteNodeStore.store(nextNode)
         }
-    }
-    
+    }    
     /// Once configuration (and optional sample data) is complete, bring the link up starting at the physical layer
     public func bringLinkUp(_ canPhysicalLayer : CanPhysicalLayer) {
         canPhysicalLayer.physicalLayerUp()
