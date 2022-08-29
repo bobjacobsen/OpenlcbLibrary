@@ -36,6 +36,10 @@ public class ThrottleModel : ObservableObject {
     
     /// Speed here is in MPH, and conversion to meters/sec is done here
     public func sendSetSpeed(to mphSpeed: Float16) {
+        if tc_state != .Selected {
+            // nothing selected to send the speed to
+            return
+        }
         let mpsSpeed = mphSpeed * ThrottleModel.MPH_to_mps
         let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
         let bytes = signedSpeed.bytes               // see extension to Float16 below
@@ -94,6 +98,8 @@ public class ThrottleModel : ObservableObject {
     
     // works with ThrottleProcessor to execute a state machine
     public func startSelection(address : UInt64, forceLongAddr : Bool = false) {
+        // zero speed, reset functions
+        resetSpeedAndFunctions()
         // start search for requested number
         tc_state = .Wait_on_TC_Search_reply
         let shortLongLabel : String = forceLongAddr ? "L" : (address > 127 ? "L" : "S")
@@ -105,6 +111,8 @@ public class ThrottleModel : ObservableObject {
     }
     
     public func startSelection(entry: RosterEntry) {
+        // zero speed, reset functions
+        resetSpeedAndFunctions()
         // selection has actual node ID, go straight to sending Assign
         tc_state = .Wait_on_TC_Assign_Reply
         requestedLocoID = entry.label
@@ -115,6 +123,15 @@ public class ThrottleModel : ObservableObject {
                               destination: entry.nodeID, data: data)
         linkLayer!.sendMessage(command)
 
+    }
+    
+    func resetSpeedAndFunctions() {
+        speed = 0
+        forward = true
+        reverse = false
+        for fn in fnModels {
+            fn.pressed = false
+        }
     }
     
     func createRosterEntry(for nodeID: NodeID) -> RosterEntry {
@@ -156,6 +173,10 @@ public class ThrottleModel : ObservableObject {
     
     // handle a function call
     public func sendFunctionSet(function: Int, to: Bool) {
+        if tc_state != .Selected {
+            // nothing selected to send the speed to
+            return
+        }
         let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId,
                               data: [0x01, 0x00, 0x00, UInt8(function), 0x00, to ? 0x01 : 0x00])
         linkLayer!.sendMessage(message)
