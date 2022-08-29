@@ -36,8 +36,7 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     /// Retrieve a Node's content from the store
     /// - Parameter nodeID: Look-up key
     /// - Returns: Returns Node, creating if need be
-    // mutates to create non-existing node
-    mutating func lookup(_ nodeID : NodeID) -> Node? {
+    func lookup(_ nodeID : NodeID) -> Node? {
         return byIdMap[nodeID]
     }
 
