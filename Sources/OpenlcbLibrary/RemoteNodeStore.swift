@@ -22,6 +22,7 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeStore")
     
+    // ID of node that's in the local node store instead of here
     let localNodeID : NodeID
 
     init(localNodeID : NodeID) {
@@ -32,13 +33,6 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     }
 
     public var description : String { "RemoteNodeStore w \(nodes.count)"}
-
-    /// Retrieve a Node's content from the store
-    /// - Parameter nodeID: Look-up key
-    /// - Returns: Returns Node, creating if need be
-    func lookup(_ nodeID : NodeID) -> Node? {
-        return byIdMap[nodeID]
-    }
 
     /// Process a message across all nodes
     /// First reception of a message-level transmission, i.e. VerfiedNode, will create an entry for that node

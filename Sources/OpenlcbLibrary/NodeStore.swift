@@ -25,14 +25,16 @@ extension NodeStore {
     mutating func store(_ node : Node) {
         byIdMap[node.id] = node
         nodes.append(node)
-        nodes.sort() // TODO: Would be nice to sort these in node name order, if there is a node name yet, instead of just by ID
+        // nodes.sort() // TODO: Would be nice to sort these in node name order, if there is a node name yet, instead of just by ID
+        nodes.sort { $0.snip.userProvidedNodeName < $1.snip.userProvidedNodeName } // TODO: Seems ineffective, done too soon before SNIP arrives?
+        // TODO: Do these sorts even do anything? Or are we seeing just arrival order? How can that be? Maybe value semantics and this is passed too early?
     }
     
     /// Retrieve a Node's content from the store
     /// - Parameter nodeID: Look-up key
     /// - Returns: Returns Node, creating if need be
     // Some implementations may mutate to create non-existing node
-    mutating func lookup(_ nodeID : NodeID) -> Node? {
+    func lookup(_ nodeID : NodeID) -> Node? {
         return byIdMap[nodeID]
     }
 
@@ -43,6 +45,7 @@ extension NodeStore {
     public func asArray() -> [Node] {
         return Array(byIdMap.values)
     }
+    
     /// Retrieve a Node's content from the store
     /// - Parameter userProvidedDescription: Look-up key, from SNIP content
     /// - Returns: Optional<Node>, hence nil if Node hasn't been stored
@@ -63,4 +66,4 @@ extension NodeStore {
             }
         }
     }
-}
+} // end extension to NodeStore

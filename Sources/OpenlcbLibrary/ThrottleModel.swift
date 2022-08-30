@@ -24,7 +24,7 @@ public class ThrottleModel : ObservableObject {
         }
     }
     
-    @Published public var forward = true   // TODO: send TC update request to get initial state from command station
+    @Published public var forward = true
     @Published public var reverse = false
     
     
@@ -34,6 +34,7 @@ public class ThrottleModel : ObservableObject {
     /// The screen works in MPH; the model works in meters/sec
     static let MPH_to_mps : Float16 = 0.44704
     
+    /// Send the current speed in mph to the command station.
     /// Speed here is in MPH, and conversion to meters/sec is done here
     public func sendSetSpeed(to mphSpeed: Float16) {
         if tc_state != .Selected {
@@ -66,7 +67,8 @@ public class ThrottleModel : ObservableObject {
     
     @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0), labelSource: .Initial)]
     
-    // Have to ensure entries are unique when added to the roster
+    /// Add a roster entry to the roster.  Prevents duplication by, if needed, updating
+    /// an existing entry that's not as current
     public func addToRoster(item : RosterEntry) {
         // check source enum and update if higher priority
         // get the matching roster entry if any
@@ -80,7 +82,7 @@ public class ThrottleModel : ObservableObject {
         } else {
             roster.append(item)
         }
-        roster.sort()
+        roster.sort() // sort by .id, which is nodeID
     }
     
     /// Load the labels in roster entries from SNIP if it's now been updated
@@ -88,10 +90,13 @@ public class ThrottleModel : ObservableObject {
         for index in 0...roster.count-1 {
             let newEntry = createRosterEntryFromNodeID(for: roster[index].nodeID)
             if newEntry.labelSource.rawValue > roster[index].labelSource.rawValue {
-                print ("Need to update roster entry due to new label: \(newEntry.label)")
+                logger.trace("Updating roster entry due to new label: \(newEntry.label)")
                 roster[index].label = newEntry.label
+                roster[index].labelSource = newEntry.labelSource
             }
         }
+        roster.sort()  // sort by .id, which is nodeID
+        //roster.sort { $0.label < $1.label } // TODO: Sorts by label, but alpha sort messes up <None>, 100S vs 21S, etc; need better comparison function
     }
     
     /// Convert a numeric address to a Train Search Protocol search EventID
@@ -117,6 +122,8 @@ public class ThrottleModel : ObservableObject {
         return EventID([0x09, 0x00, 0x99, 0xFF, match1, match2, match3, flags])
     }
     
+    /// Start the locomotive selection process from a user-provided address . Optionally "force long address"
+    /// which creates a long address even if it's numerically in the short address 1->127 range
     // works with ThrottleProcessor to execute a state machine
     public func startSelection(address : UInt64, forceLongAddr : Bool = false) {
         // zero speed, reset functions
@@ -131,6 +138,7 @@ public class ThrottleModel : ObservableObject {
         linkLayer?.sendMessage(message)
     }
     
+    /// Start the locomotive selection process from a specific RosterEntry.
     public func startSelection(entry: RosterEntry) {
         // zero speed, reset functions
         resetSpeedAndFunctions()
@@ -143,9 +151,10 @@ public class ThrottleModel : ObservableObject {
         let command = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
                               destination: entry.nodeID, data: data)
         linkLayer!.sendMessage(command)
-
     }
     
+    /// Set speed to 0 Forward and turn off all functions.
+    /// This will trigger updates to the command station as needed.
     func resetSpeedAndFunctions() {
         speed = 0
         forward = true
@@ -155,6 +164,9 @@ public class ThrottleModel : ObservableObject {
         }
     }
     
+    /// Create a new RosterEntry from just a NodeID.  Takes name from SNIP if available
+    /// otherwise gueses an address from the nodeID.  The guess is not guaranteed to work,
+    /// as some command stations don't use the 06.01.00.00.XX.XX node ID range
     func createRosterEntryFromNodeID(for nodeID: NodeID) -> RosterEntry {
         var label = ""
         var labelSource : RosterEntry.LabelSource = .Initial
@@ -185,20 +197,22 @@ public class ThrottleModel : ObservableObject {
     var tc_state : TC_Selection_State = .Idle_no_selection
     var selected_nodeId : NodeID = NodeID(0)
     
+    /// True is a selection has succeeded and a locmotive is selected
     @Published public var selected : Bool = false
+    /// When `selected` is true, this carries the user-friendly-name of the selected locomotive
     @Published public var selectedLoco : String = "Select"  // "Select" goes with !selected
 
-    // Is the selection view showing?  This is set true
-    // when a View presents the selection sheet, and
-    // reset to false when selection succeeds.
+    /// Is the selection view showing?  This is set true
+    /// when a View presents the selection sheet, and
+    /// reset to false when selection succeeds.
     @Published public var showingSelectSheet = false
     
-    // EventID used when querying for (existance of or creation as needed) a locomotive
+    // EventID used when querying for (existance of or creation as needed) a locomotive via search protocol
     var queryEventID : EventID = EventID(0)
-    // hold the name of the requested loco during selection
+    // Hold the name of the requested loco during selection
     var requestedLocoID : String = ""
     
-    // handle a function call
+    /// Forward a function update to the command station.
     public func sendFunctionSet(function: Int, to: Bool) {
         if tc_state != .Selected {
             // nothing selected to send the speed to
@@ -208,7 +222,7 @@ public class ThrottleModel : ObservableObject {
                               data: [0x01, 0x00, 0x00, UInt8(function), 0x00, to ? 0x01 : 0x00])
         linkLayer!.sendMessage(message)
     }
-}
+} // end of ThrottleModel class
 
 // For converting Float16 to bytes and vice versa
 // See https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
@@ -219,7 +233,7 @@ extension Float16 {
 }
 
 
-// the selection state, referenced here and in ThrottleProcessor
+// The selection state, referenced here and in ThrottleProcessor
 public enum TC_Selection_State {
     case Idle_no_selection
     // case Wait_on_Verified_Node    // have sent VerifyNode to make sure we have alias - this is now obsolete, as Traction Search event is used instead
@@ -230,8 +244,9 @@ public enum TC_Selection_State {
     case Wait_on_TC_Deassign_Reply  // have sent TC Command Desassign, wait on TC Reply OK
 }
 
+// This needs reference semantics so that it can be passed and then updated
 public class RosterEntry : Hashable, Equatable, Comparable {
-    public var label : String // TODO: make this computed to get most recent value from SNIP or fall back to local?
+    public var label : String // TODO: make this computed to get most recent value from SNIP or fall back to to a local string - would replace `reloadRoster`?
     public let nodeID : NodeID
     var labelSource : LabelSource
     
