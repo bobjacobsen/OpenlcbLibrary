@@ -37,9 +37,9 @@ final class ThrottleProcessorTest: XCTestCase {
         put.process(piaMatch, node1)
 
         XCTAssertEqual(model.roster.count, 2)
-        XCTAssertTrue(model.roster.contains(RosterEntry(label: "10", nodeID: NodeID(10))))
-        XCTAssertFalse(model.roster.contains(RosterEntry(label: "11", nodeID: NodeID(11))))
-        XCTAssertTrue(model.roster.contains(RosterEntry(label: "12", nodeID: NodeID(12))))
+        XCTAssertTrue(model.roster.contains( RosterEntry(label: "10", nodeID: NodeID(10), labelSource: .Initial)))
+        XCTAssertFalse(model.roster.contains(RosterEntry(label: "11", nodeID: NodeID(11), labelSource: .Initial)))
+        XCTAssertTrue(model.roster.contains( RosterEntry(label: "12", nodeID: NodeID(12), labelSource: .Initial)))
     }
 
     func testSpeedReplt() throws {

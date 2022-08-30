@@ -64,20 +64,30 @@ public class ThrottleModel : ObservableObject {
         logger.debug("init of ThrottleModel complete")
     }
     
-    @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0))]
+    @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0), labelSource: .Initial)]
     
     // Have to ensure entries are unique when added to the roster
     public func addToRoster(item : RosterEntry) {
-        if roster.contains(item) { return }
-        roster.append(item)
+        // check source enum and update if higher priority
+        // get the matching roster entry if any
+        if let rosterEntry = roster.first(where: {$0 == item}) {
+            // match exists
+            if item.labelSource.rawValue < rosterEntry.labelSource.rawValue {
+                // do the update
+                item.label = rosterEntry.label
+                item.labelSource = rosterEntry.labelSource
+            }
+        } else {
+            roster.append(item)
+        }
         roster.sort()
     }
     
     /// Load the labels in roster entries from SNIP if it's now been updated
     public func reloadRoster() {
         for index in 0...roster.count-1 {
-            let newEntry = createRosterEntry(for: roster[index].nodeID)
-            if newEntry.label != roster[index].label {
+            let newEntry = createRosterEntryFromNodeID(for: roster[index].nodeID)
+            if newEntry.labelSource.rawValue > roster[index].labelSource.rawValue {
                 print ("Need to update roster entry due to new label: \(newEntry.label)")
                 roster[index].label = newEntry.label
             }
@@ -145,13 +155,18 @@ public class ThrottleModel : ObservableObject {
         }
     }
     
-    func createRosterEntry(for nodeID: NodeID) -> RosterEntry {
+    func createRosterEntryFromNodeID(for nodeID: NodeID) -> RosterEntry {
         var label = ""
+        var labelSource : RosterEntry.LabelSource = .Initial
+        
         if (nodeID.nodeId == 0) {
             label = "<none>"
+            labelSource = .Initial
         } else {
             label = openlcbLibrary!.lookUpNodeName(for: nodeID)
-            if label == "" {
+            if label != "" {
+                labelSource = .SNIP
+            } else {
                 // probably too early, and SNIP not loaded yet
                 // create one from NodeID
                 let addr = nodeID.nodeId & 0x3FFF
@@ -160,9 +175,10 @@ public class ThrottleModel : ObservableObject {
                 } else {
                     label = "\(addr)"
                 }
+                labelSource = .NodeID
             }
         }
-        return RosterEntry(label: label, nodeID: nodeID)
+        return RosterEntry(label: label, nodeID: nodeID, labelSource: labelSource)
 
     }
     
@@ -215,12 +231,23 @@ public enum TC_Selection_State {
 }
 
 public class RosterEntry : Hashable, Equatable, Comparable {
-    public var label : String
+    public var label : String // TODO: make this computed to get most recent value from SNIP or fall back to local?
     public let nodeID : NodeID
+    var labelSource : LabelSource
     
-    init(label : String, nodeID : NodeID){
+    // Code where the label came from, in increasing reliability order
+    // This is needed becaue an isATrainEvent might come after e.g. TCAssignReply data was loaded
+    enum LabelSource : Int {
+        case Initial       = 1 // not initialized at all, i.e. from creation of the model before 1st real roster entry is added
+        case NodeID        = 2 // inferred from NodeID, i.e. when constructed by isATrain event
+        case TCAssignReply = 3
+        case SNIP          = 4
+    }
+    
+    init(label : String, nodeID : NodeID, labelSource: LabelSource){
         self.label = label
         self.nodeID = nodeID
+        self.labelSource = labelSource
     }
 
     /// Equality is defined on the NodeID only.

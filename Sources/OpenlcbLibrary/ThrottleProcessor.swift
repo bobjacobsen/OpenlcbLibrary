@@ -97,6 +97,8 @@ struct ThrottleProcessor : Processor {
                     model.selectedLoco = model.requestedLocoID // display requested loco in the View
                     model.selected = true
                     model.showingSelectSheet = false // reset the selection sheet, closing it
+                    // Make sure there's a roster entry
+                    model.addToRoster(item: RosterEntry(label: model.requestedLocoID, nodeID: model.selected_nodeId, labelSource: .TCAssignReply))
                     // Send query for speed and functions
                     var reply = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
                                     destination: model.selected_nodeId, data: [0x10])  // query speed
@@ -125,10 +127,8 @@ struct ThrottleProcessor : Processor {
     
     func processPossibleTrainEvent(_ message : Message) {
         if message.data == isTrainIDarray {
-            // logger.trace("eventID matches")
-            
             // retain the source ID as a roster entry with the low bits holding the address
-            model.addToRoster(item: model.createRosterEntry(for: message.source))
+            model.addToRoster(item: model.createRosterEntryFromNodeID(for: message.source))
         }
     }
     
