@@ -19,7 +19,7 @@ class EventTest: XCTestCase {
 
     func testDescription() {
         let eid = EventID(0x08090A0B0C0D0E0F)
-        XCTAssertEqual(Event(eid).description, "Event (EventID 08.09.0A.0B.0C.0D.0E.0F)")
+        XCTAssertEqual(Event(eid).description, "Event (08.09.0A.0B.0C.0D.0E.0F)")
     }
 
     func testEquatable() {

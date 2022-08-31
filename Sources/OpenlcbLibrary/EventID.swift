@@ -9,7 +9,7 @@ import Foundation
 /// Represents an 8-byte node ID.
 ///  Provides conversion to and from Ints and Strings in standard form.
 public struct EventID : Equatable, Hashable, CustomStringConvertible {
-    let eventID : UInt64 // to ensure 8 byte EventID)
+    public let eventID : UInt64 // to ensure 8 byte EventID) // TODO: only public getter, internal setter?
     
     /// Display in standard format
     public var description : String {
@@ -22,15 +22,14 @@ public struct EventID : Equatable, Hashable, CustomStringConvertible {
         let part7 = (eventID / 0x00_00_00_00_00_00_01_00 ) & 0xFF
         let part8 = (eventID / 0x00_00_00_00_00_00_00_01 ) & 0xFF
         
-        return "EventID " +
-        "\(String(format:"%02X", part1))." +
-        "\(String(format:"%02X", part2))." +
-        "\(String(format:"%02X", part3))." +
-        "\(String(format:"%02X", part4))." +
-        "\(String(format:"%02X", part5))." +
-        "\(String(format:"%02X", part6))." +
-        "\(String(format:"%02X", part7))." +
-        "\(String(format:"%02X", part8))"
+        return  "\(String(format:"%02X", part1))." +
+                "\(String(format:"%02X", part2))." +
+                "\(String(format:"%02X", part3))." +
+                "\(String(format:"%02X", part4))." +
+                "\(String(format:"%02X", part5))." +
+                "\(String(format:"%02X", part6))." +
+                "\(String(format:"%02X", part7))." +
+                "\(String(format:"%02X", part8))"
     }
     
     /// Convert an integer to an eventID
