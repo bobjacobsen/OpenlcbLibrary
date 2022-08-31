@@ -19,7 +19,7 @@ class LocalEventStoreTest: XCTestCase {
     }
 
     func testBasics() {
-        var store = LocalEventStore()
+        let store = LocalEventStore()
         
         store.consumes(EventID(2))
         XCTAssertTrue(store.isConsumed(EventID(2)))

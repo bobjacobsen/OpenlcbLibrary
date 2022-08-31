@@ -6,17 +6,22 @@
 //
 
 import Foundation
+import os
 
 /// Store node-specific Event information
 ///
 ///  See also ``GlobalEventStore``
+///
+///  Serves as a View model for displaying the events used by a node
 
 // TODO: Add support for ranges
-public struct LocalEventStore {
-    internal var eventsConsumed : Set<EventID> = []
-    internal var eventsProduced : Set<EventID> = []
+public class LocalEventStore {
+    @Published var eventsConsumed : Set<EventID> = []
+    @Published var eventsProduced : Set<EventID> = []
 
-    mutating func consumes(_ id : EventID) {
+    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalEventStore")
+
+    func consumes(_ id : EventID) {
         eventsConsumed.insert(id)
     }
     
@@ -24,7 +29,7 @@ public struct LocalEventStore {
         return eventsConsumed.contains(id)
     }
     
-    mutating func produces(_ id : EventID) {
+    func produces(_ id : EventID) {
         eventsProduced.insert(id)
     }
     
