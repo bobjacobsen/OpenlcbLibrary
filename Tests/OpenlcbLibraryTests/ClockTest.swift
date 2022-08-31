@@ -41,7 +41,6 @@ final class ClockTest: XCTestCase {
         let calendar = Calendar.current // user calendar
         let setDateTime = calendar.date(from: setComponents)
         
-        // TODO: actually set and get from the Clock object
         let getDateTime = setDateTime!
         
         // now check
