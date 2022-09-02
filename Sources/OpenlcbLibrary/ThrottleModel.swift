@@ -86,16 +86,19 @@ public class ThrottleModel : ObservableObject {
     }
     
     /// Load the labels in roster entries from SNIP if it's now been updated
+    // TODO: reloadRoster from ThrottleModel.init is causing "Publishing changes from within view updates" error
     public func reloadRoster() {
-        for index in 0...roster.count-1 {
-            let newEntry = createRosterEntryFromNodeID(for: roster[index].nodeID)
-            if newEntry.labelSource.rawValue > roster[index].labelSource.rawValue {
-                logger.trace("Updating roster entry due to new label: \(newEntry.label)")
-                roster[index].label = newEntry.label
-                roster[index].labelSource = newEntry.labelSource
+        DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
+            for index in 0...self.roster.count-1 {
+                let newEntry = self.createRosterEntryFromNodeID(for: self.roster[index].nodeID)
+                if newEntry.labelSource.rawValue > self.roster[index].labelSource.rawValue {
+                    self.logger.trace("Updating roster entry due to new label: \(newEntry.label)")
+                    self.roster[index].label = newEntry.label
+                    self.roster[index].labelSource = newEntry.labelSource
+                }
             }
+            self.roster.sort()  // sort by .id, which is nodeID
         }
-        roster.sort()  // sort by .id, which is nodeID
         //roster.sort { $0.label < $1.label } // TODO: Sorts by label, but alpha sort messes up <None>, 100S vs 21S, etc; need better comparison function
     }
     

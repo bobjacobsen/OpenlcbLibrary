@@ -13,7 +13,7 @@ import os
 /// Tracks node status, PIP and SNIP information, but deliberately does not track memory (config, CDI) contents due to size.
 ///
 
-struct RemoteNodeProcessor : Processor {
+public struct RemoteNodeProcessor : Processor {
     public init ( _ linkLayer: CanLink? = nil) {
         self.linkLayer = linkLayer
     }
@@ -90,7 +90,9 @@ struct RemoteNodeProcessor : Processor {
         // We request SNIP data on startup so that we can display node names.  Can consider deferring this is it's a issue on big networks
         let snip = Message(mti: MTI.Simple_Node_Ident_Info_Request, source: linkLayer!.localNodeID, destination: node.id, data: [])
         linkLayer?.sendMessage(snip)
-
+        // we request produced and consumed event IDs
+        let eventReq = Message(mti: MTI.Identify_Events_Addressed, source: linkLayer!.localNodeID, destination: node.id, data: [])
+        linkLayer?.sendMessage(eventReq)
     }
     
     private func protocolSupportReply(_ message : Message, _ node : Node) {

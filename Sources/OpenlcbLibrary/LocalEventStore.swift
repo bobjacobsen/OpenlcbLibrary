@@ -16,8 +16,8 @@ import os
 
 // TODO: Add support for ranges
 public class LocalEventStore {
-    @Published var eventsConsumed : Set<EventID> = []
-    @Published var eventsProduced : Set<EventID> = []
+    @Published public var eventsConsumed : Set<EventID> = []
+    @Published public var eventsProduced : Set<EventID> = []
 
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalEventStore")
 

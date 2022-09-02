@@ -36,7 +36,7 @@ final public class Node : Equatable, Hashable, Comparable, // for Sets and sorts
         self.id = nodeID
     }
     
-    var events = LocalEventStore()
+    public var events = LocalEventStore()
     
     // two ctors for use with SwiftUI previews
     public convenience init( _ nodeID : NodeID, pip : Set<PIP> ) {

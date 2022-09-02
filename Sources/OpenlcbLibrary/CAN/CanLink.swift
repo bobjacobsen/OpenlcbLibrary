@@ -19,7 +19,7 @@ import os
 ///  
 public class CanLink : LinkLayer {
     
-    let localNodeID : NodeID // valid default node ID
+    public let localNodeID : NodeID // valid default node ID
     var localAliasSeed : UInt64
     var localAlias : UInt
 
@@ -292,8 +292,7 @@ public class CanLink : LinkLayer {
         }
     }
     
-    override func sendMessage(_ msg : Message) {
-        
+    public override func sendMessage(_ msg : Message) {
         // special case for datagram
         if msg.mti == .Datagram {
             var header = UInt(0x10_000_000)

@@ -8,7 +8,7 @@ import Foundation
 
 /// Represents an 8-byte node ID.
 ///  Provides conversion to and from Ints and Strings in standard form.
-public struct EventID : Equatable, Hashable, CustomStringConvertible {
+public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible {
     public let eventID : UInt64 // to ensure 8 byte EventID) // TODO: only public getter, internal setter?
     
     /// Display in standard format
@@ -57,7 +57,7 @@ public struct EventID : Equatable, Hashable, CustomStringConvertible {
         self.init(eventID)
     }
     
-    func toArray() -> [UInt8] {
+    public func toArray() -> [UInt8] {
         return [
             UInt8( (eventID / 0x01_00_00_00_00_00_00_00 ) & 0xFF ),
             UInt8( (eventID / 0x00_01_00_00_00_00_00_00 ) & 0xFF ),
@@ -70,5 +70,10 @@ public struct EventID : Equatable, Hashable, CustomStringConvertible {
         ]
     }
     
+    // Comparable is defined on the ID
+    public static func <(lhs: EventID, rhs: EventID) -> Bool {
+        return lhs.eventID < rhs.eventID
+    }
+
 }
 

@@ -14,7 +14,7 @@ public struct Message : Equatable, Hashable, CustomStringConvertible {
     let data : [UInt8]
     
     /// Addressed message initialization
-    init(mti : MTI, source : NodeID, destination : NodeID?, data: [UInt8] = []) {
+    public init(mti : MTI, source : NodeID, destination : NodeID?, data: [UInt8] = []) {
         self.mti = mti
         self.source = source
         self.destination = destination
@@ -22,7 +22,7 @@ public struct Message : Equatable, Hashable, CustomStringConvertible {
     }
     
     /// Global message initiallization
-    init(mti : MTI, source : NodeID, data: [UInt8] = []) {
+    public init(mti : MTI, source : NodeID, data: [UInt8] = []) {
         self.init(mti: mti, source : source, destination : nil, data: data)
     }
     

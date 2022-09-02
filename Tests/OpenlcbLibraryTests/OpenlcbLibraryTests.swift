@@ -69,10 +69,11 @@ final class OpenlcbLibraryTests: XCTestCase {
         frame = CanFrame(header: header, data: data)
         canPhysicalLayer.fireListeners(frame)
 
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 3)
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 4)
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[0].header))", "0x19170240") // Verified Node
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[1].header))", "0x19828240") // PIP reqeust
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[2].header))", "0x19DE8240") // SNIP request
+        XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[3].header))", "0x19968240") // identify events
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].data, [5,1,1,1,3,1]) // carries nodeID
 
         canPhysicalLayer.receivedFrames = []
