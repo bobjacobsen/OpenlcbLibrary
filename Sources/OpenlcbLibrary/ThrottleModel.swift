@@ -32,7 +32,7 @@ public class ThrottleModel : ObservableObject {
     
     /// 1 scale mph to meters per second for the speed commands.
     /// The screen works in MPH; the model works in meters/sec
-    static let MPH_to_mps : Float16 = 0.44704
+    static let mps_per_MPH : Float16 = 0.44704
     
     /// Send the current speed in mph to the command station.
     /// Speed here is in MPH, and conversion to meters/sec is done here
@@ -41,7 +41,7 @@ public class ThrottleModel : ObservableObject {
             // nothing selected to send the speed to
             return
         }
-        let mpsSpeed = mphSpeed * ThrottleModel.MPH_to_mps
+        let mpsSpeed = mphSpeed * ThrottleModel.mps_per_MPH
         let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
         let bytes = signedSpeed.bytes               // see extension to Float16 below
         
@@ -64,6 +64,32 @@ public class ThrottleModel : ObservableObject {
         
         logger.debug("init of ThrottleModel complete")
     }
+    
+    // Data to construct a single function button
+    public class FnModel : ObservableObject {
+        public let label : String
+        public let number : Int
+        var model: ThrottleModel
+        public let id = UUID()
+        
+        @Published public var pressed : Bool = false {
+            willSet(newValue) {
+                if newValue != pressed {
+                    // send on change only
+                    model.sendFunctionSet(function: number, to: pressed)
+                }
+            }
+        }
+        @Published public var momentary : Bool = false
+        
+        public init(_ number : Int, _ label : String, _ model : ThrottleModel) {
+            self.number = number
+            self.label = label
+            self.model = model
+        }
+    }
+
+    // MARK: Roster support
     
     @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0), labelSource: .Initial)]
     
@@ -281,26 +307,3 @@ public class RosterEntry : Hashable, Equatable, Comparable {
     }
 }
 
-// Data to construct a single function button
-public class FnModel : ObservableObject {
-    public let label : String
-    public let number : Int
-    var model: ThrottleModel
-    public let id = UUID()
-    
-    @Published public var pressed : Bool = false {
-        willSet(newValue) {
-            if newValue != pressed {
-                // send on change only
-                model.sendFunctionSet(function: number, to: pressed)
-            }
-        }
-    }
-    @Published public var momentary : Bool = false
-    
-    public init(_ number : Int, _ label : String, _ model : ThrottleModel) {
-        self.number = number
-        self.label = label
-        self.model = model
-    }
-}
