@@ -59,7 +59,7 @@ final public class Node : Equatable, Hashable, Comparable, // for Sets and sorts
     public func hash(into hasher : inout Hasher) {
         hasher.combine(id)
     }
-    // Comparable is defined on the ID
+    /// Comparable is defined on the ID
     public static func <(lhs: Node, rhs: Node) -> Bool {
         return lhs.id.nodeId < rhs.id.nodeId
     }
