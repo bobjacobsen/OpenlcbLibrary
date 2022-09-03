@@ -112,7 +112,6 @@ public class ThrottleModel : ObservableObject {
     }
     
     /// Load the labels in roster entries from SNIP if it's now been updated
-    // TODO: reloadRoster from ThrottleModel.init is causing "Publishing changes from within view updates" error
     public func reloadRoster() {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
             for index in 0...self.roster.count-1 {

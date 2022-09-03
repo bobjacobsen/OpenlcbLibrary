@@ -85,7 +85,12 @@ struct ThrottleProcessor : Processor {
                 return
             case .QueryFunction:
                 // function message
-                let fn = Int(message.data[3]) // TODO: check for function space 0 in bytes 1,2
+                // Only work with main F0-Fn, so check for that
+                if message.data[1] != 0 || message.data[2] != 0 {
+                    // not, so this is not for us
+                    return
+                }
+                let fn = Int(message.data[3])
                 model.fnModels[fn].pressed = (message.data[5] != 0)
                 return
             case .ControllerConfig:
