@@ -95,7 +95,6 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         let lprocessor : Processor = LocalNodeProcessor(linkLevel)  // track effect of messages on Local Node
 
         let dservice = DatagramService()
-        let dprocessor : Processor = DatagramProcessor(linkLevel, dservice)   // datagram processor doesn't affect node status
 
         let cprocessor : Processor = ClockProcessor(linkLevel, [clockModel0])   // clock processor doesn't affect node status
 
@@ -107,7 +106,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
-        localNodeStore.processors =  [pprocessor, dprocessor,            lprocessor, cprocessor, tprocessor]
+        localNodeStore.processors =  [pprocessor, dservice,             lprocessor, cprocessor, tprocessor]
  
         // register listener here which will process the node stores without copying them
         linkLevel.registerMessageReceivedListener(processMessageFromLinkLevel)

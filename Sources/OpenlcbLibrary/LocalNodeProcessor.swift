@@ -46,7 +46,7 @@ struct LocalNodeProcessor : Processor {
             unrecognizedMTI(message, node)
             break
         }
-        // datagrams and datagram replies are handled in the DatagramProcessor/DatagramService
+        // datagrams and datagram replies are handled in the DatagramService
     }
 
     private func linkUpMessage(_ message : Message, _ node : Node) {
