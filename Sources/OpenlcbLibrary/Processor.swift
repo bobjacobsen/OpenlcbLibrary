@@ -15,8 +15,7 @@ public protocol Processor {
     /// accept a Message, adjust state as needed, possibly reply
     func process( _ message : Message, _ node : Node )
 
-    // TODO; do we need a call to say "is this message interesting?",
-    // to shortcut N node calls doing nothing?
+    // TODO: do we need a call to say "is this message interesting?", to shortcut N node calls doing nothing?
 }
 
 extension Processor {
