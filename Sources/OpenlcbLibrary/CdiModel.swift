@@ -8,5 +8,5 @@
 import Foundation
 
 class CdiModel {
-    
+    @Published var loading : Bool = false
 }
