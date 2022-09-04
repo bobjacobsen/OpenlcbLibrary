@@ -26,7 +26,7 @@ class LinkLayerTest: XCTestCase {
         received = false
         let msg = Message(mti : MTI.Initialization_Complete, source : NodeID(12), destination : NodeID(21))
         let receiver  = receiveListener
-        let layer = LinkLayer()
+        let layer = LinkLayer(NodeID(100))
         layer.registerMessageReceivedListener(receiver)
         
         layer.fireListeners(msg)

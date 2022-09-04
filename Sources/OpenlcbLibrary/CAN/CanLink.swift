@@ -19,7 +19,6 @@ import os
 ///  
 public class CanLink : LinkLayer {
     
-    public let localNodeID : NodeID // valid default node ID
     var localAliasSeed : UInt64
     var localAlias : UInt
 
@@ -34,10 +33,9 @@ public class CanLink : LinkLayer {
     var nextInternallyAssignedNodeID : UInt64 = 1
 
     public init(localNodeID : NodeID) {
-        self.localNodeID = localNodeID
         self.localAliasSeed = localNodeID.nodeId
         self.localAlias = CanLink.createAlias12(localAliasSeed)
-        super.init()
+        super.init(localNodeID)
     }
     
     final func linkPhysicalLayer( _ cpl : CanPhysicalLayer) {

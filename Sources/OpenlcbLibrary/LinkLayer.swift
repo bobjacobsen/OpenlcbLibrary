@@ -22,6 +22,11 @@ public class LinkLayer {
         case Permitted
     }
 
+    init(_ localNodeID : NodeID ) {
+        self.localNodeID = localNodeID
+    }
+    public let localNodeID : NodeID // valid default node ID
+
     public func sendMessage(_ msg : Message) {}
     
     func registerMessageReceivedListener(_ listener : @escaping ( (_ : Message) -> () )) {
