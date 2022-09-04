@@ -9,12 +9,12 @@ import Foundation
 import os
 
 struct ThrottleProcessor : Processor {
-    public init ( _ linkLayer: CanLink? = nil, model: ThrottleModel) {
+    public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
         self.linkLayer = linkLayer
         self.model = model
     }
     
-    let linkLayer : CanLink?
+    let linkLayer : LinkLayer?
     let model : ThrottleModel
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleProcessor")

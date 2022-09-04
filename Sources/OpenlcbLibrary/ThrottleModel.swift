@@ -11,7 +11,7 @@ import os
 // Data to construct a throttle
 public class ThrottleModel : ObservableObject {
     
-    var linkLayer : CanLink?
+    var linkLayer : LinkLayer?
     var openlcbLibrary : OpenlcbLibrary?
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
