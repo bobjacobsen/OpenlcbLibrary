@@ -36,6 +36,9 @@ struct LocalNodeProcessor : Processor {
         case .Traction_Control_Reply :
             // this is handled in the ThrottleProcessor, ignored here
             break
+        case .Datagram, .Datagram_Rejected, .Datagram_Received_OK :
+            // datagrams and datagram replies are handled in the DatagramService
+            break
         case .Simple_Node_Ident_Info_Request :
             simpleNodeIdentInfoRequest(message, node)
         case .Identify_Events_Addressed :
@@ -46,7 +49,7 @@ struct LocalNodeProcessor : Processor {
             unrecognizedMTI(message, node)
             break
         }
-        // datagrams and datagram replies are handled in the DatagramService
+        
     }
 
     private func linkUpMessage(_ message : Message, _ node : Node) {

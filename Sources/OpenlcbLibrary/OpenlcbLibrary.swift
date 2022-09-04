@@ -31,6 +31,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     
     public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
     
+    let dservice : DatagramService
+    public let mservice : MemoryService // TODO: Needs to be encapsulated in a model, not free to CdiView
+
     /// Initialize a basic system
     public init(defaultNodeID : NodeID) {
         
@@ -42,6 +45,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         clockModel0 = ClockModel()
         throttleModel0 = ThrottleModel(linkLevel)
+        dservice = DatagramService(linkLevel)
+        mservice = MemoryService(service: dservice)
+
         // stored values initialized, 'self' available below here
         logger.info("OpenlcbLibrary init")
         throttleModel0.openlcbLibrary = self
@@ -94,7 +100,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
 
         let lprocessor : Processor = LocalNodeProcessor(linkLevel)  // track effect of messages on Local Node
 
-        let dservice = DatagramService(linkLevel)
+        //let dservice = DatagramService(linkLevel)
+        
+        //let mservice = MemoryService(service: dservice)
 
         let cprocessor : Processor = ClockProcessor(linkLevel, [clockModel0])   // clock processor doesn't affect node status
 

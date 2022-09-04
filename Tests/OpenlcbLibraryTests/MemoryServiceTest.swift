@@ -10,8 +10,20 @@ import XCTest
 
 class MemoryServiceTest: XCTestCase {
 
+    class LinkMockLayer : LinkLayer {
+        static var sentMessages : [Message] = []
+        override func sendMessage( _ message : Message) {
+            LinkMockLayer.sentMessages.append(message)
+        }
+    }
+    
+    var service : MemoryService = MemoryService(service: DatagramService(LinkMockLayer(NodeID(12))))
+    
+    func callback(memo : MemoryService.MemoryReadMemo) {
+    }
+    
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        LinkMockLayer.sentMessages = []
     }
 
     override func tearDownWithError() throws {
@@ -19,11 +31,10 @@ class MemoryServiceTest: XCTestCase {
     }
 
     func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: NodeID(123), size: 64, space: 0xFD, address: 0,
+                                                   okReply: callback, rejectedReply: callback, dataReply: callback)
+        service.requestMemoryRead(memMemo)
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
     }
 
 }
