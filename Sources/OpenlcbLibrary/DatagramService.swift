@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 /// Provide a service interface for reading and writing Datagrams.
 //
@@ -14,50 +15,56 @@ import Foundation
 // TODO: Update the PlantUML diagrams
 //
 class DatagramService : Processor {
-    public init ( _ linkLayer: LinkLayer? = nil) {
+    public init ( _ linkLayer: LinkLayer) {
         self.linkLayer = linkLayer
     }
-    let linkLayer : LinkLayer?
+    let linkLayer : LinkLayer
     
+    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "DatagramService")
+
     // Memo carries write request and two reply callbacks
     struct DatagramWriteMemo : Equatable {
         
-        let srcID : NodeID
+        // source is this node
         let destID : NodeID
         let data : [UInt8]
-
-        let okReply : ( (_ : Message) -> () )? = defaultIgnoreReply
-        let rejectedReply : ( (_ : Message) -> () )? = defaultIgnoreReply
         
+        let okReply : ( (_ : Message) -> () )?
+        let rejectedReply : ( (_ : Message) -> () )?
+        
+        init(destID : NodeID, data : [UInt8], okReply : ( (_ : Message) -> () )? = defaultIgnoreReply, rejectedReply : ( (_ : Message) -> () )? = defaultIgnoreReply) {
+            self.destID = destID
+            self.data = data
+            self.okReply = okReply
+            self.rejectedReply = rejectedReply
+        }
         static func defaultIgnoreReply(_ : Message) {
             // default handling of reply does nothing
         }
-
+        
         // for Equatable
         static func == (lhs: DatagramService.DatagramWriteMemo, rhs: DatagramService.DatagramWriteMemo) -> Bool {
-            if lhs.srcID != rhs.srcID { return false }
             if lhs.destID != rhs.destID { return false }
             if lhs.data != rhs.data { return false }
             return true
         }
     }
-
+    
     // Memo carries read result
     struct DatagramReadMemo : Equatable {
         
         let srcID : NodeID
-        let destID : NodeID
+        // destination is this node
         let data : [UInt8]
-                
+        
         // for Equatable
         static func == (lhs: DatagramService.DatagramReadMemo, rhs: DatagramService.DatagramReadMemo) -> Bool {
             if lhs.srcID != rhs.srcID { return false }
-            if lhs.destID != rhs.destID { return false }
             if lhs.data != rhs.data { return false }
             return true
         }
     }
-
+    
     enum DatagramProtocolID : UInt {
         case LogRequest      = 0x01
         case LogReply        = 0x02
@@ -70,7 +77,7 @@ class DatagramService : Processor {
         
         case Unrecognized    = 0xFFF // 12 bits: out of possible normal range
     }
-
+    
     /// Returns Unrecognized if there is no type specified, i.e. the datagram is empty
     func datagramType(data : [UInt8]) -> DatagramProtocolID {
         if (data.count == 0) { return .Unrecognized }
@@ -80,13 +87,16 @@ class DatagramService : Processor {
             return .Unrecognized
         }
     }
-
+    
+    private var pendingWriteMemos : [DatagramWriteMemo] = []
+    
     func sendDatagram(_ memo : DatagramWriteMemo) {
-        //let message = Message(mti: MTI.Datagram, source: memo.srcNode.id, destination: memo.destNode.id, data: memo.data)
-        
-        // TODO: Make a record of memo for reply
-        
-        // TODO: Send datagram message
+        // Make a record of memo for reply
+        pendingWriteMemos.append(memo)
+
+        // Send datagram message
+        let message = Message(mti: MTI.Datagram, source: linkLayer.localNodeID, destination: memo.destID, data: memo.data)
+        linkLayer.sendMessage(message)
     }
     
     func registerDatagramReceivedListener(_ listener : @escaping ( (_ : DatagramReadMemo) -> () )) {
@@ -99,8 +109,11 @@ class DatagramService : Processor {
             listener(dg)
         }
     }
-
+    
     public func process( _ message : Message, _ node : Node ) {
+        // Check that it's to us
+        if !checkDestID(message, linkLayer.localNodeID) { return }
+        
         switch message.mti {
         case MTI.Datagram :
             handleDatagram(message)
@@ -115,15 +128,48 @@ class DatagramService : Processor {
     }
     
     func handleDatagram(_ message : Message) {
-        // TODO: handle Datagram
+        // create a read memo and pass to listeners
+        let memo = DatagramReadMemo(srcID: message.source, data: message.data)
+        fireListeners(memo)
     }
     
     func handleDatagramReceivedOK(_ message : Message) {
-        // TODO: handle DatagramReceivedOK
+        // match to the memo
+        let memo = matchToWriteMemo(message: message)
+        // fire the callback
+        memo?.okReply?(message)
     }
     
     func handleDatagramRejected(_ message : Message) {
-        // TODO: handle DatagramRejected
+        // match to the memo
+        let memo = matchToWriteMemo(message: message)
+        // fire the callback
+        memo?.rejectedReply?(message)
     }
-
+    
+    private func matchToWriteMemo(message : Message) -> DatagramService.DatagramWriteMemo? {
+        for memo in pendingWriteMemos {
+            if memo.destID != message.source { break }
+            // remove the found element
+            if let index = pendingWriteMemos.firstIndex(of: memo) {
+                pendingWriteMemos.remove(at: index)
+            }
+            return memo
+        }
+        // did not find one
+        logger.error("Did not match memo to message \(message)")
+        return nil  // this will prevent firther processing
+    }
+    
+    func positiveReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, flags : UInt8 = 0) {
+        let message = Message(mti: .Datagram_Received_OK, source: linkLayer.localNodeID, destination: dg.srcID, data: [flags])
+        linkLayer.sendMessage(message)
+    }
+    
+    func negativeReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, err : UInt16) {
+        let data0 = UInt8((err >> 8 ) & 0xFF)
+        let data1 = UInt8(err & 0xFF)
+        let message = Message(mti: .Datagram_Rejected, source: linkLayer.localNodeID, destination: dg.srcID, data: [data0, data1])
+        linkLayer.sendMessage(message)
+    }
 }

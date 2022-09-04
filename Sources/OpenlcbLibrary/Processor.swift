@@ -19,14 +19,25 @@ public protocol Processor {
 }
 
 extension Processor {
+    // check whether a message came from a specific nodeID
+    internal func checkSourceID(_ message : Message, _ nodeID : NodeID) -> Bool {
+        return message.source == nodeID
+    }
+    
     // check whether a message came from a specific node
     internal func checkSourceID(_ message : Message, _ node : Node) -> Bool {
-        return message.source == node.id
+        return checkSourceID(message, node.id)
+    }
+
+    // check whether a message is addressed to a specific nodeID
+    // Global messages return false: Not specifically addressed
+    internal func checkDestID(_ message : Message, _ nodeID : NodeID) -> Bool {
+        return message.destination == nodeID
     }
     
     // check whether a message is addressed to a specific node
     // Global messages return false: Not specifically addressed
     internal func checkDestID(_ message : Message, _ node : Node) -> Bool {
-        return message.destination == node.id
+        return checkDestID(message, node.id)
     }
 }

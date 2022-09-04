@@ -11,7 +11,7 @@ import XCTest
 class LocalNodeProcessorTest: XCTestCase {
 
     var node21 = Node(NodeID(21))
-    let processor : Processor = LocalNodeProcessor(LinkMockLayer())
+    let processor : Processor = LocalNodeProcessor(LinkMockLayer(NodeID(100)))
     
 
     class LinkMockLayer : LinkLayer {

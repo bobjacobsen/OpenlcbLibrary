@@ -12,6 +12,13 @@ import XCTest
 ///
 class ProcessingArchitectureTest: XCTestCase {
 
+    class LinkMockLayer : LinkLayer {
+        static var sentMessages : [Message] = []
+        override func sendMessage( _ message : Message) {
+            LinkMockLayer.sentMessages.append(message)
+        }
+    }
+    
     var defaultNode : Node = Node(NodeID(0x05_01_01_01_03_01))
     
     override func setUpWithError() throws {
@@ -38,7 +45,7 @@ class ProcessingArchitectureTest: XCTestCase {
         rprocessor.process(msg, rnode)
         XCTAssertEqual(rnode.state, Node.State.Initialized, "node state goes initialized")
 
-        let dprocessor : Processor = DatagramService() // datagram processor doesn't affect node status
+        let dprocessor : Processor = DatagramService(LinkMockLayer(NodeID(123))) // datagram processor doesn't affect node status
         let dnode = Node(NodeID(12))
         dprocessor.process(msg, dnode)
         XCTAssertEqual(dnode.state, Node.State.Uninitialized, "node state should be unchanged")

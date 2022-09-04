@@ -94,7 +94,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
 
         let lprocessor : Processor = LocalNodeProcessor(linkLevel)  // track effect of messages on Local Node
 
-        let dservice = DatagramService()
+        let dservice = DatagramService(linkLevel)
 
         let cprocessor : Processor = ClockProcessor(linkLevel, [clockModel0])   // clock processor doesn't affect node status
 
