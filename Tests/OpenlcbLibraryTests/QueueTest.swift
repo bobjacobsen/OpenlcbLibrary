@@ -14,6 +14,8 @@ final class QueueTest: XCTestCase {
         var collection = Queue<Int>()
 
         XCTAssertTrue(collection.isEmpty)
+        XCTAssertEqual(collection.dequeue(), nil)
+        XCTAssertEqual(collection.peek(), nil)
 
         collection.enqueue(8)
         collection.enqueue(12)
