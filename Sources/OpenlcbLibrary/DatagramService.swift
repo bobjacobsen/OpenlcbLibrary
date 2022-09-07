@@ -9,6 +9,12 @@ import Foundation
 import os
 
 /// Provide a service interface for reading and writing Datagrams.
+/// Writes to remote node:
+/// - Create a WriteMemo and submit
+/// - Get an OK or NotOK callback
+/// Reads from remote node:
+///  - Mlutiple listeners are notified
+///  - exactly one should call positiveReplyToDatagram/negativeReplyToDatagram before returning from listener
 //
 // Implements `Processor`, should be fed as part of common execution
 //
@@ -29,16 +35,16 @@ public class DatagramService : Processor {
         let destID : NodeID
         let data : [UInt8]
         
-        let okReply : ( (_ : Message) -> () )?
-        let rejectedReply : ( (_ : Message) -> () )?
+        let okReply : ( (_ : DatagramWriteMemo) -> () )?
+        let rejectedReply : ( (_ : DatagramWriteMemo) -> () )?
         
-        init(destID : NodeID, data : [UInt8], okReply : ( (_ : Message) -> () )? = defaultIgnoreReply, rejectedReply : ( (_ : Message) -> () )? = defaultIgnoreReply) {
+        init(destID : NodeID, data : [UInt8], okReply : ( (_ : DatagramWriteMemo) -> () )? = defaultIgnoreReply, rejectedReply : ( (_ : DatagramWriteMemo) -> () )? = defaultIgnoreReply) {
             self.destID = destID
             self.data = data
             self.okReply = okReply
             self.rejectedReply = rejectedReply
         }
-        static func defaultIgnoreReply(_ : Message) {
+        static func defaultIgnoreReply(_ : DatagramWriteMemo) {
             // default handling of reply does nothing
         }
         
@@ -130,21 +136,24 @@ public class DatagramService : Processor {
     func handleDatagram(_ message : Message) {
         // create a read memo and pass to listeners
         let memo = DatagramReadMemo(srcID: message.source, data: message.data)
-        fireListeners(memo)
+        fireListeners(memo) // destination listner calls back to
+                            // positiveReplyToDatagram/negativeReplyToDatagram before returning
     }
     
+    // OK reply to write
     func handleDatagramReceivedOK(_ message : Message) {
         // match to the memo
         let memo = matchToWriteMemo(message: message)
         // fire the callback
-        memo?.okReply?(message)
+        memo?.okReply?(memo!)
     }
     
+    // Not OK reply to write
     func handleDatagramRejected(_ message : Message) {
         // match to the memo
         let memo = matchToWriteMemo(message: message)
         // fire the callback
-        memo?.rejectedReply?(message)
+        memo?.rejectedReply?(memo!)
     }
     
     private func matchToWriteMemo(message : Message) -> DatagramService.DatagramWriteMemo? {
@@ -161,11 +170,13 @@ public class DatagramService : Processor {
         return nil  // this will prevent firther processing
     }
     
+    // send a positive reply to a received datagram
     func positiveReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, flags : UInt8 = 0) {
         let message = Message(mti: .Datagram_Received_OK, source: linkLayer.localNodeID, destination: dg.srcID, data: [flags])
         linkLayer.sendMessage(message)
     }
     
+    // send a negative reply to a received datagram
     func negativeReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, err : UInt16) {
         let data0 = UInt8((err >> 8 ) & 0xFF)
         let data1 = UInt8(err & 0xFF)

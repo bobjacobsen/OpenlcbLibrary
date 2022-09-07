@@ -30,9 +30,9 @@ class MemoryServiceTest: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() throws {
+    func testRead() throws {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: NodeID(123), size: 64, space: 0xFD, address: 0,
-                                                   okReply: callback, rejectedReply: callback, dataReply: callback)
+                                                   rejectedReply: callback, dataReply: callback)
         service.requestMemoryRead(memMemo)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
     }
