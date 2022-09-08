@@ -18,8 +18,10 @@ public class CdiModel : ObservableObject {
     let mservice : MemoryService
     let nodeID : NodeID
     
-    var nextReadAddress = -1
+    @Published public var nextReadAddress = -1
+    
     var savedDataString = ""
+    var cdiSpaceLength  = 1
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiModel")
 
@@ -36,7 +38,8 @@ public class CdiModel : ObservableObject {
         processAquiredText()
     }
     func dataReplyCallback(memo : MemoryService.MemoryReadMemo) {
-        // TODO: Save the data
+        // Assume this is a Read Reply with data
+        // Save the data
         if let chars = String(bytes: memo.data, encoding: .utf8) {
             savedDataString.append(chars)
         } else {
@@ -47,6 +50,11 @@ public class CdiModel : ObservableObject {
         // Check for end of data (< 64 and/or trailing 0 byte)
         if memo.size < 64 || findTrailingZero(in: memo) {
             processAquiredText()
+            
+            loading = false
+            endOK = true
+            loaded = true
+            
             return
         }
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0x4300, address: nextReadAddress, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
@@ -77,13 +85,9 @@ public class CdiModel : ObservableObject {
         // temporary load from sample data
         //tree = CdiSampleDataAccess.sampleCdiXmlData()[0].children!
         
-        // kick off the read process
+        // do the first read and start the loop
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0x4300, address: 0, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
         nextReadAddress = 64
         mservice.requestMemoryRead(memMemo)
-
-        loading = false
-        endOK = true
-        loaded = true
     }
 }

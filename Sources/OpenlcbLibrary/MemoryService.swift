@@ -44,7 +44,8 @@ public class MemoryService {
         /// Node from which read is requested
         let nodeID : NodeID
         let size : UInt8  // max 64 bytes
-        let space : UInt16 // set this to 0x40SS-0x4300 i.e. space flag in top byte
+        let space : UInt16  // set this to 0x40SS-0x4300 i.e. space flag in top byte
+                            
         let address : Int
         
         /// Node received a Datagram Rejected, Terminate Due to Error or Optional Interaction Rejected that could not be recovered
@@ -86,12 +87,10 @@ public class MemoryService {
         if memo.data[0] != 0x20 {
             return
         }
-        if (memo.data[1] & 0xF8) != 0x50 {
-            // Other memory datagram that we don't respond to
-            // TODO: Should this be rejected?
-            return;
-        }
-        // acknowledge it
+        // We deliberately don't check for Read Reply so this can cover
+        // e.g. Get Address Space Information Reply too
+        
+        // Acknowledge the datagram
         service.positiveReplyToDatagram(memo, flags: 0x0000)
         // return data to requestor: first find matching memory read memo, then reply
         for index in 0...readMemos.count {

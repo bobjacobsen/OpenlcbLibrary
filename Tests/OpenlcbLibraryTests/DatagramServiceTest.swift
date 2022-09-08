@@ -89,11 +89,11 @@ class DatagramServiceTest: XCTestCase {
     }
 
     var callback = false
-    func callBackCheck(_ : Message) -> () {
+    func writeCallBackCheck(_ : DatagramService.DatagramWriteMemo) -> () {
         callback = true
     }
     func testSendDatagramOK() {
-        let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], okReply: callBackCheck)
+        let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], okReply: writeCallBackCheck)
         
         service.sendDatagram(writeMemo)
         
@@ -107,7 +107,7 @@ class DatagramServiceTest: XCTestCase {
     }
     
     func testSendDatagramRejected() {
-        let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], rejectedReply: callBackCheck)
+        let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], rejectedReply: writeCallBackCheck)
         
         service.sendDatagram(writeMemo)
         
