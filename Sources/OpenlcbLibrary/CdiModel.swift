@@ -57,7 +57,7 @@ public class CdiModel : ObservableObject {
             
             return
         }
-        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0x4300, address: nextReadAddress, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0xFF, address: nextReadAddress, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
         nextReadAddress = nextReadAddress+64
         mservice.requestMemoryRead(memMemo)
     }
@@ -86,25 +86,25 @@ public class CdiModel : ObservableObject {
         //tree = CdiSampleDataAccess.sampleCdiXmlData()[0].children!
         
         // do the first read and start the loop
-        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0x4300, address: 0, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0xFF, address: 0, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
         nextReadAddress = 64
         mservice.requestMemoryRead(memMemo)
     }
     
     public func writeInt(value : Int, at: Int, space: UInt8, length: UInt8) {
-        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: 0x0000+UInt16(space), address: at, data: mservice.intToArray(value: value, length: length))
+        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: space, address: at, data: mservice.intToArray(value: value, length: length))
         
         mservice.requestMemoryWrite(memMemo)
     }
     
     public func writeString(value : String, at: Int, space: UInt8, length: UInt8) {
-        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: 0x0000+UInt16(space), address: at, data: mservice.stringToArray(value: value, length: length))
+        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: space, address: at, data: mservice.stringToArray(value: value, length: length))
         
         mservice.requestMemoryWrite(memMemo)
     }
     
     public func readInt(from: Int, space: UInt8, length: UInt8, action: @escaping (Int)->()) {
-        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: 0x4000+UInt16(space), address: from,
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
                                                    rejectedReply: {_ in },
                                                    dataReply: {memo in
             action(self.mservice.arrayToInt(data:memo.data, length: length))
@@ -113,7 +113,7 @@ public class CdiModel : ObservableObject {
     }
     
     public func readString(from: Int, space: UInt8, length: UInt8, action: @escaping (String)->()) {
-        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: 0x4000+UInt16(space), address: from,
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
                                                    rejectedReply: {_ in },
                                                    dataReply: {memo in
             action(self.mservice.arrayToString(data:memo.data, length: length))

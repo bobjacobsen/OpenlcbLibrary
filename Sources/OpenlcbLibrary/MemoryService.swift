@@ -33,7 +33,7 @@ public class MemoryService {
 
     // Memo carries request and reply
     public struct MemoryReadMemo {
-        public init(nodeID : NodeID, size : UInt8, space : UInt16, address : Int, rejectedReply : ( (_ : MemoryReadMemo) -> () )?, dataReply : ( (_ : MemoryReadMemo) -> () )? ) {
+        public init(nodeID : NodeID, size : UInt8, space : UInt8, address : Int, rejectedReply : ( (_ : MemoryReadMemo) -> () )?, dataReply : ( (_ : MemoryReadMemo) -> () )? ) {
             self.nodeID = nodeID
             self.size = size
             self.space = space
@@ -44,7 +44,7 @@ public class MemoryService {
         /// Node from which read is requested
         let nodeID : NodeID
         let size : UInt8  // max 64 bytes
-        let space : UInt16  // set this to 0x40SS-0x4300 i.e. space flag in top byte
+        let space : UInt8
                             
         let address : Int
         
@@ -59,6 +59,18 @@ public class MemoryService {
     
     var readMemos : [MemoryReadMemo] = []
     
+    // convert from a space number to either
+    // (false, 1-3 for in command byte) : spaces 0xFF - 0xFD
+    // (true, space number) : spaces 0 - 0xFC
+    func spaceDecode(space : UInt8) -> (Bool, UInt8) {
+        if space >= 0xFD {
+            return (false, space&0x03)
+        } else {
+            return (true, space)
+        }
+    }
+    
+    
     /// Request a read operation start.
     ///
     /// If okReply in the memo is triggered, it will be followed by a dataReply.
@@ -67,13 +79,16 @@ public class MemoryService {
         // preserve the request
         readMemos.append(memo)
         // send the read request
-        let spaceFlag = UInt8( (memo.space >> 8) & 0xFF)
+        var byte6 = false
+        var flag : UInt8 = 0
+        (byte6, flag) = spaceDecode(space: memo.space)
+        let spaceFlag = flag | 0x40
         let addr2 = UInt8( (memo.address >> 24) & 0xFF )
         let addr3 = UInt8( (memo.address >> 16) & 0xFF )
         let addr4 = UInt8( (memo.address >>  8) & 0xFF )
         let addr5 = UInt8( memo.address & 0xFF )
         var data : [UInt8] = [0x20, spaceFlag, addr2,addr3,addr4,addr5]
-        if (spaceFlag & 0x03 == 0) {
+        if (byte6) {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
         data.append(contentsOf: [memo.size])
@@ -135,7 +150,7 @@ public class MemoryService {
         let rejectedReply : ( (_ : MemoryWriteMemo) -> () )?
 
         let size : UInt8  // max 64 bytes
-        let space : UInt16 // set this to 0x40SS-0x4300 i.e. space flag in top byte
+        let space : UInt8
         let address : Int
 
         let data : [UInt8]
@@ -149,13 +164,16 @@ public class MemoryService {
         // preserve the request
         writeMemos.append(memo)
         // create & send a write datagram
-        let spaceFlag = UInt8( (memo.space >> 8) & 0xFF)
+        var byte6 = false
+        var flag : UInt8 = 0
+        (byte6, flag) = spaceDecode(space: memo.space)
+        let spaceFlag = flag | 0x00
         let addr2 = UInt8( (memo.address >> 24) & 0xFF )
         let addr3 = UInt8( (memo.address >> 16) & 0xFF )
         let addr4 = UInt8( (memo.address >>  8) & 0xFF )
         let addr5 = UInt8( memo.address & 0xFF )
         var data : [UInt8] = [0x20, spaceFlag, addr2,addr3,addr4,addr5]
-        if (spaceFlag & 0x03 == 0) {
+        if (byte6) {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
         data.append(contentsOf: memo.data) // TODO set opcode
