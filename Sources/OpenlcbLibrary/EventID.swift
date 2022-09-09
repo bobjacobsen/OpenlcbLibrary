@@ -9,7 +9,7 @@ import Foundation
 /// Represents an 8-byte node ID.
 ///  Provides conversion to and from Ints and Strings in standard form.
 public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible {
-    public let eventID : UInt64 // to ensure 8 byte EventID) // TODO: only public getter, internal setter?
+    public let eventID : UInt64 // to ensure 8 byte EventID)
     
     /// Display in standard format
     public var description : String {
@@ -38,9 +38,15 @@ public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible
     }
     
     /// Convert a standard-format string 08.09.0A.0B.0C.0D.0E.0F to a NodeID
+    // TODO: This doesn't properly handle i.e. 1.2.3.4 due to missing leading 0's
     public init(_ eventID : String) {
-        let hex = eventID.replacingOccurrences(of: ".", with: "")
-        self.eventID = UInt64(hex, radix: 16) ?? 0
+        let components = eventID.components(separatedBy: ".")
+        var result : UInt64 = 0
+        for component in components {
+            let pieceValue = UInt64(component, radix: 16) ?? 0
+            result = result << 8 | pieceValue
+        }
+        self.eventID = result
     }
     
     /// Convert data bytes to eventID

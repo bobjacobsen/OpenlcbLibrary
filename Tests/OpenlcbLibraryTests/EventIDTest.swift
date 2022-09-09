@@ -22,7 +22,16 @@ class EventIDTest: XCTestCase {
         XCTAssertEqual(eid.description, "08.09.0A.0B.0C.0D.0E.0F")
         let eid2 = EventID("FF.09.0A.0B.0C.0D.0E.0F")
         XCTAssertEqual(eid2.description, "FF.09.0A.0B.0C.0D.0E.0F")
+        
+        let eid3 = EventID("FF.9.A.B.C.D.E.F")
+        XCTAssertEqual(eid3.description, "FF.09.0A.0B.0C.0D.0E.0F")
+        let eid4 = EventID("A.B.C.D.E.F")
+        XCTAssertEqual(eid4.description, "00.00.0A.0B.0C.0D.0E.0F")
+        
+        let eid5 = EventID("08090A0B0C0D0E0F")
+        XCTAssertEqual(eid5.description, "08.09.0A.0B.0C.0D.0E.0F")
     }
+    
     func testInitArray() {
         let array : [UInt8] = [8,9,10,11,12,13,14,15]
         let eid = EventID(array)
@@ -35,6 +44,7 @@ class EventIDTest: XCTestCase {
         let eid = EventID("foo")
         XCTAssertEqual(eid.description, "00.00.00.00.00.00.00.00")
     }
+    
     func testDescription() {
         let eid = EventID(0x08090A0B0C0D0E0F)
         XCTAssertEqual(eid.description, "08.09.0A.0B.0C.0D.0E.0F")
