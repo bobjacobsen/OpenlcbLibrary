@@ -64,4 +64,21 @@ class MemoryServiceTest: XCTestCase {
         aut = service.stringToArray(value: "ABCD", length: 6)
         XCTAssertEqual(aut, [0x41, 0x42, 0x43, 0x44])
     }
+    
+    func testSpaceDecode() {
+        var byte6 = false
+        var space : UInt8 = 0x00
+        
+        (byte6, space) = service.spaceDecode(space: 0xF8)
+        XCTAssertEqual(space, 0xF8)
+        XCTAssertTrue(byte6)
+
+        (byte6, space) = service.spaceDecode(space: 0xFF)
+        XCTAssertEqual(space, 0x03)
+        XCTAssertFalse(byte6)
+
+        (byte6, space) = service.spaceDecode(space: 0xFD)
+        XCTAssertEqual(space, 0x01)
+        XCTAssertFalse(byte6)
+    }
 }
