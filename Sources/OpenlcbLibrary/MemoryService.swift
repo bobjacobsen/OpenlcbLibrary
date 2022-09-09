@@ -118,7 +118,7 @@ public class MemoryService {
                 if readMemos[index].nodeID == memo.srcID {
                     var tMemoryMemo = readMemos[index]
                     readMemos.remove(at: index)
-                    // TODO: decode type of operation, hence data offset
+                    // decode type of operation, hence data offset
                     var offset = 6
                     if memo.data[1] == 0x50 {
                         offset = 7
@@ -134,7 +134,6 @@ public class MemoryService {
                 if writeMemos[index].nodeID == memo.srcID {
                     // var tMemoryMemo = writeMemos[index]
                     writeMemos.remove(at: index)
-                    // TODO: what do we do with this?  Log error if given?
                     break
                 }
             }
@@ -177,12 +176,12 @@ public class MemoryService {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
         data.append(contentsOf: memo.data) // TODO set opcode
-        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data)  // TODO: callbacks?
+        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data)
         service.sendDatagram(dgWriteMemo)
 
     }
     
-    public func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {
+    func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {
         var result = 0
         for index in 0...Int(length-1) {
             result = result << 8
@@ -191,7 +190,7 @@ public class MemoryService {
         return result
     }
     
-    public func arrayToString(data: [UInt8], length: UInt8) -> (String) {
+    func arrayToString(data: [UInt8], length: UInt8) -> (String) {
         var zeroIndex = data.count
         if let temp = data.firstIndex(of: 0) {
             zeroIndex = temp
@@ -208,7 +207,7 @@ public class MemoryService {
     }
     
 
-    public func intToArray(value: Int, length: UInt8) -> [UInt8] {
+    func intToArray(value: Int, length: UInt8) -> [UInt8] {
         switch length {
         case 1:
             return [UInt8(value&0xff)]
@@ -227,9 +226,11 @@ public class MemoryService {
         }
     }
     
-    public func stringToArray(value: String, length: UInt8) -> ([UInt8]) {
+    func stringToArray(value: String, length: UInt8) -> ([UInt8]) {
         let strToUInt8:[UInt8] = [UInt8](value.utf8)
         let byteCount = min(Int(length), strToUInt8.count)
         return Array(strToUInt8[0...byteCount-1])
     }
+    
+    
 }

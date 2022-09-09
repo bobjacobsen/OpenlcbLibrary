@@ -43,7 +43,7 @@ public class CdiModel : ObservableObject {
         if let chars = String(bytes: memo.data, encoding: .utf8) {
             savedDataString.append(chars)
         } else {
-            logger.error("received data not in UTF8 form")
+            logger.error("<Received data not in UTF8 form>")
             processAquiredText()
             return
         }
@@ -81,7 +81,6 @@ public class CdiModel : ObservableObject {
         
         loading = true
         
-        // TODO: this is just a sample-data standin
         // temporary load from sample data
         //tree = CdiSampleDataAccess.sampleCdiXmlData()[0].children!
         

@@ -49,7 +49,6 @@ public final class CdiXmlMemo : Identifiable {
     public let id = UUID() // for Identifiable
     
     // TODO: ACDI expansion
-    // TODO: memory address computation needs more extensive testing
     // TODO: How to handle the identification block?  Present or not? Read-only
     
     /// Copy ctor makes deep copy
