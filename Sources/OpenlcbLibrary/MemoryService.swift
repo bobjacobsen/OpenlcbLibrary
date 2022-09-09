@@ -166,7 +166,7 @@ public class MemoryService {
     
     public func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {
         var result = 0
-        for index in 1...Int(length) {
+        for index in 0...Int(length-1) {
             result = result << 8
             result = result | Int(data[index])
         }
@@ -178,14 +178,13 @@ public class MemoryService {
         if let temp = data.firstIndex(of: 0) {
             zeroIndex = temp
         }
-        print ("zeroIndex \(zeroIndex)")
 
         let byteCount = min(zeroIndex, Int(length) )
-        print ("bytecount \(byteCount)")
 
-        print("converting \(byteCount-1) bytes")
-        print(data[0])
-        print(data[byteCount-1])
+        if (byteCount == 0) {
+            return ""
+        }
+        
         let result = String(bytes: Array(data[0...byteCount-1]), encoding: .utf8)
         return result ?? "<not UTF8>"
     }
