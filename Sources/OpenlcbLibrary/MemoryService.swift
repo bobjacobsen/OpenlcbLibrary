@@ -82,7 +82,7 @@ public class MemoryService {
         var byte6 = false
         var flag : UInt8 = 0
         (byte6, flag) = spaceDecode(space: memo.space)
-        let spaceFlag = flag | 0x40
+        let spaceFlag = byte6 ? 0x40 : flag | 0x40
         let addr2 = UInt8( (memo.address >> 24) & 0xFF )
         let addr3 = UInt8( (memo.address >> 16) & 0xFF )
         let addr4 = UInt8( (memo.address >>  8) & 0xFF )
@@ -166,7 +166,7 @@ public class MemoryService {
         var byte6 = false
         var flag : UInt8 = 0
         (byte6, flag) = spaceDecode(space: memo.space)
-        let spaceFlag = flag | 0x00
+        let spaceFlag = byte6 ? 0x00 : flag | 0x00
         let addr2 = UInt8( (memo.address >> 24) & 0xFF )
         let addr3 = UInt8( (memo.address >> 16) & 0xFF )
         let addr4 = UInt8( (memo.address >>  8) & 0xFF )
