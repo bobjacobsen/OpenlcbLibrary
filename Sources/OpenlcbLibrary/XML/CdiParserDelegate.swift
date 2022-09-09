@@ -259,7 +259,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     func intStart(attributes : [String:String]) {
         let thisMemo = CdiXmlMemo()
         thisMemo.length = 1
-        if let attr = attributes["length"] {
+        if let attr = attributes["size"] {
             if let length = Int(attr) {
                 thisMemo.length = length
             }
@@ -302,7 +302,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
 
     func stringStart(attributes : [String:String]) {
         let thisMemo = CdiXmlMemo()
-        if let attr = attributes["length"] {
+        if let attr = attributes["size"] {
             if let length = Int(attr) {
                 thisMemo.length = length
             }

@@ -105,7 +105,7 @@ class CdiXmlMemoTest: XCTestCase {
                             <group>
                                 <name>NameSeg</name>
                                 <description>DescSeg</description>
-                                <int length="2">
+                                <int size="2">
                                     <name>Name</name>
                                     <description>Desc</description>
                                 </int>
@@ -138,8 +138,8 @@ class CdiXmlMemoTest: XCTestCase {
                                 <name>NameSeg</name>
                                 <repname>RepNameSeg</repname>
                                 <description>DescSeg</description>
-                                <int length="2"><name>Name</name><description>Desc</description></int>"
-                                <string length="3" offset="4"></string>
+                                <int size="2"><name>Name</name><description>Desc</description></int>"
+                                <string size="3" offset="4"></string>
                                 <eventid><name>NameE</name><description>DescE</description></eventid>
                             </group></cdi>
                         """.data(using: .utf8))!

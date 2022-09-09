@@ -12,7 +12,7 @@ public class CdiModel : ObservableObject {
     @Published public var loading : Bool = false  // true while loading - use to show ProgressView
     @Published public var loaded  : Bool = false  // true when loading is done and data is present
     @Published public var endOK   : Bool = true   // if false when loaded is true, an error prevented a complete load
-
+    
     @Published public var tree : [CdiXmlMemo] = [] // content!
     
     let mservice : MemoryService
@@ -24,12 +24,12 @@ public class CdiModel : ObservableObject {
     var cdiSpaceLength  = 1
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiModel")
-
+    
     public init (mservice : MemoryService, nodeID : NodeID) {
         self.mservice = mservice
         self.nodeID = nodeID
     }
-
+    
     func okReplyCallback(memo : MemoryService.MemoryReadMemo) {
     }
     func rejectedReplyCallback(memo : MemoryService.MemoryReadMemo) {
@@ -61,7 +61,7 @@ public class CdiModel : ObservableObject {
         nextReadAddress = nextReadAddress+64
         mservice.requestMemoryRead(memMemo)
     }
-
+    
     func findTrailingZero(in memo: MemoryService.MemoryReadMemo) -> (Bool) {
         if memo.data.contains(0x00) {
             return true
@@ -73,12 +73,12 @@ public class CdiModel : ObservableObject {
         // actually process it into an XML tree
         tree = CdiXmlMemo.process(savedDataString.data(using: .utf8)!)[0].children! // index due tonull base node
     }
- 
+    
     public func readModel(nodeID: NodeID) {
         if loaded {
             return // already loaded
         }
-
+        
         loading = true
         
         // TODO: this is just a sample-data standin
@@ -90,4 +90,35 @@ public class CdiModel : ObservableObject {
         nextReadAddress = 64
         mservice.requestMemoryRead(memMemo)
     }
+    
+    public func writeInt(value : Int, at: Int, space: UInt8, length: UInt8) {
+        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: 0x0000+UInt16(space), address: at, data: mservice.intToArray(value: value, length: length))
+        
+        mservice.requestMemoryWrite(memMemo)
+    }
+    
+    public func writeString(value : String, at: Int, space: UInt8, length: UInt8) {
+        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: 0x0000+UInt16(space), address: at, data: mservice.stringToArray(value: value, length: length))
+        
+        mservice.requestMemoryWrite(memMemo)
+    }
+    
+    public func readInt(from: Int, space: UInt8, length: UInt8, action: @escaping (Int)->()) {
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: 0x4000+UInt16(space), address: from,
+                                                   rejectedReply: {_ in },
+                                                   dataReply: {memo in
+            action(self.mservice.arrayToInt(data:memo.data, length: length))
+        })
+        mservice.requestMemoryRead(memMemo)
+    }
+    
+    public func readString(from: Int, space: UInt8, length: UInt8, action: @escaping (String)->()) {
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: 0x4000+UInt16(space), address: from,
+                                                   rejectedReply: {_ in },
+                                                   dataReply: {memo in
+            action(self.mservice.arrayToString(data:memo.data, length: length))
+        })
+        mservice.requestMemoryRead(memMemo)
+    }
+    
 }

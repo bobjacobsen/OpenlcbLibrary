@@ -37,4 +37,31 @@ class MemoryServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
     }
 
+    func testArrayToString() {
+        var sut = service.arrayToString(data: [0x41,0x42,0x43,0x44], length: 4)
+        XCTAssertEqual(sut, "ABCD")
+
+        sut = service.arrayToString(data: [0x41,0x42,0,0x44], length: 4)
+        XCTAssertEqual(sut, "AB")
+
+        sut = service.arrayToString(data: [0x41,0x42,0x43,0x44], length: 2)
+        XCTAssertEqual(sut, "AB")
+
+        sut = service.arrayToString(data: [0x41,0x42,0x43,0], length: 4)
+        XCTAssertEqual(sut, "ABC")
+
+        sut = service.arrayToString(data: [0x41,0x42,0x43,0x44], length: 8)
+        XCTAssertEqual(sut, "ABCD")
+    }
+    
+    func testStringToArray() {
+        var aut = service.stringToArray(value: "ABCD", length: 4)
+        XCTAssertEqual(aut, [0x41, 0x42, 0x43, 0x44])
+        
+        aut = service.stringToArray(value: "ABCD", length: 2)
+        XCTAssertEqual(aut, [0x41, 0x42])
+
+        aut = service.stringToArray(value: "ABCD", length: 6)
+        XCTAssertEqual(aut, [0x41, 0x42, 0x43, 0x44])
+    }
 }

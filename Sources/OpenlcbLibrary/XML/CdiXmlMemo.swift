@@ -118,7 +118,7 @@ public final class CdiXmlMemo : Identifiable {
         return delegate.memoStack
     }
     
-    // recurse through the Mmeo tree to expand group(replication>1) -> multiple GROUP_REP memos in the tree
+    // recurse through the Memo tree to expand group(replication>1) -> multiple GROUP_REP memos in the tree
     static private func processGroupReplication(_ memo : CdiXmlMemo) {
         if memo.type == .GROUP  && memo.length > 1 { // length holds replication count
             // here, replication is required
