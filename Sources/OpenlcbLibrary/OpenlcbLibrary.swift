@@ -22,9 +22,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     @Published public var remoteNodeStore : RemoteNodeStore
 
     @Published public var clockModel0 : ClockModel
-    
+ 
     @Published public var throttleModel0 : ThrottleModel
-    
+
     public let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
@@ -133,15 +133,18 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     }
     
     func processMessageFromLinkLevel(_ message: Message) {
-        let publish = true
+        var publish = false
         
-        localNodeStore.invokeProcessorsOnNodes(message: message)
-        remoteNodeStore.invokeProcessorsOnNodes(message: message)
+        publish = localNodeStore.invokeProcessorsOnNodes(message: message) || publish // always run invoke Processsors on nodes
+        if remoteNodeStore.checkForNewNode(message: message) {
+            remoteNodeStore.createNewRemoteNode(message: message)
+            publish = true
+        }
+        publish = remoteNodeStore.invokeProcessorsOnNodes(message: message) || publish // always run invoke Processsors on nodes
         
         if publish {
+            logger.debug("publish change due to \(message, privacy: .public)")
             self.objectWillChange.send()
-                // TODO: Every message publishes; make this less brute force with a return Bool from invokeProcessorsOnNodes?
-                // TODO: Granularity too large, this is publishing entire node store and clock
         }
     }
     

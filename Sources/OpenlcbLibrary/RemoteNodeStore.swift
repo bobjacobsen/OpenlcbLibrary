@@ -34,45 +34,40 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
 
     public var description : String { "RemoteNodeStore w \(nodes.count)"}
 
-    /// Process a message across all nodes
-    /// First reception of a message-level transmission, i.e. VerfiedNode, will create an entry for that node
-    mutating func invokeProcessorsOnNodes(message : Message) {
+    // return true if the message is to a new node, so that createNewRemoteNode should be called.
+    func checkForNewNode(message : Message) -> Bool {
+        // return nil if in localNodeStore
+        let nodeID = message.source
+        if nodeID == localNodeID {
+            // present in other store, skip
+            return false
+        }
+        // NodeID(0) is a special case, used for e.g. linkUp, linkDown; don't store
+        if (nodeID == NodeID(0)) {
+            return false
+        }
         // make sure source node is in store if it needs to be
         if let _ = lookup(message.source) {
-            // logger.trace("found node")
+            return false
         }
-        else {
-            // need to create the node and process it's New_Node_Seen
-            // return nil if in localNodeStore
-            let nodeID = message.source
-            if nodeID == localNodeID {
-                // present in other store, skip
-                return
-            } else {
-                // not present, create
-                let node = Node(nodeID)
-                logger.debug("creating node \(nodeID, privacy: .public)")
-                // NodeID(0) is a special case, used for e.g. linkUp, linkDown; don't store
-                if (nodeID != NodeID(0)) {
-                    store(node)
-                    // All nodes process a notification that there's a new node
-                    let newNodeMessage = Message(mti: MTI.New_Node_Seen, source: nodeID)
-                    for processor in processors {
-                            processor.process(newNodeMessage, node)
-                    }
-                } else {
-                    logger.debug("  Skipping store of NodeID(0)")
-                }
-            }
-        }
+        return true
+    }
+    
+    // a new node was found by checkForNewNode, so this
+    // mutates the store to add this.  This should only be called
+    // if checkForNewNode is true to avoid excess publishing!
+    mutating func createNewRemoteNode(message : Message) {
+        // need to create the node and process it's New_Node_Seen
+        let nodeID = message.source
+        let node = Node(nodeID)
+        logger.debug("creating node \(nodeID, privacy: .public)")
         
-        // The following is super.invokeProcessorsOnNodes(message: message)
+        store(node)
+        // All nodes process a notification that there's a new node
+        let newNodeMessage = Message(mti: MTI.New_Node_Seen, source: nodeID)
         for processor in processors {
-            for node in byIdMap.values {
-                processor.process(message, node)
-            }
+            _ = processor.process(newNodeMessage, node)
         }
     }
-
-
+    
 }

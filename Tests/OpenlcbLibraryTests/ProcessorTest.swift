@@ -19,8 +19,8 @@ final class ProcessorTest: XCTestCase {
     }
 
     struct TestStruct : Processor {
-        func process(_ message: Message, _ node: Node) {
-            return
+        func process(_ message: Message, _ node: Node)  -> Bool {
+            return false
         }
     }
     

@@ -27,7 +27,6 @@ public class ThrottleModel : ObservableObject {
     @Published public var forward = true
     @Published public var reverse = false
     
-    
     // Operations methods
     
     /// 1 scale mph to meters per second for the speed commands.
@@ -52,7 +51,7 @@ public class ThrottleModel : ObservableObject {
     
     let maxFn = 28
     @Published public var fnModels : [FnModel] = []
-    
+
     public init(_ linkLayer : CanLink?) {
         self.linkLayer = linkLayer
         
@@ -81,7 +80,7 @@ public class ThrottleModel : ObservableObject {
             }
         }
         @Published public var momentary : Bool = false
-        
+
         public init(_ number : Int, _ label : String, _ model : ThrottleModel) {
             self.number = number
             self.label = label
@@ -92,7 +91,7 @@ public class ThrottleModel : ObservableObject {
     // MARK: Roster support
     
     @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0), labelSource: .Initial)]
-    
+ 
     /// Add a roster entry to the roster.  Prevents duplication by, if needed, updating
     /// an existing entry that's not as current
     public func addToRoster(item : RosterEntry) {
@@ -123,8 +122,8 @@ public class ThrottleModel : ObservableObject {
                 }
             }
             self.roster.sort()  // sort by .id, which is nodeID
+            //roster.sort { $0.label < $1.label } // TODO: Sorts by label, but alpha sort messes up <None>, 100S vs 21S, etc; need better comparison function
         }
-        //roster.sort { $0.label < $1.label } // TODO: Sorts by label, but alpha sort messes up <None>, 100S vs 21S, etc; need better comparison function
     }
     
     /// Convert a numeric address to a Train Search Protocol search EventID

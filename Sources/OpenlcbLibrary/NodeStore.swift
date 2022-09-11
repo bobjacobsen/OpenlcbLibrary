@@ -59,11 +59,13 @@ extension NodeStore {
     }
     
     /// Process a message across all nodes
-    mutating func invokeProcessorsOnNodes(message : Message) {
+    func invokeProcessorsOnNodes(message : Message) -> Bool {
+        var publish = false
         for processor in processors {
             for node in byIdMap.values {
-                processor.process(message, node)
+                publish = processor.process(message, node) || publish // always  invoke Processsor on node
             }
         }
+        return publish
     }
 } // end extension to NodeStore

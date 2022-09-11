@@ -22,10 +22,10 @@ struct ThrottleProcessor : Processor {
     let isTrainID = EventID("01.01.00.00.00.00.03.03")
     let isTrainIDarray : [UInt8] = [1,1,0,0,0,0,3,3]
     
-    public func process( _ message : Message, _ node : Node  ) {
+    public func process( _ message : Message, _ node : Node  ) -> Bool {
         
         // Do a fast drop of messages not to us or global - note linklevelup/down are marked as global
-        if (!message.mti.isGlobal() && !checkDestID(message, node)) { return }
+        if (!message.mti.isGlobal() && !checkDestID(message, node)) { return false }
                 
         // specific message handling
         switch message.mti {
@@ -33,11 +33,11 @@ struct ThrottleProcessor : Processor {
             // link level up, ask for isATrain producers
             let request = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: isTrainIDarray)
             linkLayer?.sendMessage(request)
-            return
+            return false
         case .Producer_Consumer_Event_Report:
             // check for isTrain event and handle
             processPossibleTrainEvent(message)
-            return
+            return false
         case    .Producer_Identified_Active,
                 .Producer_Identified_Inactive,
                 .Producer_Identified_Unknown:
@@ -82,17 +82,17 @@ struct ThrottleProcessor : Processor {
                     model.reverse = true
                 }
                 
-                return
+                return false
             case .QueryFunction:
                 // function message
                 // Only work with main F0-Fn, so check for that
                 if message.data[1] != 0 || message.data[2] != 0 {
                     // not, so this is not for us
-                    return
+                    return false
                 }
                 let fn = Int(message.data[3])
                 model.fnModels[fn].pressed = (message.data[5] != 0)
-                return
+                return false
             case .ControllerConfig:
                 // check combination of message subtype and state
                 if model.tc_state == .Wait_on_TC_Assign_Reply && message.data[1] == 0x01 {
@@ -123,11 +123,12 @@ struct ThrottleProcessor : Processor {
                     linkLayer!.sendMessage(heartbeat)
                 }
             default:
-                return // not of interest
+                return false // not of interest
             }
         default:
-            return
+            return false
         }
+        return false
     }
     
     func processPossibleTrainEvent(_ message : Message) {

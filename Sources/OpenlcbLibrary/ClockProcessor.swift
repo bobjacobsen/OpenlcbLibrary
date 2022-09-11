@@ -16,7 +16,7 @@ struct ClockProcessor : Processor {
     let linkLayer : LinkLayer?
     let clocks : [ClockModel]  // provided array of valid clocks, 0 to 4 entries
 
-    public func process( _ message : Message, _ node : Node ) {
+    public func process( _ message : Message, _ node : Node ) -> Bool {
         switch message.mti {
         case .Producer_Consumer_Event_Report,
                 .Producer_Identified_Active,
@@ -33,6 +33,8 @@ struct ClockProcessor : Processor {
             // no need to do anything
             break
         }
+        
+        return false;
     }
     
     func linkUp(_ message : Message, _ node : Node) {

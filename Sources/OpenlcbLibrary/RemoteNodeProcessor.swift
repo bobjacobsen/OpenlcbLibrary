@@ -22,9 +22,9 @@ public struct RemoteNodeProcessor : Processor {
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeProcessor")
     
-    public func process( _ message : Message, _ node : Node  ) {
+    public func process( _ message : Message, _ node : Node  ) -> Bool {
         // Do a fast drop of messages not to us, from us, or global - note linklevelup/down are marked as global
-        if (!message.mti.isGlobal() && !checkSourceID(message, node) && !checkDestID(message, node)) { return }
+        if (!message.mti.isGlobal() && !checkSourceID(message, node) && !checkDestID(message, node)) { return false }
         
         // if you see anything at all from us, must be in Initialized state
         if checkSourceID(message, node) {  // Sent by node we're processing?
@@ -35,8 +35,10 @@ public struct RemoteNodeProcessor : Processor {
         switch message.mti {
         case .Initialization_Complete, .Initialization_Complete_Simple :
             initializationComplete(message, node)
+            return true
         case .Protocol_Support_Reply :
             protocolSupportReply(message, node)
+            return true
         case .Link_Level_Up :
             linkUpMessage(message, node)
         case .Link_Level_Down :
@@ -45,17 +47,21 @@ public struct RemoteNodeProcessor : Processor {
             simpleNodeIdentInfoRequest(message, node)
         case .Simple_Node_Ident_Info_Reply :
             simpleNodeIdentInfoReply(message, node)
+            return true
         case .Producer_Identified_Active, .Producer_Identified_Inactive, .Producer_Identified_Unknown, .Producer_Consumer_Event_Report :
             producedEventIndicated(message, node)
+            return true
         case .Consumer_Identified_Active, .Consumer_Identified_Inactive, .Consumer_Identified_Unknown :
             consumedEventIndicated(message, node)
+            return true
         case .New_Node_Seen :
             newNodeSeen(message, node)
+            return true
         default:
             // we ignore others
-            // logger.trace("message needing no processing: \(message) on \(node)")
-            break
+            return false
         }
+        return false
     }
     
     private func initializationComplete(_ message : Message, _ node : Node) {

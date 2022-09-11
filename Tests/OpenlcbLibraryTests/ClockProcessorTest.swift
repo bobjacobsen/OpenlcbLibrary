@@ -29,20 +29,20 @@ final class ClockProcessorTest: XCTestCase {
     func testRunStop() {
         clock0.run = false
         let msg1 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 0xF0,02]) // start
-        processor.process(msg1, node21)
+        _ = processor.process(msg1, node21)
         XCTAssertEqual(clock0.run, true, "clock started")
         let msg2 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 0xF0,01]) // stop
-        processor.process(msg2, node21)
+        _ = processor.process(msg2, node21)
         XCTAssertEqual(clock0.run, false, "clock stopped")
     }
 
     func testSetTimeAndDate() {
         let msg1 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, UInt8(0x30+2020/256), UInt8(2020&0xff)]) // year 2020
-        processor.process(msg1, node21)
+        _ = processor.process(msg1, node21)
         let msg2 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 0x22,23]) // Feb 23
-        processor.process(msg2, node21)
+        _ = processor.process(msg2, node21)
         let msg3 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 12, 34]) // 12:34
-        processor.process(msg3, node21)
+        _ = processor.process(msg3, node21)
 
         let setTime = clock0.getTime()
         XCTAssertEqual(clock0.getYear(setTime), 2020)
@@ -57,7 +57,7 @@ final class ClockProcessorTest: XCTestCase {
         let c0 = clock0.getTime()
         
         let msg1 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,4, UInt8(0x30+2020/256), UInt8(2020&0xff)]) // year 2020, but invalid clock number
-        processor.process(msg1, node21)
+        _ = processor.process(msg1, node21)
         
         XCTAssertEqual(clock0.getTime().description, c0.description)
         XCTAssertEqual(clock1.getTime().description, c1.description)
@@ -65,7 +65,7 @@ final class ClockProcessorTest: XCTestCase {
     
     func testSetRate() {
         let msg1 = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(13), data: [1,1,0,0,1,0, 0x40, 16]) // rate 4
-        processor.process(msg1, node21)
+        _ = processor.process(msg1, node21)
         
         XCTAssertEqual(clock0.rate, 4.0)
     }

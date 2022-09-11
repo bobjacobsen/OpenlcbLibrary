@@ -13,9 +13,8 @@ import Foundation
 
 public protocol Processor {
     /// accept a Message, adjust state as needed, possibly reply
-    func process( _ message : Message, _ node : Node )
-
-    // TODO: do we need a call to say "is this message interesting?", to shortcut N node calls doing nothing?
+    ///  Returns: True is the contains of the node changed in a way that should be published, i.e. a PIP, SNIP or event model change
+    func process( _ message : Message, _ node : Node ) -> Bool
 }
 
 extension Processor {

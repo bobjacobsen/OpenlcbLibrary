@@ -15,8 +15,8 @@ struct LocalNodeProcessor : Processor {
     let linkLayer : LinkLayer?
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalNodeProcessor")
     
-    func process( _ message : Message, _ node : Node ) {
-        if ( !checkDestID(message, node) ) { return }  // not to us
+    func process( _ message : Message, _ node : Node ) -> Bool {
+        if ( !checkDestID(message, node) ) { return false }  // not to us
         // specific message handling
         switch message.mti {
         case .Link_Level_Up :
@@ -49,7 +49,7 @@ struct LocalNodeProcessor : Processor {
             unrecognizedMTI(message, node)
             break
         }
-        
+        return false;
     }
 
     private func linkUpMessage(_ message : Message, _ node : Node) {

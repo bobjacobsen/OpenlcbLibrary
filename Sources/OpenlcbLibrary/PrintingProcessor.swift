@@ -20,7 +20,7 @@ struct PrintingProcessor : Processor {
     let linkLayer : LinkLayer?
     var result : (_ : String) -> ()
     
-    public func process( _ message : Message, _ node : Node ) {
+    public func process( _ message : Message, _ node : Node ) -> Bool {
         var dataString = ""
         for byte in message.data {
             dataString += "\(String(format:"%02X", byte)) "
@@ -64,6 +64,7 @@ struct PrintingProcessor : Processor {
         case    .Link_Level_Up, .Link_Level_Down, .New_Node_Seen, .Unknown :
             internalMessage(message, dataString)
         }
+        return false
     }
     
     private func simpleAddressedMessage(_ message : Message, _ node : Node, _ dataString : String) {

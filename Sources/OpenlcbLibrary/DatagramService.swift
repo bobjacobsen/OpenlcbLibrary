@@ -116,9 +116,9 @@ public class DatagramService : Processor {
         }
     }
     
-    public func process( _ message : Message, _ node : Node ) {
+    public func process( _ message : Message, _ node : Node ) -> Bool {
         // Check that it's to us
-        if !checkDestID(message, linkLayer.localNodeID) { return }
+        if !checkDestID(message, linkLayer.localNodeID) { return false }
         
         switch message.mti {
         case MTI.Datagram :
@@ -131,6 +131,7 @@ public class DatagramService : Processor {
             // no need to do anything
             break
         }
+        return false
     }
     
     func handleDatagram(_ message : Message) {
