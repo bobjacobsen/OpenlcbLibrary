@@ -25,7 +25,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
  
     @Published public var throttleModel0 : ThrottleModel
 
-    public let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
+    let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
     
@@ -53,7 +53,10 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         throttleModel0.openlcbLibrary = self
     }
     
-    /// Iniitialize and add sample data for SwiftUI preview
+    /// Iniitialize and optionally add sample data for SwiftUI preview
+    ///      - parameters:
+    ///         - sample: Iff true, add the sample nodes.
+
     public convenience init(sample: Bool) {
         self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
         logger.info("OpenlcbLibrary init(Bool)")
@@ -61,6 +64,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
             createSampleData()
         }
     }
+    
     /// The ``configureCanTelnet`` method will set up a system with
     ///   - A CAN-protocol Telnet connection
     ///   - ``defaultNode``, a  local node in a ``localNodeStore``
@@ -154,7 +158,6 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     }
     
     var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``
-    
     /// Load some sample nodes, but don't activate them - for use by testing of library clients
     public func createSampleData() {
         // create two remote nodes
@@ -200,7 +203,8 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
             nextNode.snip.updateStringsFromSnipData()
             remoteNodeStore.store(nextNode)
         }
-    }    
+    }
+    
     /// Once configuration (and optional sample data) is complete, bring the link up starting at the physical layer
     public func bringLinkUp(_ canPhysicalLayer : CanPhysicalLayer) {
         canPhysicalLayer.physicalLayerUp()

@@ -14,7 +14,7 @@ import os
 ///
 
 public struct RemoteNodeProcessor : Processor {
-    public init ( _ linkLayer: CanLink? = nil) {
+    init ( _ linkLayer: CanLink? = nil) {
         self.linkLayer = linkLayer
     }
     

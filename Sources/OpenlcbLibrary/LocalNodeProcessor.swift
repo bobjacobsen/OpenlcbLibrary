@@ -9,7 +9,7 @@ import Foundation
 import os
 
 struct LocalNodeProcessor : Processor {
-    public init ( _ linkLayer: LinkLayer? = nil) {
+    init ( _ linkLayer: LinkLayer? = nil) {
         self.linkLayer = linkLayer
     }
     let linkLayer : LinkLayer?
@@ -59,7 +59,6 @@ struct LocalNodeProcessor : Processor {
         // ask all nodes to identify themselves
         let msgVN = Message(mti: MTI.Verify_NodeID_Number_Global, source: node.id)
         linkLayer!.sendMessage(msgVN)
-
     }
 
     private func linkDownMessage(_ message : Message, _ node : Node) {
