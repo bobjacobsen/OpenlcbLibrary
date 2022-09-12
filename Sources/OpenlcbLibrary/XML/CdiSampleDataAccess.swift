@@ -28,7 +28,7 @@ public struct CdiSampleDataAccess {
             let data = try Data(contentsOf: fileURL)
             return data
         } catch {
-            logger.error("caught \(error, privacy:.public)")
+            logger.error("caught \(error.localizedDescription, privacy:.public)")
             return nil
         }
     }
@@ -42,7 +42,7 @@ public struct CdiSampleDataAccess {
             let data = string.data(using: .utf8)!
             return data
         } catch  {
-            logger.error("caught \(error, privacy:.public)")
+            logger.error("caught \(error.localizedDescription, privacy:.public)")
         }
         return nil
     }
