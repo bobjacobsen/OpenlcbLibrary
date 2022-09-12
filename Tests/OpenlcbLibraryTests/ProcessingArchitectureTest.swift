@@ -42,12 +42,12 @@ class ProcessingArchitectureTest: XCTestCase {
         let rprocessor : Processor = RemoteNodeProcessor() // track effect of messages on Remote Node
         
         XCTAssertEqual(rnode.state, Node.State.Uninitialized, "node state starts uninitialized")
-        rprocessor.process(msg, rnode)
+        _ = rprocessor.process(msg, rnode)
         XCTAssertEqual(rnode.state, Node.State.Initialized, "node state goes initialized")
 
         let dprocessor : Processor = DatagramService(LinkMockLayer(NodeID(123))) // datagram processor doesn't affect node status
         let dnode = Node(NodeID(12))
-        dprocessor.process(msg, dnode)
+        _ = dprocessor.process(msg, dnode)
         XCTAssertEqual(dnode.state, Node.State.Uninitialized, "node state should be unchanged")
         
         // printing process, well, prints
@@ -57,7 +57,7 @@ class ProcessingArchitectureTest: XCTestCase {
         }
         let pprocessor : Processor = PrintingProcessor(handler) // example of processor that extracts info from message
         let pnode = Node(NodeID(12))
-        pprocessor.process(msg, pnode)
+        _ = pprocessor.process(msg, pnode)
         XCTAssertEqual(result, "00.00.00.00.00.0C: Initialization Complete ")
     }
     
