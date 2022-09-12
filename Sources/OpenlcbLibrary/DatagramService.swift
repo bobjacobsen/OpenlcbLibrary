@@ -20,7 +20,7 @@ import os
 //
 // TODO: Update the PlantUML diagrams
 //
-public class DatagramService : Processor {
+class DatagramService : Processor {
     public init ( _ linkLayer: LinkLayer) {
         self.linkLayer = linkLayer
     }

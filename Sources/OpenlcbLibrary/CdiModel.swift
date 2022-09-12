@@ -25,7 +25,7 @@ public class CdiModel : ObservableObject {
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiModel")
     
-    public init (mservice : MemoryService, nodeID : NodeID) {
+    init (mservice : MemoryService, nodeID : NodeID) {
         self.mservice = mservice
         self.nodeID = nodeID
     }

@@ -290,7 +290,7 @@ public class CanLink : LinkLayer {
         }
     }
     
-    public override func sendMessage(_ msg : Message) {
+    override func sendMessage(_ msg : Message) {
         // special case for datagram
         if msg.mti == .Datagram {
             var header = UInt(0x10_000_000)

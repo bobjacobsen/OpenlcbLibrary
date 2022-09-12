@@ -23,7 +23,7 @@ public class MemoryService {
     
     let service : DatagramService
     
-    public init(service : DatagramService) {
+    init(service : DatagramService) {
         self.service = service
         // register to DatagramService to hear arriving datagrams
         service.registerDatagramReceivedListener(datagramReceivedListener)
@@ -32,7 +32,7 @@ public class MemoryService {
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "MemoryService")
 
     // Memo carries request and reply
-    public struct MemoryReadMemo {
+    struct MemoryReadMemo {
         public init(nodeID : NodeID, size : UInt8, space : UInt8, address : Int, rejectedReply : ( (_ : MemoryReadMemo) -> () )?, dataReply : ( (_ : MemoryReadMemo) -> () )? ) {
             self.nodeID = nodeID
             self.size = size
@@ -75,7 +75,7 @@ public class MemoryService {
     ///
     /// If okReply in the memo is triggered, it will be followed by a dataReply.
     /// A rejectedReply will not be followed by a dataReply.
-    public func requestMemoryRead(_ memo : MemoryReadMemo) {
+    func requestMemoryRead(_ memo : MemoryReadMemo) {
         // preserve the request
         readMemos.append(memo)
         // send the read request

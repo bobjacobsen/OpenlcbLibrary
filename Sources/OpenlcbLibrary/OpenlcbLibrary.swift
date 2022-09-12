@@ -32,7 +32,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
     
     let dservice : DatagramService
-    public let mservice : MemoryService // TODO: Needs to be encapsulated in a model, not free to CdiView
+    let mservice : MemoryService // TODO: Needs to be encapsulated in a model, not free to CdiView
 
     /// Initialize a basic system
     public init(defaultNodeID : NodeID) {
@@ -146,6 +146,11 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
             logger.debug("publish change due to \(message, privacy: .public)")
             self.objectWillChange.send()
         }
+    }
+    
+    public func produceEvent(eventID: EventID) {
+        let msg = Message(mti: .Producer_Consumer_Event_Report, source: linkLevel.localNodeID, data: eventID.toArray())
+        linkLevel.sendMessage(msg)
     }
     
     var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``
