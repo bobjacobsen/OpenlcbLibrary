@@ -24,7 +24,10 @@ public struct RemoteNodeProcessor : Processor {
     
     public func process( _ message : Message, _ node : Node  ) -> Bool {
         // Do a fast drop of messages not to us, from us, or global - note linklevelup/down are marked as global
-        if (!message.mti.isGlobal() && !checkSourceID(message, node) && !checkDestID(message, node)) { return false }
+        guard message.mti.isGlobal()
+                || checkSourceID(message, node)
+                || checkDestID(message, node)
+            else { return false }
         
         // if you see anything at all from us, must be in Initialized state
         if checkSourceID(message, node) {  // Sent by node we're processing?

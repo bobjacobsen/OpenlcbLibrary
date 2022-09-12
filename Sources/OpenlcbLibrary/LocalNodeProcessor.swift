@@ -16,7 +16,7 @@ struct LocalNodeProcessor : Processor {
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalNodeProcessor")
     
     func process( _ message : Message, _ node : Node ) -> Bool {
-        if ( !checkDestID(message, node) ) { return false }  // not to us
+        guard checkDestID(message, node) else { return false }  // not to us
         // specific message handling
         switch message.mti {
         case .Link_Level_Up :
@@ -67,7 +67,7 @@ struct LocalNodeProcessor : Processor {
     }
 
     private func verifyNodeIDNumberGlobal(_ message : Message, _ node : Node) {
-        if ( message.data.count > 0 && node.id != NodeID(message.data)) {return} // not to us
+        guard message.data.count == 0 || node.id == NodeID(message.data) else { return } // not to us
         let msg = Message(mti: MTI.Verified_NodeID, source: node.id, destination: message.source, data: node.id.toArray())
         linkLayer!.sendMessage(msg)
    }
@@ -104,8 +104,8 @@ struct LocalNodeProcessor : Processor {
     ///
     /// Handle a message with an unrecognized MTI by returning OptionalInteractionRejected
     private func unrecognizedMTI(_ message : Message, _ node : Node) {
-        // global messages are ignored
-        if message.isGlobal() { return }
+        guard !message.isGlobal() else { return } // global messages are ignored
+        
         // addressed messages get an OptionalInteractionRejected
         logger.notice("received unexpected \(message, privacy: .public), sent OIR")
         let msg = Message(mti: MTI.Optional_Interaction_Rejected, source: node.id, destination: message.source,

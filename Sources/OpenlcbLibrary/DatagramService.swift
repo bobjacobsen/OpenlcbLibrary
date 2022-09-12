@@ -86,7 +86,7 @@ class DatagramService : Processor {
     
     /// Returns Unrecognized if there is no type specified, i.e. the datagram is empty
     func datagramType(data : [UInt8]) -> DatagramProtocolID {
-        if (data.count == 0) { return .Unrecognized }
+        guard data.count != 0 else { return .Unrecognized }
         if let retval = DatagramProtocolID(rawValue: UInt(data[0])) {
             return retval
         } else {
@@ -118,7 +118,7 @@ class DatagramService : Processor {
     
     public func process( _ message : Message, _ node : Node ) -> Bool {
         // Check that it's to us
-        if !checkDestID(message, linkLayer.localNodeID) { return false }
+        guard checkDestID(message, linkLayer.localNodeID) else { return false }
         
         switch message.mti {
         case MTI.Datagram :

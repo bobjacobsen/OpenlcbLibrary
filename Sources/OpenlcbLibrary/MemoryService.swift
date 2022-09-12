@@ -103,9 +103,7 @@ public class MemoryService {
 
     func datagramReceivedListener(memo: DatagramService.DatagramReadMemo) {
         // node received a datagram, is it our service?
-        if memo.data[0] != 0x20 {
-            return
-        }
+        guard memo.data[0] == 0x20 else { return }
         
         // Acknowledge the datagram
         service.positiveReplyToDatagram(memo, flags: 0x0000)
