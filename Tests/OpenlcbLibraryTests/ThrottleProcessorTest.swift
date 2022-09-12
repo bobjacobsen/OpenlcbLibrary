@@ -32,9 +32,9 @@ final class ThrottleProcessorTest: XCTestCase {
         let pcerNoMatch = Message(mti:.Producer_Consumer_Event_Report, source: NodeID(11), data: [1,1,0,0,0,0,3,0]) // mismatch in last entry
         let piaMatch =   Message(mti:.Producer_Identified_Active, source: NodeID(12), data: [1,1,0,0,0,0,3,3]) // isATrain event
 
-        put.process(pcerMatch, node1)
-        put.process(pcerNoMatch, node1)
-        put.process(piaMatch, node1)
+        _ = put.process(pcerMatch, node1)
+        _ = put.process(pcerNoMatch, node1)
+        _ = put.process(piaMatch, node1)
 
         XCTAssertEqual(model.roster.count, 2)
         XCTAssertTrue(model.roster.contains( RosterEntry(label: "10", nodeID: NodeID(10), labelSource: .Initial)))
@@ -51,7 +51,7 @@ final class ThrottleProcessorTest: XCTestCase {
         // 0 mps test
         let replyMsg0 = Message(mti:.Traction_Control_Reply, source: NodeID(10), destination: NodeID(1), data: [0x10, 0x00, 0x00, 0x00, 0x80, 0x00, 0xFF, 0xFF]) // speed reply
         
-        put.process(replyMsg0, node1)
+        _ = put.process(replyMsg0, node1)
         
         XCTAssertEqual(model.speed, 0.0)
         XCTAssertTrue(model.forward)
@@ -60,7 +60,7 @@ final class ThrottleProcessorTest: XCTestCase {
         // 100 mps test
         let replyMsg100 = Message(mti:.Traction_Control_Reply, source: NodeID(10), destination: NodeID(1), data: [0x10, 0x56, 0x40, 0x00, 0x80, 0x00, 0xFF, 0xFF]) // speed reply
         
-        put.process(replyMsg100, node1)
+        _ = put.process(replyMsg100, node1)
         
         XCTAssertEqual(model.speed, 100.0)
         XCTAssertTrue(model.forward)
@@ -69,7 +69,7 @@ final class ThrottleProcessorTest: XCTestCase {
         // reverse 0 mps test
         let replyMsgR0 = Message(mti:.Traction_Control_Reply, source: NodeID(10), destination: NodeID(1), data: [0x10, 0x80, 0x00, 0x00, 0x80, 0x00, 0xFF, 0xFF]) // speed reply
         
-        put.process(replyMsgR0, node1)
+        _ = put.process(replyMsgR0, node1)
         
         XCTAssertEqual(model.speed, 0.0)
         XCTAssertTrue(model.reverse)

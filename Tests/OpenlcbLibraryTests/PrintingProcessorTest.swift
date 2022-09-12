@@ -27,7 +27,7 @@ class PrintingProcessorTest: XCTestCase {
         let processor = PrintingProcessor(handler)
         let msg = Message(mti : MTI.Initialization_Complete, source : NodeID(12))
         
-        processor.process(msg, node)
+        _ = processor.process(msg, node)
         
         XCTAssertEqual(result, "00.00.00.00.00.0C: Initialization Complete ")
     }
@@ -40,7 +40,7 @@ class PrintingProcessorTest: XCTestCase {
         let processor = PrintingProcessor(handler)
         let msg = Message(mti : MTI.Consumer_Range_Identified, source : NodeID(12), destination : NodeID(13))
         
-        processor.process(msg, node)
+        _ = processor.process(msg, node)
         
         XCTAssertEqual(result, "00.00.00.00.00.0C: Consumer Range Identified ")
    }
@@ -53,7 +53,7 @@ class PrintingProcessorTest: XCTestCase {
         let processor = PrintingProcessor(handler)
         let msg = Message(mti : MTI.Producer_Consumer_Event_Report, source : NodeID(12), destination : NodeID(13))
         
-        processor.process(msg, node)
+        _ = processor.process(msg, node)
         
         XCTAssertEqual(result, "00.00.00.00.00.0C: Producer Consumer Event Report ")
     }
@@ -66,7 +66,7 @@ class PrintingProcessorTest: XCTestCase {
         let processor = PrintingProcessor(handler)
         let msg = Message(mti : MTI.Link_Level_Down, source : NodeID(12), destination : NodeID(13))
         
-        processor.process(msg, node)
+        _ = processor.process(msg, node)
         
         XCTAssertEqual(result, "Internal Message: Link Level Down ")
     }

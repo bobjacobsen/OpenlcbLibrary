@@ -101,7 +101,7 @@ class DatagramServiceTest: XCTestCase {
         
         // send a reply back through
         let message = Message(mti: .Datagram_Received_OK, source: NodeID(22), destination: NodeID(12))
-        service.process(message, Node(NodeID(21)))
+        _ = service.process(message, Node(NodeID(21)))
         // was callback called?
         XCTAssertTrue(callback)
     }
@@ -115,7 +115,7 @@ class DatagramServiceTest: XCTestCase {
         
         // send a reply back through
         let message = Message(mti: .Datagram_Rejected, source: NodeID(22), destination: NodeID(12))
-        service.process(message, Node(NodeID(21)))
+        _ = service.process(message, Node(NodeID(21)))
         // was callback called?
         XCTAssertTrue(callback)
     }
@@ -127,7 +127,7 @@ class DatagramServiceTest: XCTestCase {
 
         // receive a datagram
         let message = Message(mti: .Datagram, source: NodeID(22), destination: NodeID(12))
-        service.process(message, Node(NodeID(21)))
+        _ = service.process(message, Node(NodeID(21)))
         
         // check that it went through
         XCTAssertTrue(received)
