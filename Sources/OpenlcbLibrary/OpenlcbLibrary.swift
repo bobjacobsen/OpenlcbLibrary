@@ -32,7 +32,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
     
     let dservice : DatagramService
-    let mservice : MemoryService // TODO: Needs to be encapsulated in a model, not free to CdiView
+    public let mservice : MemoryService // TODO: Needs to be encapsulated in a model, not free to CdiView
 
     /// Initialize a basic system
     public init(defaultNodeID : NodeID) {
