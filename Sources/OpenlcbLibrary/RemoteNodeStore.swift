@@ -10,16 +10,8 @@ import os
 
 /// Accumulates Nodes that it sees requested, unless they're already in a given local NodeStore
 /// 
-public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
-    
-    // variables from NodeStore protocol
-    
-    // TODO: This should be @Published, but that can only be done on a class.  Needed so that the node navigation list will update when a node's SNIP updates.
-    public var nodes: [Node]
-    
-    public var byIdMap: [NodeID : Node]
-    public var processors: [Processor]
-    
+public class RemoteNodeStore : NodeStore, CustomStringConvertible {
+        
     // local variables
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeStore")
@@ -28,9 +20,6 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     let localNodeID : NodeID
 
     init(localNodeID : NodeID) {
-        self.nodes  = []
-        self.byIdMap = [:]
-        self.processors = []
         self.localNodeID = localNodeID
     }
 
@@ -58,7 +47,7 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     // a new node was found by checkForNewNode, so this
     // mutates the store to add this.  This should only be called
     // if checkForNewNode is true to avoid excess publishing!
-    mutating func createNewRemoteNode(message : Message) {
+    func createNewRemoteNode(message : Message) {
         // need to create the node and process it's New_Node_Seen
         let nodeID = message.source
         let node = Node(nodeID)

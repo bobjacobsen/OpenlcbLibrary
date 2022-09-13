@@ -11,18 +11,16 @@ import Foundation
 /// Store the available Nodes and provide multiple means of retrieval.
 ///  Storage and indexing methods are an internal detail.
 ///  You can't remove a node; once we know about it, we know about it.
-public protocol NodeStore { // for SwiftUI
+public class NodeStore : ObservableObject { // for SwiftUI
     
-    var nodes : [Node] {get set}
-    var byIdMap : [NodeID : Node] {get set}
-    var processors : [Processor] {get set}
-}
-
-extension NodeStore {
+    @Published public var nodes : [Node] = []
+    
+    var byIdMap : [NodeID : Node] = [:]
+    var processors : [Processor] = []
         
     /// Store a new node or replace an existing stored node
     /// - Parameter node: new Node content
-    mutating func store(_ node : Node) {
+    func store(_ node : Node) {
         byIdMap[node.id] = node
         nodes.append(node)
 
