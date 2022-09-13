@@ -80,6 +80,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         defaultNode.snip.modelName        = "OlcbTools"     // TODO: App name handling (as opposed to library name)
         defaultNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
         defaultNode.snip.softwareVersion  = "0.0.1"          // TODO: Version number handling
+        
         #if canImport(UIKit)
         // iOS case
         defaultNode.snip.userProvidedNodeName = UIDevice.current.name
@@ -91,6 +92,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
             defaultNode.snip.userProvidedNodeName = "Some Mac"
         }
         #endif
+        
         defaultNode.snip.userProvidedDescription = "Full OlcbTools App"
         defaultNode.snip.updateSnipDataFromStrings()
 
