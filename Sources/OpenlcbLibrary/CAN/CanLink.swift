@@ -182,11 +182,11 @@ public class CanLink : LinkLayer {
             // special case for JMRI, which sends VerifiedNodeID but not AMD
             if mti == MTI.Verified_NodeID {
                 sourceID = NodeID(frame.data)
-                logger.info("Verified_NodeID from unknown source alias: \(frame, privacy: .public), continue with \(sourceID, privacy: .public)")
+                logger.info("Verified_NodeID from unknown source alias: \(frame, privacy: .public), continue with observed ID \(sourceID, privacy: .public)")
             } else {
                 sourceID = NodeID(nextInternallyAssignedNodeID)
                 nextInternallyAssignedNodeID += 1
-                logger.error("message from unknown source alias: \(frame, privacy: .public), continue with \(sourceID, privacy: .public)")
+                logger.error("message from unknown source alias: \(frame, privacy: .public), continue with created ID \(sourceID, privacy: .public)")
             }
             // register that internally-generated nodeID-alias association
             aliasToNodeID[frame.header&0xFFF] = sourceID
@@ -418,8 +418,8 @@ public class CanLink : LinkLayer {
         let receivedAlias = frame.header & 0x0000_FFF
         let abort = (receivedAlias == localAlias)
         if (abort ) {
-            // Collision! Insist on our alias
-            logger.notice("alias collision with alias \(receivedAlias, privacy: .public), we restart with AMR and attempt to get new alias")
+            // Collision! \\ TODO: are we doing the right thing here on alias collision?
+            logger.notice("alias collision in frame \(frame, privacy: .public), we restart with AMR and attempt to get new alias")
             link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
             // Standard 6.2.5
             state = .Inhibited
