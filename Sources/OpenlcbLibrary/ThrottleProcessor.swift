@@ -8,6 +8,8 @@
 import Foundation
 import os
 
+// Float16 not supported on macOS Rosetta.  See e.g. https://github.com/SusanDoggie/Float16 and https://forums.swift.org/t/float16-for-macos-and-older-version-of-ios/40572
+
 struct ThrottleProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
         self.linkLayer = linkLayer
