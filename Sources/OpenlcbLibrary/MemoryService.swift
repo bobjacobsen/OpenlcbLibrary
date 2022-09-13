@@ -19,7 +19,7 @@ import os
 // - create a read memo and submit
 // - wait for either dataReply or rejectedReply call back.
 
-public class MemoryService {
+final public class MemoryService {
     
     let service : DatagramService
     

@@ -15,7 +15,7 @@ import os
 ///  Serves as a View model for displaying the events used by a node
 
 // TODO: Add support for ranges
-public class LocalEventStore {
+final public class LocalEventStore {
     @Published public var eventsConsumed : Set<EventID> = []
     @Published public var eventsProduced : Set<EventID> = []
 
