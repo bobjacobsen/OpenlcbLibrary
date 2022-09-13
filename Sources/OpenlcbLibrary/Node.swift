@@ -29,8 +29,8 @@ final public class Node : Equatable, Hashable, Comparable, // for Sets and sorts
     }
     var state : State = .Uninitialized
 
-    public var pipSet = Set<PIP>()
-    public var snip = SNIP()
+    @Published public var pipSet = Set<PIP>()
+    @Published public var snip = SNIP()
     public var cdi : CdiModel? = nil
 
     public init( _ nodeID : NodeID) {

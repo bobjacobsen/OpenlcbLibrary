@@ -159,6 +159,17 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         linkLevel.sendMessage(msg)
     }
     
+    public func refreshNode(node : Node ) {
+        node.snip = SNIP()
+        let messageSNIP = Message(mti: .Simple_Node_Ident_Info_Request, source: linkLevel.localNodeID, destination: node.id)
+        linkLevel.sendMessage(messageSNIP)
+    }
+    
+    public func refreshAllNodes() {
+        let messageVerify = Message(mti: .Verify_NodeID_Number_Global, source: linkLevel.localNodeID)
+        linkLevel.sendMessage(messageVerify)
+    }
+    
     var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``
     /// Load some sample nodes, but don't activate them - for use by testing of library clients
     public func createSampleData() {
