@@ -123,9 +123,10 @@ public struct RemoteNodeProcessor : Processor {
     }
     
     private func simpleNodeIdentInfoReply(_ message : Message, _ node : Node) {
-        if checkSourceID(message, node) { // send by us?
+        if checkSourceID(message, node) { // sent by this node?
             // accumulate data in the node
             if message.data.count > 2 {
+                node.snip = SNIP()
                 node.snip.addData(data: message.data)
                 node.snip.updateStringsFromSnipData()
                 // logger.trace("SNIP data added to \(node, privacy: .public)")

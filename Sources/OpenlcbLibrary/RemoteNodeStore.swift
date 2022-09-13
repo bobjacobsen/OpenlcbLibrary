@@ -14,7 +14,9 @@ public struct RemoteNodeStore : NodeStore, CustomStringConvertible {
     
     // variables from NodeStore protocol
     
+    // TODO: This should be @Published, but that can only be done on a class.  Needed so that the node navigation list will update when a node's SNIP updates.
     public var nodes: [Node]
+    
     public var byIdMap: [NodeID : Node]
     public var processors: [Processor]
     
