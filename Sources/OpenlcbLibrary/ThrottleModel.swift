@@ -94,6 +94,27 @@ public class ThrottleModel : ObservableObject {
     
     @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0), labelSource: .Initial)]
  
+    /// Get the name of a roster entry from its NodeID
+    
+    public func getRosterEntryName(from : NodeID) -> String {
+        for entry in roster {
+            if entry.nodeID == from {
+                return entry.label
+            }
+        }
+        return from.description
+    }
+
+    public func getRosterEntryNodeID(from : String) -> NodeID {
+        for entry in roster {
+            if entry.label == from {
+                return entry.nodeID
+            }
+        }
+        logger.error("getRosterEntryNodeID asked for \"\(from, privacy:.public)\" which didn't match")
+        return NodeID(0)
+    }
+
     /// Add a roster entry to the roster.  Prevents duplication by, if needed, updating
     /// an existing entry that's not as current
     public func addToRoster(item : RosterEntry) {

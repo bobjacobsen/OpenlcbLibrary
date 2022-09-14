@@ -25,7 +25,9 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
  
     @Published public var throttleModel0 : ThrottleModel
 
-    let linkLevel : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
+    @Published public var consistModel0 : ConsistModel
+
+    let linkLayer : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
     
@@ -39,13 +41,14 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         
         defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01; user responsible for uniqueness of value
         
-        linkLevel = CanLink(localNodeID: defaultNodeID)
+        linkLayer = CanLink(localNodeID: defaultNodeID)
 
         localNodeStore   = LocalNodeStore()
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         clockModel0 = ClockModel()
-        throttleModel0 = ThrottleModel(linkLevel)
-        dservice = DatagramService(linkLevel)
+        throttleModel0 = ThrottleModel(linkLayer)
+        consistModel0 = ConsistModel(linkLayer: linkLayer)
+        dservice = DatagramService(linkLayer)
         mservice = MemoryService(service: dservice)
 
         // stored values initialized, 'self' available below here
@@ -99,31 +102,31 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         localNodeStore.store(defaultNode)
         
         // connect the physical -> link layers using the CAN-overTCP form (Native Telnet not yet available)
-        linkLevel.linkPhysicalLayer(canPhysicalLayer)
+        linkLayer.linkPhysicalLayer(canPhysicalLayer)
         
         // create processors
-        let rprocessor : Processor = RemoteNodeProcessor(linkLevel) // track effect of messages on Remote Nodes
+        let rprocessor : Processor = RemoteNodeProcessor(linkLayer) // track effect of messages on Remote Nodes
 
-        let lprocessor : Processor = LocalNodeProcessor(linkLevel)  // track effect of messages on Local Node
+        let lprocessor : Processor = LocalNodeProcessor(linkLayer)  // track effect of messages on Local Node
 
-        //let dservice = DatagramService(linkLevel)
+        //let dservice = DatagramService(linkLayer)
         
         //let mservice = MemoryService(service: dservice)
 
-        let cprocessor : Processor = ClockProcessor(linkLevel, [clockModel0])   // clock processor doesn't affect node status
+        let cprocessor : Processor = ClockProcessor(linkLayer, [clockModel0])   // clock processor doesn't affect node status
 
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
         
-        let tprocessor : Processor = ThrottleProcessor(linkLevel, model: throttleModel0)
+        let tprocessor : Processor = ThrottleProcessor(linkLayer, model: throttleModel0)
         
         // TODO: With this setup, only messages from the network are sent to pprocessor and displayed.
         
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
-        localNodeStore.processors =  [pprocessor, dservice,             lprocessor, cprocessor, tprocessor]
+        localNodeStore.processors =  [pprocessor, dservice,             lprocessor, cprocessor, tprocessor, consistModel0]
  
         // register listener here which will process the node stores without copying them
-        linkLevel.registerMessageReceivedListener(processMessageFromLinkLevel)
+        linkLayer.registerMessageReceivedListener(processMessageFromLinkLayer)
 
     }
     
@@ -138,7 +141,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         }
     }
     
-    func processMessageFromLinkLevel(_ message: Message) {
+    func processMessageFromLinkLayer(_ message: Message) {
         var publish = false
         
         publish = localNodeStore.invokeProcessorsOnNodes(message: message) || publish // always run invoke Processsors on nodes
@@ -155,19 +158,19 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     }
     
     public func produceEvent(eventID: EventID) {
-        let msg = Message(mti: .Producer_Consumer_Event_Report, source: linkLevel.localNodeID, data: eventID.toArray())
-        linkLevel.sendMessage(msg)
+        let msg = Message(mti: .Producer_Consumer_Event_Report, source: linkLayer.localNodeID, data: eventID.toArray())
+        linkLayer.sendMessage(msg)
     }
     
     public func refreshNode(node : Node ) {
         node.snip = SNIP()
-        let messageSNIP = Message(mti: .Simple_Node_Ident_Info_Request, source: linkLevel.localNodeID, destination: node.id)
-        linkLevel.sendMessage(messageSNIP)
+        let messageSNIP = Message(mti: .Simple_Node_Ident_Info_Request, source: linkLayer.localNodeID, destination: node.id)
+        linkLayer.sendMessage(messageSNIP)
     }
     
     public func refreshAllNodes() {
-        let messageVerify = Message(mti: .Verify_NodeID_Number_Global, source: linkLevel.localNodeID)
-        linkLevel.sendMessage(messageVerify)
+        let messageVerify = Message(mti: .Verify_NodeID_Number_Global, source: linkLayer.localNodeID)
+        linkLayer.sendMessage(messageVerify)
     }
     
     var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``

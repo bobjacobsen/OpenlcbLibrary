@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-// Float16 not supported on macOS Rosetta.  See e.g. https://github.com/SusanDoggie/Float16 and https://forums.swift.org/t/float16-for-macos-and-older-version-of-ios/40572
+// Float16 not supported on Intel macOS and Rosetta.  See e.g. https://github.com/SusanDoggie/Float16 and https://forums.swift.org/t/float16-for-macos-and-older-version-of-ios/40572
 
 struct ThrottleProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
@@ -26,13 +26,13 @@ struct ThrottleProcessor : Processor {
     
     public func process( _ message : Message, _ node : Node  ) -> Bool {
         
-        // Do a fast drop of messages not to us or global - note linklevelup/down are marked as global
+        // Do a fast drop of messages not to us or global - note linkLayer up/down are marked as global
         if (!message.mti.isGlobal() && !checkDestID(message, node)) { return false }
                 
         // specific message handling
         switch message.mti {
-        case .Link_Level_Up :
-            // link level up, ask for isATrain producers
+        case .Link_Layer_Up :
+            // link layer up, ask for isATrain producers
             let request = Message(mti: .Identify_Producer, source: linkLayer!.localNodeID, data: isTrainIDarray)
             linkLayer?.sendMessage(request)
             return false

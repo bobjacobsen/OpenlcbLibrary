@@ -26,7 +26,7 @@ struct ClockProcessor : Processor {
         
         // TODO: We should reply to Identify_Producer, Identify_Consumer, Identify_Events?
             
-        case .Link_Level_Up :
+        case .Link_Layer_Up :
             linkUp(message, node)
         
         default:

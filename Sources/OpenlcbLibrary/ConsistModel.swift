@@ -6,26 +6,33 @@
 //
 
 import Foundation
+import os
 
-class ConsistModel {
+public class ConsistModel : ObservableObject, Processor {
     
-    @Published var forLoco : NodeID
-    @Published var consist : [ConsistEntryModel] = []
+    @Published public var forLoco : NodeID = NodeID(0)
+    @Published public var consist : [ConsistEntryModel] = []
     
-    init(forLoco: NodeID) {
-        self.forLoco = forLoco
+    let linkLayer : LinkLayer
+    
+    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ConsistModel")
+
+    public init(linkLayer : LinkLayer) {
+        self.linkLayer = linkLayer
     }
     
     // represent a single slement of the consist
-    class ConsistEntryModel {
-        @Published var childLoco : NodeID
+    public class ConsistEntryModel : ObservableObject {
+        @Published public var childLoco : NodeID
         
         @Published var reverse : Bool = false
         @Published var echoF0 : Bool = false
         @Published var echoFn : Bool = false
         @Published var hide : Bool = false
         
-        convenience init(childLoco : NodeID) {
+        public var id = UUID()
+        
+        public convenience init(childLoco : NodeID) {
             self.init(childLoco : childLoco, reverse : false, echoF0 : false, echoFn : false, hide: false)
         }
         
@@ -37,5 +44,96 @@ class ConsistModel {
             self.hide = hide
         }
 
+    }
+    
+    enum FetchConsistState {
+        case Idle
+        case AwaitingReadReply
+    }
+    var fetchConsistState : FetchConsistState = .Idle
+    var remainingNodes : [NodeID] = []  // workspace
+
+    // Kick off the process of reading in a single-level, single-link consist
+    // starting with the head loco
+    //
+    // This does direct Query Node operations until a null is returned,
+    // without first getting the count.
+    public func fetchConsist() {
+        // clear the existing model
+        consist = []
+        // Kick off the read with the first one
+        fetchConsistState = .AwaitingReadReply
+        let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x03, 0x00]) // to head of consist
+        linkLayer.sendMessage(message)
+        // now it heads over to the consist processor to wait for the reply
+    }
+    
+    // add a loco to the consist.  // TODO: See also `resetFlags`, which seems to do the same thing sort-of
+    public func addLocoToConsist(add : NodeID) {
+        let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, 0x0]+add.toArray())
+        linkLayer.sendMessage(message)
+        // reload the consist info from the top // TODO: Too soon?
+        fetchConsist()
+    }
+    
+    func removeLocoFromConsist(remove : NodeID) {
+        // TODO: Check that the consist contains the loco
+        // TODO: Remove from data structure
+        // TODO: Send the de-consisting message, with a listener for the reply
+    }
+    
+    func resetFlags(on : NodeID, reverse : Bool, echoF0: Bool, echoFn: Bool) {
+        var byte : UInt8 = 0
+        if reverse  { byte |= 0x02 }
+        if echoF0   { byte |= 0x04 }
+        if echoFn   { byte |= 0x08 }
+        
+        let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, byte]+on.toArray())
+        linkLayer.sendMessage(message)
+    }
+    
+    // Consist processor
+    public func process( _ message : Message, _ node : Node ) -> Bool {
+        guard checkDestID(message, linkLayer.localNodeID) else { return false }  // not for us?
+        guard message.mti == .Traction_Control_Reply else { return false }
+        
+        // decode type of message
+        if message.data[0] == 0x30 {
+            // Listener Configuration reply
+            if message.data[1] == 0x03 {
+                // Listener Configuration Query Node reply, check state
+                switch (fetchConsistState) {
+                case .AwaitingReadReply :
+                    // data[2] = node count
+                    // data[3] = node index
+                    // data[4] = flags
+                    // data[5-10] = node ID
+                    //
+                    // check for real content
+                    if message.data.count >= 9 {
+                        // this is a successful read
+                        // store the information in a new entry
+                        let entry = ConsistEntryModel(childLoco: NodeID(Array(message.data[5...10])))
+                        entry.reverse = message.data[4] & 0x2 != 0
+                        entry.echoF0  = message.data[4] & 0x4 != 0
+                        entry.echoFn  = message.data[4] & 0x8 != 0
+                        consist.append(entry)
+                        // Send next message
+                        let nextmsg = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x03, message.data[3]+1]) // to head of consist
+                        linkLayer.sendMessage(nextmsg)
+                    } else {
+                        // empty read reply, we're done
+                        // Nullify the state machine
+                        fetchConsistState = .Idle
+                    }
+                    return false
+                default:
+                    logger.error("Received \(message, privacy: .public) in unexpected state \(String(describing: self.fetchConsistState), privacy:.public)")
+                    return false
+                }
+                // guard checkSourceID(message, forLoco) else { return false }  // not from top loco?
+            }
+        }
+        return false // not an interesting message for us
     }
 }

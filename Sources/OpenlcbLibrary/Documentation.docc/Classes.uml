@@ -28,7 +28,7 @@ Node : MemoryService
 protocol NodeStore
 NodeStore : Set<Node>
 NodeStore : Set<Processor>
-NodeStore : LinkLevel
+NodeStore : LinkLayer
 
 struct RemoteNodeStore
 NodeStore <|-- RemoteNodeStore

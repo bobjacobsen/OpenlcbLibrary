@@ -23,7 +23,7 @@ public struct RemoteNodeProcessor : Processor {
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeProcessor")
     
     public func process( _ message : Message, _ node : Node  ) -> Bool {
-        // Do a fast drop of messages not to us, from us, or global - note linklevelup/down are marked as global
+        // Do a fast drop of messages not to us, from us, or global - note linkLayer up/down are marked as global
         guard message.mti.isGlobal()
                 || checkSourceID(message, node)
                 || checkDestID(message, node)
@@ -42,9 +42,9 @@ public struct RemoteNodeProcessor : Processor {
         case .Protocol_Support_Reply :
             protocolSupportReply(message, node)
             return true
-        case .Link_Level_Up :
+        case .Link_Layer_Up :
             linkUpMessage(message, node)
-        case .Link_Level_Down :
+        case .Link_Layer_Down :
             linkDownMessage(message, node)
         case .Simple_Node_Ident_Info_Request :
             simpleNodeIdentInfoRequest(message, node)

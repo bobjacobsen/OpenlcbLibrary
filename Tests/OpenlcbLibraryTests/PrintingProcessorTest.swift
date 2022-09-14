@@ -64,11 +64,11 @@ class PrintingProcessorTest: XCTestCase {
             self.result = data
         }
         let processor = PrintingProcessor(handler)
-        let msg = Message(mti : MTI.Link_Level_Down, source : NodeID(12), destination : NodeID(13))
+        let msg = Message(mti : MTI.Link_Layer_Down, source : NodeID(12), destination : NodeID(13))
         
         _ = processor.process(msg, node)
         
-        XCTAssertEqual(result, "Internal Message: Link Level Down ")
+        XCTAssertEqual(result, "Internal Message: Link Layer Down ")
     }
 
 }

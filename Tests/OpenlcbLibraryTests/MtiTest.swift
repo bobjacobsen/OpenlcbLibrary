@@ -45,7 +45,7 @@ class MtiTest: XCTestCase {
         XCTAssertTrue(MTI.Initialization_Complete.isGlobal())
         XCTAssertFalse(MTI.Protocol_Support_Inquiry.isGlobal())
         
-        XCTAssertTrue(MTI.Link_Level_Up.isGlobal())     // needs to be global so all node implementations see it
-        XCTAssertTrue(MTI.Link_Level_Down.isGlobal())   // needs to be global so all node implementations see it
+        XCTAssertTrue(MTI.Link_Layer_Up.isGlobal())     // needs to be global so all node implementations see it
+        XCTAssertTrue(MTI.Link_Layer_Down.isGlobal())   // needs to be global so all node implementations see it
     }
 }

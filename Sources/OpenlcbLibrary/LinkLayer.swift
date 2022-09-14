@@ -22,7 +22,7 @@ public class LinkLayer {
         case Permitted
     }
 
-    init(_ localNodeID : NodeID ) {
+    public init(_ localNodeID : NodeID ) {
         self.localNodeID = localNodeID
     }
     public let localNodeID : NodeID // valid default node ID
@@ -44,9 +44,9 @@ public class LinkLayer {
     func linkStateChange(state : State) {
         var msg : Message
         if state == State.Permitted {
-            msg = Message(mti: MTI.Link_Level_Up, source: NodeID(0) )
+            msg = Message(mti: MTI.Link_Layer_Up, source: NodeID(0) )
         } else {
-            msg = Message(mti: MTI.Link_Level_Down, source: NodeID(0) )
+            msg = Message(mti: MTI.Link_Layer_Down, source: NodeID(0) )
         }
         fireListeners(msg)
     }

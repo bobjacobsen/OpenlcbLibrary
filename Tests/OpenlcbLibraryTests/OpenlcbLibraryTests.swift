@@ -58,7 +58,7 @@ final class OpenlcbLibraryTests: XCTestCase {
         canPhysicalLayer.fireListeners(frame)
 
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0)  // we don't reply to AMR
-        XCTAssertFalse(lib.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created by AMR, needs a message-level reception
+        XCTAssertFalse(lib.remoteNodeStore.isPresent(NodeID([03,03,03,03,03,03]))) // remote node not created by AMR, needs a message-layer reception
 
         canPhysicalLayer.receivedFrames = []
 

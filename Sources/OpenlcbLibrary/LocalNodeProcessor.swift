@@ -19,9 +19,9 @@ struct LocalNodeProcessor : Processor {
         guard checkDestID(message, node) else { return false }  // not to us
         // specific message handling
         switch message.mti {
-        case .Link_Level_Up :
+        case .Link_Layer_Up :
             linkUpMessage(message, node)
-        case .Link_Level_Down :
+        case .Link_Layer_Down :
             linkDownMessage(message, node)
         case .Verify_NodeID_Number_Global :
             verifyNodeIDNumberGlobal(message, node)

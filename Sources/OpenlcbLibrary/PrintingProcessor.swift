@@ -61,7 +61,7 @@ struct PrintingProcessor : Processor {
                 .Learn_Event,
                 .Producer_Consumer_Event_Report :
             simpleGlobalMessage(message, node, dataString)
-        case    .Link_Level_Up, .Link_Level_Down, .New_Node_Seen, .Unknown :
+        case    .Link_Layer_Up, .Link_Layer_Down, .New_Node_Seen, .Unknown :
             internalMessage(message, dataString)
         }
         return false

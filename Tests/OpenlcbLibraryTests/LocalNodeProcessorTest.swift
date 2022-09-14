@@ -32,7 +32,7 @@ class LocalNodeProcessorTest: XCTestCase {
 
     func testLinkUp() throws {
         node21.state = .Uninitialized
-        let msg = Message(mti : MTI.Link_Level_Up, source : NodeID(0), destination : NodeID(0), data: [])
+        let msg = Message(mti : MTI.Link_Layer_Up, source : NodeID(0), destination : NodeID(0), data: [])
 
         _ = processor.process(msg, node21)
 
@@ -47,7 +47,7 @@ class LocalNodeProcessorTest: XCTestCase {
 
     func testLinkDown() throws {
         node21.state = .Initialized
-        let msg = Message(mti : MTI.Link_Level_Down, source : NodeID(0), destination : NodeID(0), data: [])
+        let msg = Message(mti : MTI.Link_Layer_Down, source : NodeID(0), destination : NodeID(0), data: [])
 
         _ = processor.process(msg, node21)
 

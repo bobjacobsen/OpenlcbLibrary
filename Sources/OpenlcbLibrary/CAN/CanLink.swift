@@ -9,7 +9,7 @@ import Foundation
 import os
 /// Handles link-layer formatting and unformatting for CAN-frame links.
 ///
-/// Uses a ``CanPhysicalLayer`` implementation at the ``CanFrame`` level.
+/// Uses a ``CanPhysicalLayer`` implementation at the ``CanFrame`` layer.
 ///
 /// This implementation handles one static Local Node and a variable number of Remote Nodes.
 ///  - An alias is allocated for the Local Node when the link comes up.
@@ -73,7 +73,7 @@ public class CanLink : LinkLayer {
         }
     }
 
-    // these are link-level concepts, so below here instead of CanFrame
+    // these are link-layer concepts, so below here instead of CanFrame
     enum ControlFrame : Int {
         case RID = 0x0700
         case AMD = 0x0701
@@ -101,7 +101,7 @@ public class CanLink : LinkLayer {
         // start the alias allocation in Inhibited state
         state = .Inhibited
         defineAndReserveAlias()
-        // notify upper levels
+        // notify upper layers
         linkStateChange(state: state)
     }
         

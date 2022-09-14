@@ -50,8 +50,8 @@ public enum MTI : Int {
     case Unknown                            = 0x0000
     
     // these are used for internal signalling and are not present in the MTI specification.
-    case Link_Level_Up                      = 0x2000   // entered Permitted state, needs to be marked global
-    case Link_Level_Down                    = 0x2010   // entered Inhibited state, needs to be marked global
+    case Link_Layer_Up                      = 0x2000   // entered Permitted state, needs to be marked global
+    case Link_Layer_Down                    = 0x2010   // entered Inhibited state, needs to be marked global
     case New_Node_Seen                      = 0x2028   // alias resolution found new node, marked addressed
 
     

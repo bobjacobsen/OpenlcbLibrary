@@ -64,7 +64,7 @@ class RemoteProcessorTest: XCTestCase {
     func testLinkDown() throws {
         node21.pipSet = Set([PIP.EVENT_EXCHANGE_PROTOCOL])
         node21.state = .Initialized
-        let msg = Message(mti : MTI.Link_Level_Down, source: NodeID(0), destination: NodeID(0))
+        let msg = Message(mti : MTI.Link_Layer_Down, source: NodeID(0), destination: NodeID(0))
         _ = processor.process(msg, node21)
         XCTAssertEqual(node21.pipSet, Set([PIP.EVENT_EXCHANGE_PROTOCOL]))
         XCTAssertEqual(node21.state, Node.State.Uninitialized)
@@ -73,7 +73,7 @@ class RemoteProcessorTest: XCTestCase {
     func testLinkUp() throws {
         node21.pipSet = Set([PIP.EVENT_EXCHANGE_PROTOCOL])
         node21.state = .Initialized
-        let msg = Message(mti : MTI.Link_Level_Up, source: NodeID(0), destination: NodeID(0))
+        let msg = Message(mti : MTI.Link_Layer_Up, source: NodeID(0), destination: NodeID(0))
         _ = processor.process(msg, node21)
         XCTAssertEqual(node21.pipSet, Set([PIP.EVENT_EXCHANGE_PROTOCOL]))
         XCTAssertEqual(node21.state, Node.State.Uninitialized)
