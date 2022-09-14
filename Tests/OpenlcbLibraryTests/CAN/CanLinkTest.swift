@@ -208,7 +208,7 @@ class CanLinkTest: XCTestCase {
                        NodeID(0x010203040506))
     }
     
-    func testVerifiedNodeIDsetAliasMap() {
+    func testVerifiedNodeInDestAliasMap() {
         // JMRI doesn't send AMD, so gets assigned 00.00.00.00.00.00
         // This tests that a VerifiedNode will update that.
         
@@ -440,8 +440,6 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages[1].data[10], 32)
         XCTAssertEqual(messageLayer.receivedMessages[1].data[11], 33)
     }
-
-    // TODO: Test sending global and addressed messages (see Datagram example below)
     
     func testZeroLengthDatagram (){
         let canPhysicalLayer = PhyMockLayer()
