@@ -20,6 +20,8 @@ import os
 //
 // TODO: Update the PlantUML diagrams
 //
+// TODO:  Implement a dequeue to stack up rapid requests
+
 final class DatagramService : Processor {
     public init ( _ linkLayer: LinkLayer) {
         self.linkLayer = linkLayer

@@ -143,7 +143,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     }
 
     func acdiStart() {
-        // TODO: add standard-defined ACDI contents - note that JMRI seems to ignore it, and RR-Cirkits replicates the info in a Segment
+        // TODO: add standard-defined ACDI contents - note that JMRI seems to ignore it, and TCS, RR-Cirkits replicates the info in a Segment
     }
     func acdiEnd() {
     }

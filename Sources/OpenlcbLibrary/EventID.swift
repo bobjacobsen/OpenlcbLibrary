@@ -38,7 +38,6 @@ public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible
     }
     
     /// Convert a standard-format string 08.09.0A.0B.0C.0D.0E.0F to a NodeID
-    // TODO: This doesn't properly handle i.e. 1.2.3.4 due to missing leading 0's
     public init(_ eventID : String) {
         let components = eventID.components(separatedBy: ".")
         var result : UInt64 = 0
