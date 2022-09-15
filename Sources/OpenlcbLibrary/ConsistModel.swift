@@ -25,10 +25,10 @@ public class ConsistModel : ObservableObject, Processor {
     public class ConsistEntryModel : ObservableObject {
         @Published public var childLoco : NodeID
         
-        @Published var reverse : Bool = false
-        @Published var echoF0 : Bool = false
-        @Published var echoFn : Bool = false
-        @Published var hide : Bool = false
+        @Published public var reverse : Bool = false
+        @Published public var echoF0 : Bool = false
+        @Published public var echoFn : Bool = false
+        @Published public var hide : Bool = false
         
         public var id = UUID()
         
@@ -76,13 +76,20 @@ public class ConsistModel : ObservableObject, Processor {
         fetchConsist()
     }
     
-    func removeLocoFromConsist(remove : NodeID) {
-        // TODO: Check that the consist contains the loco
-        // TODO: Remove from data structure
-        // TODO: Send the de-consisting message, with a listener for the reply
+    public func removeLocoFromConsist(remove : NodeID) {
+        let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x02, 0x00]+remove.toArray())
+        linkLayer.sendMessage(message)
+        // remove from our view of the consist
+        for index in 0...consist.count {
+            let entry = consist[index]
+            if entry.childLoco == remove {
+                consist.remove(at: index)
+                break
+            }
+        }
     }
     
-    func resetFlags(on : NodeID, reverse : Bool, echoF0: Bool, echoFn: Bool) {
+    public func resetFlags(on : NodeID, reverse : Bool, echoF0: Bool, echoFn: Bool) {
         var byte : UInt8 = 0
         if reverse  { byte |= 0x02 }
         if echoF0   { byte |= 0x04 }
