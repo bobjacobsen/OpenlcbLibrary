@@ -222,7 +222,7 @@ public class ThrottleModel : ObservableObject {
         var labelSource : RosterEntry.LabelSource = .Initial
         
         if (nodeID.nodeId == 0) {
-            label = "<none>"
+            label = "<None>"
             labelSource = .Initial
         } else {
             label = openlcbLibrary!.lookUpNodeName(for: nodeID)
