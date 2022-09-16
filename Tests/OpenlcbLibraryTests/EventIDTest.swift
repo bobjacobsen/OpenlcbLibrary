@@ -40,6 +40,11 @@ class EventIDTest: XCTestCase {
         XCTAssertEqual(eid2.description, "FF.09.0A.0B.0C.0D.0E.0F")
     }
 
+    func testToArray() {
+        let eid = EventID(0x0102030405060708)
+        XCTAssertEqual(eid.toArray(), [1,2,3,4,5,6,7,8])
+    }
+    
     func testInvalidInitString() {
         let eid = EventID("foo")
         XCTAssertEqual(eid.description, "00.00.00.00.00.00.00.00")
