@@ -19,6 +19,8 @@ import os
 // - create a read memo and submit
 // - wait for either dataReply or rejectedReply call back.
 
+// TODO: Needs a dequeue to serialize multiple requests e.g. for CD variable refresh
+
 final public class MemoryService {
     
     let service : DatagramService
@@ -173,7 +175,7 @@ final public class MemoryService {
         if (byte6) {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
-        data.append(contentsOf: memo.data) // TODO set opcode
+        data.append(contentsOf: memo.data)
         let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data)
         service.sendDatagram(dgWriteMemo)
 
