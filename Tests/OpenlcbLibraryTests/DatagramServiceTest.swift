@@ -92,6 +92,7 @@ class DatagramServiceTest: XCTestCase {
     func writeCallBackCheck(_ : DatagramService.DatagramWriteMemo) -> () {
         callback = true
     }
+    
     func testSendDatagramOK() {
         let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], okReply: writeCallBackCheck)
         
@@ -105,7 +106,43 @@ class DatagramServiceTest: XCTestCase {
         // was callback called?
         XCTAssertTrue(callback)
     }
-    
+
+    func testSendThreeDatagramOK() {
+        let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], okReply: writeCallBackCheck)
+        
+        service.sendDatagram(writeMemo)
+        service.sendDatagram(writeMemo)
+        service.sendDatagram(writeMemo)
+
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // only first is send until reply
+        
+        // send a reply back through
+        let message = Message(mti: .Datagram_Received_OK, source: NodeID(22), destination: NodeID(12))
+        _ = service.process(message, Node(NodeID(21)))
+        // was callback called?
+        XCTAssertTrue(callback)
+        callback = false
+        
+        // next should have been sent
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 2)
+        // send a reply back through
+        _ = service.process(message, Node(NodeID(21)))
+        // was callback called?
+        XCTAssertTrue(callback)
+        callback = false
+        
+        // next should have been sent
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 3)
+        // send a reply back through
+        _ = service.process(message, Node(NodeID(21)))
+        // was callback called?
+        XCTAssertTrue(callback)
+        callback = false
+
+        // that should be it
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 3)
+    }
+
     func testSendDatagramRejected() {
         let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], rejectedReply: writeCallBackCheck)
         

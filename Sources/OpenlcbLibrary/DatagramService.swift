@@ -101,7 +101,14 @@ final class DatagramService : Processor {
     func sendDatagram(_ memo : DatagramWriteMemo) {
         // Make a record of memo for reply
         pendingWriteMemos.append(memo)
-
+        
+        // can only have one outstanding at a time, so check it there was already one there.
+        if pendingWriteMemos.count == 1 {
+            sendDatagramMessage(memo: memo)
+        }
+    }
+    
+    private func sendDatagramMessage(memo : DatagramWriteMemo) {
         // Send datagram message
         let message = Message(mti: MTI.Datagram, source: linkLayer.localNodeID, destination: memo.destID, data: memo.data)
         linkLayer.sendMessage(message)
@@ -139,24 +146,28 @@ final class DatagramService : Processor {
     func handleDatagram(_ message : Message) {
         // create a read memo and pass to listeners
         let memo = DatagramReadMemo(srcID: message.source, data: message.data)
-        fireListeners(memo) // destination listner calls back to
+        fireListeners(memo) // destination listener calls back to
                             // positiveReplyToDatagram/negativeReplyToDatagram before returning
     }
     
     // OK reply to write
     func handleDatagramReceivedOK(_ message : Message) {
-        // match to the memo
+        // match to the memo and remove from queue
         let memo = matchToWriteMemo(message: message)
         // fire the callback
         memo?.okReply?(memo!)
+        
+        sendNextDatagramFromQueue()
     }
     
     // Not OK reply to write
     func handleDatagramRejected(_ message : Message) {
-        // match to the memo
+        // match to the memo and remove from queue
         let memo = matchToWriteMemo(message: message)
         // fire the callback
         memo?.rejectedReply?(memo!)
+
+        sendNextDatagramFromQueue()
     }
     
     private func matchToWriteMemo(message : Message) -> DatagramService.DatagramWriteMemo? {
@@ -171,6 +182,15 @@ final class DatagramService : Processor {
         // did not find one
         logger.error("Did not match memo to message \(message)")
         return nil  // this will prevent firther processing
+    }
+    
+    private func sendNextDatagramFromQueue() {
+        // is there a next datagram request?
+        if pendingWriteMemos.count > 0 {
+            // yes, get it, process it
+            let memo = pendingWriteMemos[0]
+            sendDatagramMessage(memo: memo)
+        }
     }
     
     // send a positive reply to a received datagram

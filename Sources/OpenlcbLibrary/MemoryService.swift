@@ -19,11 +19,11 @@ import os
 // - create a read memo and submit
 // - wait for either dataReply or rejectedReply call back.
 
-// TODO: Needs a dequeue to serialize multiple requests e.g. for CD variable refresh
+// TODO: Read requests are serialized, but write requests are not yet
 
 final public class MemoryService {
     
-    let service : DatagramService
+    internal let service : DatagramService
     
     init(service : DatagramService) {
         self.service = service
@@ -31,7 +31,7 @@ final public class MemoryService {
         service.registerDatagramReceivedListener(datagramReceivedListener)
     }
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "MemoryService")
+    internal let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "MemoryService")
 
     // Memo carries request and reply
     struct MemoryReadMemo {
@@ -59,12 +59,12 @@ final public class MemoryService {
         let errorType  : Int = 0  // how the error was sent // TODO: define this signaling
      }
     
-    var readMemos : [MemoryReadMemo] = []
+    internal var readMemos : [MemoryReadMemo] = []
     
     // convert from a space number to either
     // (false, 1-3 for in command byte) : spaces 0xFF - 0xFD
     // (true, space number) : spaces 0 - 0xFC
-    func spaceDecode(space : UInt8) -> (Bool, UInt8) {
+    internal func spaceDecode(space : UInt8) -> (Bool, UInt8) {
         if space >= 0xFD {
             return (false, space&0x03)
         } else {
@@ -80,6 +80,13 @@ final public class MemoryService {
     func requestMemoryRead(_ memo : MemoryReadMemo) {
         // preserve the request
         readMemos.append(memo)
+        
+        if readMemos.count == 1 {
+            requestMemoryReadNext(memo: memo)
+        }
+    }
+    
+    internal func requestMemoryReadNext(memo : MemoryReadMemo) {
         // send the read request
         var byte6 = false
         var flag : UInt8 = 0
@@ -99,46 +106,55 @@ final public class MemoryService {
         
     }
     
-    func receivedOkReplyToWrite(memo : DatagramService.DatagramWriteMemo) {
+    internal func receivedOkReplyToWrite(memo : DatagramService.DatagramWriteMemo) {
         // this is normal.  Wait for following response to be returned via listener
     }
 
-    func datagramReceivedListener(memo: DatagramService.DatagramReadMemo) {
+    internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) {
         // node received a datagram, is it our service?
-        guard memo.data[0] == 0x20 else { return }
+        guard dmemo.data[0] == 0x20 else { return }
         
         // Acknowledge the datagram
-        service.positiveReplyToDatagram(memo, flags: 0x0000)
+        service.positiveReplyToDatagram(dmemo, flags: 0x0000)
         
         // decode if read, write or some other reply
-        switch memo.data[1] {
+        switch dmemo.data[1] {
         case 0x50, 0x51, 0x52, 0x53 : // read reply
             // return data to requestor: first find matching memory read memo, then reply
             for index in 0...readMemos.count {
-                if readMemos[index].nodeID == memo.srcID {
+                if readMemos[index].nodeID == dmemo.srcID {
                     var tMemoryMemo = readMemos[index]
                     readMemos.remove(at: index)
                     // decode type of operation, hence data offset
                     var offset = 6
-                    if memo.data[1] == 0x50 {
+                    if dmemo.data[1] == 0x50 {
                         offset = 7
                     }
-                    tMemoryMemo.data = Array(memo.data[offset..<memo.data.count])
-                    tMemoryMemo.dataReply!(tMemoryMemo)
+                    
+                    // are there any more to send?
+                    if readMemos.count > 0 {
+                        requestMemoryReadNext(memo: readMemos[0])
+                    }
+
+                    // reply to requestor
+                    tMemoryMemo.data = Array(dmemo.data[offset..<dmemo.data.count])
+                    tMemoryMemo.dataReply?(tMemoryMemo)
+                    
                     break
                 }
             }
         case 0x10, 0x11, 0x12, 0x13, 0x18, 0x19, 0x1A, 0x1B : // write reply good, bad
-            // return data to requestor: first find matching memory read memo, then reply
+            // return data to requestor: first find matching memory write memo, then reply
             for index in 0...writeMemos.count {
-                if writeMemos[index].nodeID == memo.srcID {
-                    // var tMemoryMemo = writeMemos[index]
+                if writeMemos[index].nodeID == dmemo.srcID {
+                    let tMemoryMemo = writeMemos[index]
                     writeMemos.remove(at: index)
+                    tMemoryMemo.okReply?(tMemoryMemo)
                     break
                 }
             }
         default:
-            logger.error("Did not expect reply of type \(memo.data[1], privacy:.public)")
+            logger.error("Did not expect reply of type \(dmemo.data[1], privacy:.public)")
         }
     }
     
@@ -157,7 +173,7 @@ final public class MemoryService {
         let errorType  : Int = 0  // how the error was sent // TODO: define this signaling
     }
 
-    var writeMemos : [MemoryWriteMemo] = []
+    internal var writeMemos : [MemoryWriteMemo] = []
 
     func requestMemoryWrite(_ memo : MemoryWriteMemo) {
         // preserve the request
@@ -181,7 +197,7 @@ final public class MemoryService {
 
     }
     
-    func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {
+    internal func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {
         var result = 0
         for index in 0...Int(length-1) {
             result = result << 8
@@ -190,7 +206,7 @@ final public class MemoryService {
         return result
     }
     
-    func arrayToString(data: [UInt8], length: UInt8) -> (String) {
+    internal func arrayToString(data: [UInt8], length: UInt8) -> (String) {
         var zeroIndex = data.count
         if let temp = data.firstIndex(of: 0) {
             zeroIndex = temp
@@ -207,7 +223,7 @@ final public class MemoryService {
     }
     
 
-    func intToArray(value: Int, length: UInt8) -> [UInt8] {
+    internal func intToArray(value: Int, length: UInt8) -> [UInt8] {
         switch length {
         case 1:
             return [UInt8(value&0xff)]
@@ -226,7 +242,7 @@ final public class MemoryService {
         }
     }
     
-    func stringToArray(value: String, length: UInt8) -> ([UInt8]) {
+    internal func stringToArray(value: String, length: UInt8) -> ([UInt8]) {
         let strToUInt8:[UInt8] = [UInt8](value.utf8)
         let byteCount = min(Int(length), strToUInt8.count)
         return Array(strToUInt8[0...byteCount-1])
