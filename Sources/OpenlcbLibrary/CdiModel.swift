@@ -71,7 +71,7 @@ public class CdiModel : ObservableObject {
     
     func processAquiredText() {
         // actually process it into an XML tree
-        tree = CdiXmlMemo.process(savedDataString.data(using: .utf8)!)[0].children! // index due tonull base node
+        tree = CdiXmlMemo.process(savedDataString.data(using: .utf8)!)[0].children! // index due to null base node
     }
     
     public func readModel(nodeID: NodeID) {
