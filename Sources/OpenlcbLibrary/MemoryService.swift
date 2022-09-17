@@ -119,7 +119,7 @@ final public class MemoryService {
         
         // decode if read, write or some other reply
         switch dmemo.data[1] {
-        case 0x50, 0x51, 0x52, 0x53 : // read reply
+        case 0x50, 0x51, 0x52, 0x53, 0x58, 0x59, 0x5A, 0x5B : // read or read-error reply
             // return data to requestor: first find matching memory read memo, then reply
             for index in 0...readMemos.count {
                 if readMemos[index].nodeID == dmemo.srcID {
@@ -135,10 +135,16 @@ final public class MemoryService {
                     if readMemos.count > 0 {
                         requestMemoryReadNext(memo: readMemos[0])
                     }
-
+                    
                     // reply to requestor
                     tMemoryMemo.data = Array(dmemo.data[offset..<dmemo.data.count])
-                    tMemoryMemo.dataReply?(tMemoryMemo)
+                    
+                    // check for read or read error reply
+                    if (dmemo.data[1] & 0x08 == 0) {
+                        tMemoryMemo.dataReply?(tMemoryMemo)
+                    } else {
+                        tMemoryMemo.rejectedReply?(tMemoryMemo)
+                    }
                     
                     break
                 }

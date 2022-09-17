@@ -154,7 +154,9 @@ public final class CdiXmlMemo : Identifiable {
             newEndAddress = memo.startAddress
         } else {
             memo.startAddress = endAddress+memo.offset
-            newEndAddress = memo.startAddress+memo.length
+            if memo.type != .GROUP && memo.type != .GROUP_REP {  // in GROUP and GROUP_REP, length is replication count
+                newEndAddress = memo.startAddress+memo.length
+            }
         }
         memo.space = nextSpace
         // descend into children (including the new .GROUP_REP nodes)
