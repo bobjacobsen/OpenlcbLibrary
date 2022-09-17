@@ -77,7 +77,7 @@ public class ThrottleModel : ObservableObject {
             willSet(newValue) {
                 if newValue != pressed {
                     // send on change only
-                    model.sendFunctionSet(function: number, to: pressed)
+                    model.sendFunctionSet(function: number, to: newValue)
                 }
             }
         }
