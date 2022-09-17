@@ -104,7 +104,9 @@ public class CdiModel : ObservableObject {
     
     public func readInt(from: Int, space: UInt8, length: UInt8, action: @escaping (Int)->()) {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
-                                                   rejectedReply: {_ in },
+                                                   rejectedReply: {_ in
+            self.logger.error("Rejected reply to readInt of \(from, privacy: .public)")
+        },
                                                    dataReply: {memo in
             action(self.mservice.arrayToInt(data:memo.data, length: length))
         })
@@ -113,7 +115,9 @@ public class CdiModel : ObservableObject {
     
     public func readString(from: Int, space: UInt8, length: UInt8, action: @escaping (String)->()) {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
-                                                   rejectedReply: {_ in },
+                                                   rejectedReply: {_ in
+            self.logger.error("Rejected reply to readString of \(from, privacy: .public)")
+        },
                                                    dataReply: {memo in
             action(self.mservice.arrayToString(data:memo.data, length: length))
         })
