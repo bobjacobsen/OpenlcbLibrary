@@ -55,8 +55,6 @@ final public class MemoryService {
         let dataReply :     ( (_ : MemoryReadMemo) -> () )?
 
         var data : [UInt8] = []
-        let returnCode : Int = 0
-        let errorType  : Int = 0  // how the error was sent // TODO: define this signaling
      }
     
     internal var readMemos : [MemoryReadMemo] = []
@@ -155,7 +153,11 @@ final public class MemoryService {
                 if writeMemos[index].nodeID == dmemo.srcID {
                     let tMemoryMemo = writeMemos[index]
                     writeMemos.remove(at: index)
-                    tMemoryMemo.okReply?(tMemoryMemo)
+                    if (dmemo.data[1] & 0x08 == 0) {
+                        tMemoryMemo.okReply?(tMemoryMemo)
+                    } else {
+                        tMemoryMemo.rejectedReply?(tMemoryMemo)
+                    }
                     break
                 }
             }
@@ -175,8 +177,6 @@ final public class MemoryService {
         let address : Int
 
         let data : [UInt8]
-        let returnCode : Int = 0
-        let errorType  : Int = 0  // how the error was sent // TODO: define this signaling
     }
 
     internal var writeMemos : [MemoryWriteMemo] = []
