@@ -19,8 +19,7 @@ import os
 // Implements `Processor`, should be fed as part of common execution
 //
 // TODO: Update the PlantUML diagrams
-//
-// TODO:  Implement a dequeue to stack up rapid requests
+
 
 final class DatagramService : Processor {
     public init ( _ linkLayer: LinkLayer) {

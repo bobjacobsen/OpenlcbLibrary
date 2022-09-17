@@ -32,7 +32,7 @@ class CdiXmlMemoTest: XCTestCase {
         #endif
     }
 
-// TODO: Bundle reading not working with standalone tests
+// TODO: Bundle-reading not working with standalone tests
 //    func testStringElementFromBundle() {
 //        //#if os(macOS)  // file access only works on macOS due to file location?
 //        // set up the same file
