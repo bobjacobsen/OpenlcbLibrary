@@ -79,11 +79,18 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         defaultNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to receive replies to memory requests
                                   PIP.EVENT_EXCHANGE_PROTOCOL,
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
-        defaultNode.snip.manufacturerName = "Ardenwood.net"
-        defaultNode.snip.modelName        = "OlcbTools"     // TODO: App name handling (as opposed to library name)
+        defaultNode.snip.manufacturerName = "Ardenwood.us"
+        let dictionary = Bundle.main.infoDictionary!
+        if let version : String = dictionary["CFBundleDisplayName"] as? String {
+            defaultNode.snip.userProvidedDescription = version
+            defaultNode.snip.modelName = "Full \(version) App"
+        } else {
+            defaultNode.snip.userProvidedDescription = "OpenlcbLibrary"
+            defaultNode.snip.modelName = "Full OpenlcbLibrary App"
+        }
         defaultNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
-        defaultNode.snip.softwareVersion  = "0.0.1"          // TODO: Version number handling
-        
+        defaultNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "<Unknown>"
+
         #if canImport(UIKit)
         // iOS case
         defaultNode.snip.userProvidedNodeName = UIDevice.current.name
@@ -96,7 +103,6 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         }
         #endif
         
-        defaultNode.snip.userProvidedDescription = "Full OlcbTools App"
         defaultNode.snip.updateSnipDataFromStrings()
 
         localNodeStore.store(defaultNode)
