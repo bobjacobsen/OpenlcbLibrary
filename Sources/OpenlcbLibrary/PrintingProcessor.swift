@@ -61,6 +61,7 @@ struct PrintingProcessor : Processor {
                 .Learn_Event,
                 .Producer_Consumer_Event_Report :
             simpleGlobalMessage(message, node, dataString)
+            
         case    .Link_Layer_Up, .Link_Layer_Down, .New_Node_Seen, .Unknown :
             internalMessage(message, dataString)
         }
@@ -86,15 +87,6 @@ struct PrintingProcessor : Processor {
         }
     }
 }
-
-// ---------------------
-// MARK: Directly print the result
-// ---------------------
-//  let handler : (_ : String) -> () = { (data: String)  in
-//      print(data)
-//      }
-//  let pprocessor : Processor = PrintingProcessor(handler) // example that just prints info
-
 
 // ---------------------
 // MARK: Send to a View
