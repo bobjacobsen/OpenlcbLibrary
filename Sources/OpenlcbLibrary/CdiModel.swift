@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-public class CdiModel : ObservableObject {
+final public class CdiModel : ObservableObject {
     @Published public var loading : Bool = false  // true while loading - use to show ProgressView
     @Published public var loaded  : Bool = false  // true when loading is done and data is present
     @Published public var endOK   : Bool = true   // if false when loaded is true, an error prevented a complete load

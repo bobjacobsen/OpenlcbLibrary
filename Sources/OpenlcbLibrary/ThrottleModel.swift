@@ -11,7 +11,7 @@ import os
 // Float16 not supported on macOS Rosetta.  See e.g. https://github.com/SusanDoggie/Float16 and https://forums.swift.org/t/float16-for-macos-and-older-version-of-ios/40572
 
 // Data to construct a throttle
-public class ThrottleModel : ObservableObject {
+final public class ThrottleModel : ObservableObject {
     
     var linkLayer : LinkLayer?
     var openlcbLibrary : OpenlcbLibrary?
@@ -33,7 +33,7 @@ public class ThrottleModel : ObservableObject {
     
     /// 1 scale mph to meters per second for the speed commands.
     /// The screen works in MPH; the model works in meters/sec
-    static let mps_per_MPH : Float16 = 0.44704
+    static private let mps_per_MPH : Float16 = 0.44704
     
     /// Send the current speed in mph to the command station.
     /// Speed here is in MPH, and conversion to meters/sec is done here
@@ -51,23 +51,23 @@ public class ThrottleModel : ObservableObject {
         linkLayer?.sendMessage(message)
     }
     
-    let maxFn = 28
+    public let maxFn = 28
     @Published public var fnModels : [FnModel] = []
 
     public init(_ linkLayer : CanLink?) {
         self.linkLayer = linkLayer
         
         // construct the array of function models
-        for index in 0...maxFn {
+        for index in 0...maxFn { // includes 0 and maxFn, i.e. 0 to 28 inclusive
             // default fn labels are just the numbers
-            fnModels.append(FnModel(index, "\(index)", self))
+            fnModels.append(FnModel(number: index, label: "\(index)", model: self))
         }
         
         logger.debug("init of ThrottleModel complete")
     }
     
     // Data to construct a single function button
-    public class FnModel : ObservableObject {
+    final public class FnModel : ObservableObject {
         public let label : String
         public let number : Int
         var model: ThrottleModel
@@ -83,7 +83,7 @@ public class ThrottleModel : ObservableObject {
         }
         @Published public var momentary : Bool = false
 
-        public init(_ number : Int, _ label : String, _ model : ThrottleModel) {
+        public init(number : Int, label : String, model : ThrottleModel) {
             self.number = number
             self.label = label
             self.model = model
@@ -95,7 +95,6 @@ public class ThrottleModel : ObservableObject {
     @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0), labelSource: .Initial)]
  
     /// Get the name of a roster entry from its NodeID
-    
     public func getRosterEntryName(from : NodeID) -> String {
         for entry in roster {
             if entry.nodeID == from {
@@ -105,6 +104,7 @@ public class ThrottleModel : ObservableObject {
         return from.description
     }
 
+    /// Get the roster entry NodeID from its label name
     public func getRosterEntryNodeID(from : String) -> NodeID {
         for entry in roster {
             if entry.label == from {
@@ -133,7 +133,7 @@ public class ThrottleModel : ObservableObject {
         roster.sort() // sort by .id, which is nodeID
     }
     
-    /// Load the labels in roster entries from SNIP if it's now been updated
+    /// Load the labels in roster entries from SNIP if that's been updated
     public func reloadRoster() {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
             self.logger.trace("reloadRoster starting on main queue")
@@ -154,7 +154,7 @@ public class ThrottleModel : ObservableObject {
     
     /// Convert a numeric address to a Train Search Protocol search EventID
     /// The default flags are Allocate, Exact, Address Only, DCC, default address space, any speed steps
-    static func createQueryEventID(matching : UInt64, flags : UInt8 = 0x0E0) -> EventID {
+    static internal func createQueryEventID(matching : UInt64, flags : UInt8 = 0x0E0) -> EventID {
         // convert matching value to BCD
         var binaryInput = matching
         var bcdResult : UInt64 = 0
@@ -208,7 +208,7 @@ public class ThrottleModel : ObservableObject {
     
     /// Set speed to 0 Forward and turn off all functions.
     /// This will trigger updates to the command station as needed.
-    func resetSpeedAndFunctions() {
+    internal func resetSpeedAndFunctions() {
         speed = 0
         forward = true
         reverse = false
@@ -220,7 +220,7 @@ public class ThrottleModel : ObservableObject {
     /// Create a new RosterEntry from just a NodeID.  Takes name from SNIP if available
     /// otherwise gueses an address from the nodeID.  The guess is not guaranteed to work,
     /// as some command stations don't use the 06.01.00.00.XX.XX node ID range
-    func createRosterEntryFromNodeID(for nodeID: NodeID) -> RosterEntry {
+    internal func createRosterEntryFromNodeID(for nodeID: NodeID) -> RosterEntry {
         var label = ""
         var labelSource : RosterEntry.LabelSource = .Initial
         
@@ -247,8 +247,8 @@ public class ThrottleModel : ObservableObject {
 
     }
     
-    var tc_state : TC_Selection_State = .Idle_no_selection
-    var selected_nodeId : NodeID = NodeID(0)
+    internal var tc_state : TC_Selection_State = .Idle_no_selection
+    internal var selected_nodeId : NodeID = NodeID(0)
     
     /// True is a selection has succeeded and a locmotive is selected
     @Published public var selected : Bool = false
@@ -261,9 +261,9 @@ public class ThrottleModel : ObservableObject {
     @Published public var showingSelectSheet = false
     
     // EventID used when querying for (existance of or creation as needed) a locomotive via search protocol
-    var queryEventID : EventID = EventID(0)
+    internal var queryEventID : EventID = EventID(0)
     // Hold the name of the requested loco during selection
-    var requestedLocoID : String = ""
+    internal var requestedLocoID : String = ""
     
     /// Forward a function update to the command station.
     public func sendFunctionSet(function: Int, to: Bool) {
@@ -298,10 +298,10 @@ public enum TC_Selection_State {
 }
 
 // This needs reference semantics so that it can be passed and then updated
-public class RosterEntry : Hashable, Equatable, Comparable {
-    public var label : String // TODO: make this computed to get most recent value from SNIP or fall back to to a local string - would replace `reloadRoster`?
+final public class RosterEntry : Hashable, Equatable, Comparable {
+    public var label : String
     public let nodeID : NodeID
-    var labelSource : LabelSource // quality of label information
+    internal var labelSource : LabelSource // quality of label information
     
     // Code where the label came from, in increasing reliability order
     // This is needed becaue an isATrainEvent might come after e.g. TCAssignReply data was loaded

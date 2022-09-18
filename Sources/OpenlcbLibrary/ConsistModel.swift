@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-public class ConsistModel : ObservableObject, Processor {
+final public class ConsistModel : ObservableObject, Processor {
     
     @Published public var forLoco : NodeID = NodeID(0)
     @Published public var consist : [ConsistEntryModel] = []
@@ -22,7 +22,7 @@ public class ConsistModel : ObservableObject, Processor {
     }
     
     // represent a single slement of the consist
-    public class ConsistEntryModel : ObservableObject {
+    final public class ConsistEntryModel : ObservableObject {
         @Published public var childLoco : NodeID
         
         @Published public var reverse : Bool = false
@@ -68,7 +68,7 @@ public class ConsistModel : ObservableObject, Processor {
         // now it heads over to the consist processor to wait for the reply
     }
     
-    // add a loco to the consist.  // TODO: See also `resetFlags`, which seems to do the same thing sort-of
+    // add a loco to the consist.  // See also `resetFlags`, which seems to do the same thing sort-of
     public func addLocoToConsist(add : NodeID) {
         let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, 0x0]+add.toArray())
         linkLayer.sendMessage(message)

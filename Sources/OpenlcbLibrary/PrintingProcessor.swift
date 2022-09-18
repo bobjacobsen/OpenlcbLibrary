@@ -118,7 +118,7 @@ public func printingProcessorPublishLine(string : String) { // set this as ``res
 }
 
 /// Global ObservableObject publlishing the last `NIMBER_OF_LINES` of messages
-public class MonitorModel: ObservableObject {
+final public class MonitorModel: ObservableObject {
     public static let sharedInstance = MonitorModel()
     @Published public var printingProcessorContentArray: [MonitorLine] = [MonitorLine(line: "No Content Yet")]
 }
