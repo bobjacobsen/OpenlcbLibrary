@@ -99,9 +99,8 @@ final public class MemoryService {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
         data.append(contentsOf: [memo.size])
-        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToWrite) // TODO: failure callback?
+        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToWrite)
         service.sendDatagram(dgWriteMemo)
-        
     }
     
     internal func receivedOkReplyToWrite(memo : DatagramService.DatagramWriteMemo) {
