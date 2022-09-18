@@ -79,6 +79,8 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         defaultNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to receive replies to memory requests
                                   PIP.EVENT_EXCHANGE_PROTOCOL,
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
+        
+        // Load SNIP identification for this node
         defaultNode.snip.manufacturerName = "Ardenwood.us"
         let dictionary = Bundle.main.infoDictionary!
         if let version : String = dictionary["CFBundleDisplayName"] as? String {
@@ -115,10 +117,6 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
 
         let lprocessor : Processor = LocalNodeProcessor(linkLayer)  // track effect of messages on Local Node
 
-        //let dservice = DatagramService(linkLayer)
-        
-        //let mservice = MemoryService(service: dservice)
-
         let cprocessor : Processor = ClockProcessor(linkLayer, [clockModel0])   // clock processor doesn't affect node status
 
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
@@ -137,9 +135,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
     }
     
     /// Look up the SNIP node name from the RemoteNodeStore
-    // Because removeNodeStore is an active struct (for swiftui) you can't pass it to e.g. ThrottleModel at initialization time
     func lookUpNodeName(for nodeId: NodeID) -> String {
-        // return the node ID if there's no SNIP information
         if let node = remoteNodeStore.lookup(nodeId) {
             return node.snip.userProvidedNodeName
         } else {
@@ -147,6 +143,7 @@ public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // cla
         }
     }
     
+    // accesses the comon node store
     func processMessageFromLinkLayer(_ message: Message) {
         var publish = false
         
