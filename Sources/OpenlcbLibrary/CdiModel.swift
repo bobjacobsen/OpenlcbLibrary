@@ -19,9 +19,9 @@ public class CdiModel : ObservableObject {
     let nodeID : NodeID
     
     @Published public var nextReadAddress = -1
+    @Published public var cdiLength = 0
     
     var savedDataString = ""
-    var cdiSpaceLength  = 1
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiModel")
     
@@ -74,20 +74,27 @@ public class CdiModel : ObservableObject {
         tree = CdiXmlMemo.process(savedDataString.data(using: .utf8)!)[0].children! // index due to null base node
     }
     
+    func memorySpaceCallback(length : Int) {
+        print("Memory space 0xFF is \(length) bytes long")
+        cdiLength = length
+
+        // do the first read and start the loop
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0xFF, address: 0, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
+        nextReadAddress = 64
+        mservice.requestMemoryRead(memMemo)
+    }
+              
     public func readModel(nodeID: NodeID) {
         if loaded {
             return // already loaded
         }
         
         loading = true
+        nextReadAddress = 0
+        // first, read the length of the space
+        mservice.requestSpaceLength(space: 0xFF, nodeID: nodeID, callback: memorySpaceCallback)
         
-        // temporary load from sample data
-        //tree = CdiSampleDataAccess.sampleCdiXmlData()[0].children!
-        
-        // do the first read and start the loop
-        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: 0xFF, address: 0, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
-        nextReadAddress = 64
-        mservice.requestMemoryRead(memMemo)
+        // we'll start reading from that callback
     }
     
     public func writeInt(value : Int, at: Int, space: UInt8, length: UInt8) {

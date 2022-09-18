@@ -161,6 +161,25 @@ final public class MemoryService {
                     break
                 }
             }
+        case 0x86, 0x87 : // Address Space Information Reply
+            guard spaceLengthCallback != nil else {
+                logger.error("Address Space Information Reply received with no callback")
+                return
+            }
+            if dmemo.data[1] == 0x86 {
+                // not present
+                spaceLengthCallback?(-1)
+                spaceLengthCallback = nil
+                return
+            }
+            // normal reply
+            let address : Int = Int(dmemo.data[3]) << 24 +
+                        Int(dmemo.data[4]) << 16 +
+                        Int(dmemo.data[5]) << 8 +
+                        Int(dmemo.data[6])
+            spaceLengthCallback?(address)
+            spaceLengthCallback = nil
+
         default:
             logger.error("Did not expect reply of type \(dmemo.data[1], privacy:.public)")
         }
@@ -201,6 +220,20 @@ final public class MemoryService {
         let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data)
         service.sendDatagram(dgWriteMemo)
 
+    }
+    
+    private var spaceLengthCallback : ((Int) -> ())? = nil
+    
+    /// Request the length of a specific memory space from a remote node.
+    func requestSpaceLength(space: UInt8, nodeID : NodeID, callback : ((Int) -> ())? ) {
+        guard spaceLengthCallback == nil else {
+            logger.error("Overlapping calls to requestSpaceLength")
+            return
+        }
+        spaceLengthCallback = callback
+        // send request
+        let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [0x20, 0x84, space])
+        service.sendDatagram(dgReqMemo)
     }
     
     internal func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {
