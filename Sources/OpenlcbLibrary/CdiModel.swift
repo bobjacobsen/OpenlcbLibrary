@@ -75,7 +75,7 @@ public class CdiModel : ObservableObject {
     }
     
     func memorySpaceCallback(length : Int) {
-        print("Memory space 0xFF is \(length) bytes long")
+        logger.trace("Memory space 0xFF is \(length, privacy: .public) bytes long")
         cdiLength = length
 
         // do the first read and start the loop
