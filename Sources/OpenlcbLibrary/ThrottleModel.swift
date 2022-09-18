@@ -136,10 +136,13 @@ public class ThrottleModel : ObservableObject {
     /// Load the labels in roster entries from SNIP if it's now been updated
     public func reloadRoster() {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
-            for index in 0...self.roster.count-1 {
+            self.logger.trace("reloadRoster starting on main queue")
+            for index in 0..<self.roster.count {
                 let newEntry = self.createRosterEntryFromNodeID(for: self.roster[index].nodeID)
-                if newEntry.labelSource.rawValue > self.roster[index].labelSource.rawValue {
-                    self.logger.trace("Updating roster entry due to new label: \(newEntry.label)")
+                // remake if label quality has improved or name changed
+                if newEntry.labelSource.rawValue > self.roster[index].labelSource.rawValue
+                            || ( newEntry.labelSource.rawValue == self.roster[index].labelSource.rawValue && newEntry.label != self.roster[index].label) {
+                    self.logger.trace("   Updating roster entry due to new label: \(newEntry.label)")
                     self.roster[index].label = newEntry.label
                     self.roster[index].labelSource = newEntry.labelSource
                 }
@@ -298,7 +301,7 @@ public enum TC_Selection_State {
 public class RosterEntry : Hashable, Equatable, Comparable {
     public var label : String // TODO: make this computed to get most recent value from SNIP or fall back to to a local string - would replace `reloadRoster`?
     public let nodeID : NodeID
-    var labelSource : LabelSource
+    var labelSource : LabelSource // quality of label information
     
     // Code where the label came from, in increasing reliability order
     // This is needed becaue an isATrainEvent might come after e.g. TCAssignReply data was loaded
