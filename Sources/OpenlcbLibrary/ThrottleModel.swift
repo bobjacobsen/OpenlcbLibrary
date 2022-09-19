@@ -14,7 +14,7 @@ import os
 final public class ThrottleModel : ObservableObject {
     
     var linkLayer : LinkLayer?
-    var openlcbLibrary : OpenlcbLibrary?
+    var openlcbLibrary : OpenlcbNetwork?
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
     

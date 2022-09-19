@@ -1,5 +1,5 @@
 //
-//  OpenlcbLibrary.swift
+//  OpenlcbNetwork.swift
 //
 //  Created by Bob Jacobsen on 6/1/22.
 //
@@ -13,7 +13,7 @@ import os
 import UIKit
 #endif
 
-public class OpenlcbLibrary : ObservableObject, CustomStringConvertible { // class to use @Published
+public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // class to use @Published
 
     let defaultNode : Node      // the node that's implemented here
     

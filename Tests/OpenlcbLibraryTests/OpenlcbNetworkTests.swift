@@ -1,5 +1,5 @@
 //
-//  OpenlcbLibraryTests.swift
+//  OpenlcbNetworkTests.swift
 //
 //  Created by Bob Jacobsen on 6/1/22.
 //
@@ -9,12 +9,12 @@
 import XCTest
 @testable import OpenlcbLibrary
 
-final class OpenlcbLibraryTests: XCTestCase {
+final class OpenlcbNetworkTests: XCTestCase {
     
     let canPhysicalLayer = CanPhysicalLayerSimulation()
     
     func testCanSetupRuns() {
-        let lib = OpenlcbLibrary(defaultNodeID: NodeID(0x05_01_01_01_03_01))
+        let lib = OpenlcbNetwork(defaultNodeID: NodeID(0x05_01_01_01_03_01))
         lib.configureCanTelnet(canPhysicalLayer)
         
         lib.createSampleData()
@@ -25,7 +25,7 @@ final class OpenlcbLibraryTests: XCTestCase {
     
     /// More of an acceptance test than a unit test.
     func testOperation() {
-        let lib = OpenlcbLibrary(defaultNodeID: NodeID(0x05_01_01_01_03_01))
+        let lib = OpenlcbNetwork(defaultNodeID: NodeID(0x05_01_01_01_03_01))
         lib.configureCanTelnet(canPhysicalLayer)
         lib.createSampleData()
         lib.bringLinkUp(canPhysicalLayer)
