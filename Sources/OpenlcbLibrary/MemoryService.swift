@@ -8,16 +8,16 @@
 import Foundation
 import os
 
-// Does memory read and write requests.
-// Reads and writes are limited to 64 bytes at a time.
-//
-// To do memory write:
-// - create a write memo and submit
-// - wait for either okReply or rejectedReply call back.
-//
-// To do memory read:
-// - create a read memo and submit
-// - wait for either dataReply or rejectedReply call back.
+/// Does memory read and write requests.
+/// Reads and writes are limited to 64 bytes at a time.
+///
+/// To do memory write:
+/// - create a write memo and submit
+/// - wait for either okReply or rejectedReply call back.
+///
+/// To do memory read:
+/// - create a read memo and submit
+//; - wait for either dataReply or rejectedReply call back.
 
 // TODO: Read requests are serialized, but write requests are not yet
 
@@ -25,7 +25,7 @@ final public class MemoryService {
     
     internal let service : DatagramService
     
-    init(service : DatagramService) {
+    public init(service : DatagramService) {
         self.service = service
         // register to DatagramService to hear arriving datagrams
         service.registerDatagramReceivedListener(datagramReceivedListener)
@@ -34,7 +34,7 @@ final public class MemoryService {
     internal let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "MemoryService")
 
     // Memo carries request and reply
-    struct MemoryReadMemo {
+    public struct MemoryReadMemo {
         public init(nodeID : NodeID, size : UInt8, space : UInt8, address : Int, rejectedReply : ( (_ : MemoryReadMemo) -> () )?, dataReply : ( (_ : MemoryReadMemo) -> () )? ) {
             self.nodeID = nodeID
             self.size = size
@@ -54,6 +54,7 @@ final public class MemoryService {
         let rejectedReply : ( (_ : MemoryReadMemo) -> () )?
         let dataReply :     ( (_ : MemoryReadMemo) -> () )?
 
+        // for convenience, data can be added or updated after creation of the memo
         var data : [UInt8] = []
      }
     
@@ -75,7 +76,7 @@ final public class MemoryService {
     ///
     /// If okReply in the memo is triggered, it will be followed by a dataReply.
     /// A rejectedReply will not be followed by a dataReply.
-    func requestMemoryRead(_ memo : MemoryReadMemo) {
+    public func requestMemoryRead(_ memo : MemoryReadMemo) {
         // preserve the request
         readMemos.append(memo)
         
@@ -94,7 +95,7 @@ final public class MemoryService {
         let addr3 = UInt8( (memo.address >> 16) & 0xFF )
         let addr4 = UInt8( (memo.address >>  8) & 0xFF )
         let addr5 = UInt8( memo.address & 0xFF )
-        var data : [UInt8] = [0x20, spaceFlag, addr2,addr3,addr4,addr5]
+        var data : [UInt8] = [DatagramService.ProtocolID.MemoryOperation.rawValue, spaceFlag, addr2,addr3,addr4,addr5]
         if (byte6) {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
@@ -109,7 +110,7 @@ final public class MemoryService {
 
     internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) {
         // node received a datagram, is it our service?
-        guard dmemo.data[0] == 0x20 else { return }
+        guard service.datagramType(data: dmemo.data) == DatagramService.ProtocolID.MemoryOperation else { return }
         
         // Acknowledge the datagram
         service.positiveReplyToDatagram(dmemo, flags: 0x0000)
@@ -184,7 +185,7 @@ final public class MemoryService {
         }
     }
     
-    struct MemoryWriteMemo {
+    public struct MemoryWriteMemo {
         /// Node from which write is requested
         let nodeID : NodeID
         let okReply :       ( (_ : MemoryWriteMemo) -> () )?
@@ -199,7 +200,7 @@ final public class MemoryService {
 
     internal var writeMemos : [MemoryWriteMemo] = []
 
-    func requestMemoryWrite(_ memo : MemoryWriteMemo) {
+    public func requestMemoryWrite(_ memo : MemoryWriteMemo) {
         // preserve the request
         writeMemos.append(memo)
         // create & send a write datagram
@@ -211,7 +212,7 @@ final public class MemoryService {
         let addr3 = UInt8( (memo.address >> 16) & 0xFF )
         let addr4 = UInt8( (memo.address >>  8) & 0xFF )
         let addr5 = UInt8( memo.address & 0xFF )
-        var data : [UInt8] = [0x20, spaceFlag, addr2,addr3,addr4,addr5]
+        var data : [UInt8] = [DatagramService.ProtocolID.MemoryOperation.rawValue, spaceFlag, addr2,addr3,addr4,addr5]
         if (byte6) {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
@@ -224,14 +225,14 @@ final public class MemoryService {
     private var spaceLengthCallback : ((Int) -> ())? = nil
     
     /// Request the length of a specific memory space from a remote node.
-    func requestSpaceLength(space: UInt8, nodeID : NodeID, callback : ((Int) -> ())? ) {
+    public func requestSpaceLength(space: UInt8, nodeID : NodeID, callback : ((Int) -> ())? ) {
         guard spaceLengthCallback == nil else {
             logger.error("Overlapping calls to requestSpaceLength")
             return
         }
         spaceLengthCallback = callback
         // send request
-        let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [0x20, 0x84, space])
+        let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [DatagramService.ProtocolID.MemoryOperation.rawValue, 0x84, space])
         service.sendDatagram(dgReqMemo)
     }
     

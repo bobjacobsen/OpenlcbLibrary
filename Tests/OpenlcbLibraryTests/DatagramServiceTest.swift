@@ -81,10 +81,10 @@ class DatagramServiceTest: XCTestCase {
     }
 
     func testDatagramType() throws {
-        XCTAssertEqual(service.datagramType(data : []), DatagramService.DatagramProtocolID.Unrecognized)
-        XCTAssertEqual(service.datagramType(data : [0,2,3]), DatagramService.DatagramProtocolID.Unrecognized)
+        XCTAssertEqual(service.datagramType(data : []), DatagramService.ProtocolID.Unrecognized)
+        XCTAssertEqual(service.datagramType(data : [0,2,3]), DatagramService.ProtocolID.Unrecognized)
         
-        XCTAssertEqual(service.datagramType(data : [0x20,2,3]), DatagramService.DatagramProtocolID.MemoryOperation)
+        XCTAssertEqual(service.datagramType(data : [0x20,2,3]), DatagramService.ProtocolID.MemoryOperation)
         
     }
 

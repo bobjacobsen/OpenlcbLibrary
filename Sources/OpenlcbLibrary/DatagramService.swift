@@ -21,16 +21,16 @@ import os
 // TODO: Update the PlantUML diagrams
 
 
-final class DatagramService : Processor {
+final public class DatagramService : Processor {
     public init ( _ linkLayer: LinkLayer) {
         self.linkLayer = linkLayer
     }
-    let linkLayer : LinkLayer
+    private let linkLayer : LinkLayer
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "DatagramService")
+    private let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "DatagramService")
 
-    // Memo carries write request and two reply callbacks
-    struct DatagramWriteMemo : Equatable {
+    /// Memo carries write request and two reply callbacks
+    public struct DatagramWriteMemo : Equatable {
         
         // source is this node
         let destID : NodeID
@@ -50,29 +50,30 @@ final class DatagramService : Processor {
         }
         
         // for Equatable
-        static func == (lhs: DatagramService.DatagramWriteMemo, rhs: DatagramService.DatagramWriteMemo) -> Bool {
+        public static func == (lhs: DatagramService.DatagramWriteMemo, rhs: DatagramService.DatagramWriteMemo) -> Bool {
             if lhs.destID != rhs.destID { return false }
             if lhs.data != rhs.data { return false }
             return true
         }
     }
     
-    // Memo carries read result
-    struct DatagramReadMemo : Equatable {
+    /// Memo carries read result
+    public struct DatagramReadMemo : Equatable {
         
         let srcID : NodeID
         // destination is this node
         let data : [UInt8]
         
         // for Equatable
-        static func == (lhs: DatagramService.DatagramReadMemo, rhs: DatagramService.DatagramReadMemo) -> Bool {
+        public static func == (lhs: DatagramService.DatagramReadMemo, rhs: DatagramService.DatagramReadMemo) -> Bool {
             if lhs.srcID != rhs.srcID { return false }
             if lhs.data != rhs.data { return false }
             return true
         }
     }
     
-    enum DatagramProtocolID : UInt {
+    /// Known datagram protocol types
+    public enum ProtocolID : UInt8 {
         case LogRequest      = 0x01
         case LogReply        = 0x02
         
@@ -82,13 +83,14 @@ final class DatagramService : Processor {
         case Display         = 0x28
         case TrainControl    = 0x30
         
-        case Unrecognized    = 0xFFF // 12 bits: out of possible normal range
+        case Unrecognized    = 0xFF // Not formally assigned
     }
     
+    /// Determine the protocol type of the content of the dataagram.
     /// Returns Unrecognized if there is no type specified, i.e. the datagram is empty
-    func datagramType(data : [UInt8]) -> DatagramProtocolID {
+    public func datagramType(data : [UInt8]) -> ProtocolID {
         guard data.count != 0 else { return .Unrecognized }
-        if let retval = DatagramProtocolID(rawValue: UInt(data[0])) {
+        if let retval = ProtocolID(rawValue: data[0]) {
             return retval
         } else {
             return .Unrecognized
@@ -97,7 +99,8 @@ final class DatagramService : Processor {
     
     private var pendingWriteMemos : [DatagramWriteMemo] = []
     
-    func sendDatagram(_ memo : DatagramWriteMemo) {
+    /// Queue a memo that writes a datagram to the network
+    public func sendDatagram(_ memo : DatagramWriteMemo) {
         // Make a record of memo for reply
         pendingWriteMemos.append(memo)
         
@@ -113,17 +116,22 @@ final class DatagramService : Processor {
         linkLayer.sendMessage(message)
     }
     
-    func registerDatagramReceivedListener(_ listener : @escaping ( (_ : DatagramReadMemo) -> () )) {
+    /// Register a listener to be notified when each datagram arrives.  One and only one listener should reply positively or negatively to the datagram.
+    public func registerDatagramReceivedListener(_ listener : @escaping ( (_ : DatagramReadMemo) -> () )) {
         listeners.append(listener)
     }
-    var listeners : [( (_ : DatagramReadMemo) -> () )] = []
+    private var listeners : [( (_ : DatagramReadMemo) -> () )] = []  // internal for testing
     
-    func fireListeners(_ dg : DatagramReadMemo) {
+    internal func fireListeners(_ dg : DatagramReadMemo) { // internal for testing
         for listener in listeners {
             listener(dg)
         }
+        // TODO: If none of the listeners replied by now, send a negative reply
     }
     
+    /// Processor entry point.
+    /// - Returns:
+    ///     Always false; a datagram doesn't mutate the node, it's the actions brought by that datagram that does.
     public func process( _ message : Message, _ node : Node ) -> Bool {
         // Check that it's to us
         guard checkDestID(message, linkLayer.localNodeID) else { return false }
@@ -142,7 +150,7 @@ final class DatagramService : Processor {
         return false
     }
     
-    func handleDatagram(_ message : Message) {
+    internal func handleDatagram(_ message : Message) {  // internal for testing
         // create a read memo and pass to listeners
         let memo = DatagramReadMemo(srcID: message.source, data: message.data)
         fireListeners(memo) // destination listener calls back to
@@ -150,7 +158,7 @@ final class DatagramService : Processor {
     }
     
     // OK reply to write
-    func handleDatagramReceivedOK(_ message : Message) {
+    private func handleDatagramReceivedOK(_ message : Message) {
         // match to the memo and remove from queue
         let memo = matchToWriteMemo(message: message)
         // fire the callback
@@ -160,7 +168,7 @@ final class DatagramService : Processor {
     }
     
     // Not OK reply to write
-    func handleDatagramRejected(_ message : Message) {
+    private func handleDatagramRejected(_ message : Message) {
         // match to the memo and remove from queue
         let memo = matchToWriteMemo(message: message)
         // fire the callback
@@ -192,14 +200,14 @@ final class DatagramService : Processor {
         }
     }
     
-    // send a positive reply to a received datagram
-    func positiveReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, flags : UInt8 = 0) {
+    /// Send a positive reply to a received datagram
+    public func positiveReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, flags : UInt8 = 0) {
         let message = Message(mti: .Datagram_Received_OK, source: linkLayer.localNodeID, destination: dg.srcID, data: [flags])
         linkLayer.sendMessage(message)
     }
     
-    // send a negative reply to a received datagram
-    func negativeReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, err : UInt16) {
+    /// Send a negative reply to a received datagram
+    public func negativeReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, err : UInt16) {
         let data0 = UInt8((err >> 8 ) & 0xFF)
         let data1 = UInt8(err & 0xFF)
         let message = Message(mti: .Datagram_Rejected, source: linkLayer.localNodeID, destination: dg.srcID, data: [data0, data1])
