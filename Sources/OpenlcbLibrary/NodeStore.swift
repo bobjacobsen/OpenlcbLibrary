@@ -31,7 +31,6 @@ public class NodeStore : ObservableObject { // for SwiftUI
     /// Retrieve a Node's content from the store
     /// - Parameter nodeID: Look-up key
     /// - Returns: Returns Node, creating if need be
-    // Some implementations may mutate to create non-existing node
     func lookup(_ nodeID : NodeID) -> Node? {
         return byIdMap[nodeID]
     }

@@ -130,8 +130,7 @@ final public class DatagramService : Processor {
     }
     
     /// Processor entry point.
-    /// - Returns:
-    ///     Always false; a datagram doesn't mutate the node, it's the actions brought by that datagram that does.
+    /// - Returns: Always false; a datagram doesn't mutate the node, it's the actions brought by that datagram that does.
     public func process( _ message : Message, _ node : Node ) -> Bool {
         // Check that it's to us
         guard checkDestID(message, linkLayer.localNodeID) else { return false }
