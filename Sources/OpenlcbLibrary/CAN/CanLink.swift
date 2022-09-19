@@ -17,7 +17,7 @@ import os
 ///
 ///  Multi-frame addressed messages are accumulated in parallel
 ///  
-public class CanLink : LinkLayer {
+final public class CanLink : LinkLayer {
     
     var localAliasSeed : UInt64
     var localAlias : UInt

@@ -7,7 +7,8 @@
 
 import Foundation
 
-/// This is a class because it represents a single physical connection to a layout. Subclasses will handle CAN, TCP/IP and test implementations.
+/// Generalize a CAN physica layer, real or simulated.
+/// This is a class because it represents a single physical connection to a layout and is subclassed.
 /// 
 public class CanPhysicalLayer : PhysicalLayer {
     public init() {

@@ -4,14 +4,12 @@
 //  Created by Bob Jacobsen on 6/1/22.
 //
 
-// TODO: This does not display messages being sent from the program - more general issue with local -> remote
-
 import Foundation
 
 ///
 /// Provide String versions of the processed messages, one line per message
 ///
-struct PrintingProcessor : Processor {
+public struct PrintingProcessor : Processor {
     /// Pass in result routine to process output
     public init ( _ result : @escaping ( _ : String) -> (), _ linkLayer: LinkLayer? = nil) {
         self.result = result
