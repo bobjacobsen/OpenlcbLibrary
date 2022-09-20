@@ -108,7 +108,8 @@ final public class CanLink : LinkLayer {
     func defineAndReserveAlias() {
         sendAliasAllocationSequence()
         
-        // TODO: wait 200 msec and declare ready to go, see https://stackoverflow.com/questions/27517632/how-to-create-a-delay-in-swift and https://nilcoalescing.com/blog/DelayAnAsyncTaskInSwift/?utm_source=canopas-stack-weekly
+        // TODO: wait 200 msec before declaring ready to go (and doing steps following the call here)
+        
         // send AMD frame, go to Permitted state
         link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray()) )
         state = .Permitted
@@ -426,6 +427,7 @@ final public class CanLink : LinkLayer {
             // attempt to get a new alias and go back to .Permitted
             localAliasSeed = CanLink.incrementAlias48(localAliasSeed)
             localAlias = CanLink.createAlias12(localAliasSeed)
+            // TODO: Check that this new alias not already reserved, e.g. in aliasToNodeID
             defineAndReserveAlias()
         }
         return abort

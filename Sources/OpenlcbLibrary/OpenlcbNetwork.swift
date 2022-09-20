@@ -31,7 +31,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
     
-    public var description : String { "OpenlcbLibrary w \(remoteNodeStore.nodes.count)"}
+    public var description : String { "OpenlcbNetwork w \(remoteNodeStore.nodes.count)"}
     
     let dservice : DatagramService
     public let mservice : MemoryService // TODO: Needs to be encapsulated in a model, not free to CdiView
@@ -53,7 +53,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
         // stored values initialized, 'self' available below here
         logger.info("OpenlcbLibrary init")
-        throttleModel0.openlcbLibrary = self
+        throttleModel0.openlcbNetwork = self
     }
     
     /// Iniitialize and optionally add sample data for SwiftUI preview

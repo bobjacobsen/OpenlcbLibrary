@@ -14,7 +14,7 @@ import os
 final public class ThrottleModel : ObservableObject {
     
     var linkLayer : LinkLayer?
-    var openlcbLibrary : OpenlcbNetwork?
+    var openlcbNetwork : OpenlcbNetwork?
     
     let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
     
@@ -228,7 +228,7 @@ final public class ThrottleModel : ObservableObject {
             label = "<None>"
             labelSource = .Initial
         } else {
-            label = openlcbLibrary!.lookUpNodeName(for: nodeID)
+            label = openlcbNetwork!.lookUpNodeName(for: nodeID)
             if label != "" {
                 labelSource = .SNIP
             } else {

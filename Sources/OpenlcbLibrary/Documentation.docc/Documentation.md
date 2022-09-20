@@ -19,7 +19,7 @@ At the message layer:
 
  Nodes, Stores, and Link-layer and Phy-layer implementations are permanent: Once they are created, they persist until the end of the program.  Therefore ARC loops are permitted. Messages, Events, and the various ID structs are immutable and not permanent. Processors are in-between: They are immutable once created, but long-lasting hence are allowed to have references to other objects.
 
-The ``OpenlcbLibrary`` can be used to build a complete configuration.
+The ``OpenlcbNetwork`` class can be used to build a complete configuration.
 
 ![High-Level Class Diagram](Classes.png)
 
