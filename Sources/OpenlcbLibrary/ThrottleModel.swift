@@ -21,7 +21,7 @@ final public class ThrottleModel : ObservableObject {
     
     /// Speed here is in meters/second.  Views that work in MPH need to do the conversion before
     /// changing `speed` here
-    @Published public var speed : Float16 = 0.0 {
+    @Published public var speed : Float = 0.0 {
         willSet(speed) {
             sendSetSpeed(to: speed)
         }
@@ -34,11 +34,11 @@ final public class ThrottleModel : ObservableObject {
     
     /// 1 scale mph to meters per second for the speed commands.
     /// The screen works in MPH; the model works in meters/sec
-    static internal let mps_per_MPH : Float16 = 0.44704
+    static internal let mps_per_MPH : Float = 0.44704
     
     /// Send the current speed in mph to the command station.
     /// Speed here is in MPH, and conversion to meters/sec is done here
-    public func sendSetSpeed(to mphSpeed: Float16) {
+    public func sendSetSpeed(to mphSpeed: Float) {
         if tc_state != .Selected {
             // nothing selected to send the speed to
             return
@@ -51,10 +51,11 @@ final public class ThrottleModel : ObservableObject {
         linkLayer?.sendMessage(message)
     }
     
-    func encodeSpeed(to mphSpeed : Float16) -> ([UInt8]){
+    func encodeSpeed(to mphSpeed : Float) -> ([UInt8]){
         let mpsSpeed = mphSpeed * ThrottleModel.mps_per_MPH
         let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
-        let bytes = signedSpeed.bytes               // see extension to Float16 below
+        let smallSpeed = Float16(signedSpeed)
+        let bytes = smallSpeed.bytes               // see extension to Float16 below
         return bytes
     }
     

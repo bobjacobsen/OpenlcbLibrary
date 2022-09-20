@@ -42,11 +42,11 @@ final class ThrottleModelTest: XCTestCase {
     func testEncodeSpeed() {
         let model = ThrottleModel( CanLink(localNodeID: NodeID(11)))
         
-        XCTAssertEqual(model.encodeSpeed(to: 100.0), [0x96, 0x51])
+        XCTAssertEqual(model.encodeSpeed(to: 100.0), [0x97, 0x51])
         
-        XCTAssertEqual(model.encodeSpeed(to:  50.0), [0x96, 0x4D])
+        XCTAssertEqual(model.encodeSpeed(to:  50.0), [0x97, 0x4D])
 
-        XCTAssertEqual(model.encodeSpeed(to:  25.0), [0x96, 0x49])
+        XCTAssertEqual(model.encodeSpeed(to:  25.0), [0x97, 0x49])
 
         XCTAssertEqual(model.encodeSpeed(to:  10.0), [0x78, 0x44])
 
@@ -54,7 +54,7 @@ final class ThrottleModelTest: XCTestCase {
 
         model.reverse = true
 
-        XCTAssertEqual(model.encodeSpeed(to:  50.0), [0x96, 0xCD])
+        XCTAssertEqual(model.encodeSpeed(to:  50.0), [0x97, 0xCD])
 
         XCTAssertEqual(model.encodeSpeed(to:   2.0), [0x27, 0xBB])
 
