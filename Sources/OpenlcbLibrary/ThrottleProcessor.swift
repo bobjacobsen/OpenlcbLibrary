@@ -72,11 +72,12 @@ struct ThrottleProcessor : Processor {
                 // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
                 // See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
                 let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
-                let speed = alignedBytes.withUnsafeBytes {
+                let mpsSpeed = alignedBytes.withUnsafeBytes {
                     $0.load(fromByteOffset: 0, as: Float16.self)
                 }
-
-                model.speed = abs(speed)
+                let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
+                
+                model.speed = abs(mphSpeed)
                 if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
                     model.forward = true
                     model.reverse = false

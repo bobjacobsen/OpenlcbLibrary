@@ -34,7 +34,7 @@ final public class ThrottleModel : ObservableObject {
     
     /// 1 scale mph to meters per second for the speed commands.
     /// The screen works in MPH; the model works in meters/sec
-    static private let mps_per_MPH : Float16 = 0.44704
+    static internal let mps_per_MPH : Float16 = 0.44704
     
     /// Send the current speed in mph to the command station.
     /// Speed here is in MPH, and conversion to meters/sec is done here
@@ -43,13 +43,19 @@ final public class ThrottleModel : ObservableObject {
             // nothing selected to send the speed to
             return
         }
-        let mpsSpeed = mphSpeed * ThrottleModel.mps_per_MPH
-        let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
-        let bytes = signedSpeed.bytes               // see extension to Float16 below
+        
+        let bytes = encodeSpeed(to: mphSpeed)
         
         let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId,
                               data: [0x00, bytes[1], bytes[0]])
         linkLayer?.sendMessage(message)
+    }
+    
+    func encodeSpeed(to mphSpeed : Float16) -> ([UInt8]){
+        let mpsSpeed = mphSpeed * ThrottleModel.mps_per_MPH
+        let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
+        let bytes = signedSpeed.bytes               // see extension to Float16 below
+        return bytes
     }
     
     public let maxFn = 28
