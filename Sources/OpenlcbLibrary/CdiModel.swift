@@ -120,6 +120,18 @@ final public class CdiModel : ObservableObject {
         mservice.requestMemoryRead(memMemo)
     }
     
+    // An event is a 64-bit _unsigned_ quantity
+    public func readEvent(from: Int, space: UInt8, length: UInt8, action: @escaping (UInt64)->()) {
+        let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
+                                                   rejectedReply: {_ in
+            self.logger.error("Rejected reply to readInt of \(from, privacy: .public)")
+        },
+                                                   dataReply: {memo in
+            action(self.mservice.arrayToUInt64(data:memo.data, length: length))
+        })
+        mservice.requestMemoryRead(memMemo)
+    }
+    
     public func readString(from: Int, space: UInt8, length: UInt8, action: @escaping (String)->()) {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
                                                    rejectedReply: {_ in

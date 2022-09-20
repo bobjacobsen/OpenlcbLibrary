@@ -245,6 +245,15 @@ final public class MemoryService {
         return result
     }
     
+    internal func arrayToUInt64(data: [UInt8], length: UInt8) -> (UInt64) {
+        var result : UInt64 = 0
+        for index in 0...Int(length-1) {
+            result = result << 8
+            result = result | UInt64(data[index])
+        }
+        return result
+    }
+    
     internal func arrayToString(data: [UInt8], length: UInt8) -> (String) {
         var zeroIndex = data.count
         if let temp = data.firstIndex(of: 0) {
