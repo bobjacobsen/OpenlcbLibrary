@@ -169,7 +169,7 @@ class CdiXmlMemoTest: XCTestCase {
         XCTAssertEqual(result[0].children![0].children![2].type, .INPUT_EVENTID)
         XCTAssertEqual(result[0].children![0].children![2].name, "NameE")
         XCTAssertEqual(result[0].children![0].children![2].description, "DescE")
-        XCTAssertEqual(result[0].children![0].children![2].startAddress, 9)
+        XCTAssertEqual(result[0].children![0].children![2].startAddress, 13)
     }
 
     func testTripleRepGroupOfTwoElement() throws {
