@@ -72,8 +72,11 @@ final public class ConsistModel : ObservableObject, Processor {
     public func addLocoToConsist(add : NodeID) {
         let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, 0x0]+add.toArray())
         linkLayer.sendMessage(message)
-        // reload the consist info from the top
-        fetchConsist()
+        // reload the consist info from the top after a short delay
+        let deadlineTime = DispatchTime.now() + .milliseconds(500)
+        DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
+            self.fetchConsist()
+        }
     }
     
     public func removeLocoFromConsist(remove : NodeID) {
