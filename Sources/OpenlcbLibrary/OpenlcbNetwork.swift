@@ -13,6 +13,7 @@ import os
 import UIKit
 #endif
 
+/// Provides a common base implementation of an OpenLCB/LCC network using this package.
 public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // class to use @Published
 
     let defaultNode : Node      // the node that's implemented here
@@ -34,9 +35,10 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     public var description : String { "OpenlcbNetwork w \(remoteNodeStore.nodes.count)"}
     
     let dservice : DatagramService
-    public let mservice : MemoryService // TODO: Needs to be encapsulated in a model, not free to CdiView
+    public let mservice : MemoryService
 
     /// Initialize a basic system
+    /// - Parameter defaultNodeID: NodeiID for this program
     public init(defaultNodeID : NodeID) {
         
         defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01; user responsible for uniqueness of value
@@ -57,8 +59,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     }
     
     /// Iniitialize and optionally add sample data for SwiftUI preview
-    ///      - parameters:
-    ///         - sample: Iff true, add the sample nodes.
+    /// - Parameter sample: Iff true, add the sample nodes.
 
     public convenience init(sample: Bool) {
         self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
@@ -143,7 +144,9 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         }
     }
     
-    // accesses the comon node store
+    /// Process an incoming message across all the nodes in the remote node store.
+    /// Does a publish operation if any of them indicate a significant change.
+    /// - Parameter message: Incoming message to process
     func processMessageFromLinkLayer(_ message: Message) {
         var publish = false
         
@@ -160,11 +163,17 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         }
     }
     
+    /// Produce a specified event on the OpenLCB/LCC network.
+    /// This sends a global message that's marked as coming from this program's node.
+    /// - Parameter eventID: Event ID to be produced
     public func produceEvent(eventID: EventID) {
         let msg = Message(mti: .Producer_Consumer_Event_Report, source: linkLayer.localNodeID, data: eventID.toArray())
         linkLayer.sendMessage(msg)
     }
     
+    
+    /// Requests that a specific remote node update it's SNIP information (basic text description).  Sends an addressed SNIP request message to do that.
+    /// - Parameter node: Addressed Node
     public func refreshNode(node : Node ) {
         node.snip = SNIP()
         let messageSNIP = Message(mti: .Simple_Node_Ident_Info_Request, source: linkLayer.localNodeID, destination: node.id)
@@ -225,6 +234,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     }
     
     /// Once configuration (and optional sample data) is complete, bring the link up starting at the physical layer
+    /// - Parameter canPhysicalLayer: Physical layer object to start the link-up process
     public func bringLinkUp(_ canPhysicalLayer : CanPhysicalLayer) {
         canPhysicalLayer.physicalLayerUp()
     }
