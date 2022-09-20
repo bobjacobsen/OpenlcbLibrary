@@ -124,6 +124,11 @@ public struct SNIP {
     // add additional bytes of SNIP data
     mutating func addData(data : [UInt8] ) {
         for i in 0...data.count-1 {
+            // protect against overlapping requests causing an overflow
+            if (i+index) >= 253 {
+                SNIP.logger.error("Overlapping SNIP requests, truncating")
+                break
+            }
             self.data[i+index] = data[i]
         }
         index += data.count
