@@ -159,12 +159,16 @@ public final class CdiXmlMemo : Identifiable {
             }
         }
         memo.space = nextSpace
+        
+        newEndAddress = newEndAddress+memo.offset
+        
         // descend into children (including the new .GROUP_REP nodes)
         if let children = memo.children {
             for child in children {
                 newEndAddress = computeMemoryLocations(child, space: nextSpace, endAddress: newEndAddress)
             }
         }
+        // print ("node \(memo.name) end: \(newEndAddress) from: \(endAddress) type: \(memo.type) o: \(memo.offset)")
         return newEndAddress
     }
 
