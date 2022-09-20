@@ -8,8 +8,7 @@
 import Foundation
 import os
 
-// Float16 not supported on macOS Rosetta.  See e.g. https://github.com/SusanDoggie/Float16 and https://forums.swift.org/t/float16-for-macos-and-older-version-of-ios/40572
-// See also https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
+// Float16 not supported on macOS Rosetta.  Hence we use our own `floatToFloat16` conversion routine, see the bottom of the file.
 
 // Data to construct a throttle
 final public class ThrottleModel : ObservableObject {
@@ -54,8 +53,7 @@ final public class ThrottleModel : ObservableObject {
     func encodeSpeed(to mphSpeed : Float) -> ([UInt8]){
         let mpsSpeed = mphSpeed * ThrottleModel.mps_per_MPH
         let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
-        let smallSpeed = Float16(signedSpeed)
-        let bytes = smallSpeed.bytes               // see extension to Float16 below
+        let bytes = floatToFloat16(signedSpeed)
         return bytes
     }
     
@@ -285,14 +283,15 @@ final public class ThrottleModel : ObservableObject {
     }
 } // end of ThrottleModel class
 
-// For converting Float16 to bytes and vice versa
+#if arch(arm64)
+// For converting Float16 to bytes and vice versa (used in some tests on Arm64, even after Float16 removed from main code)
 // See https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
-// See also https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38 for another approach
 extension Float16 {
     var bytes: [UInt8] {
         withUnsafeBytes(of: self, Array.init)
     }
 }
+#endif
 
 // The selection state, referenced here and in ThrottleProcessor
 internal enum TC_Selection_State {
@@ -338,4 +337,39 @@ final public class RosterEntry : Hashable, Equatable, Comparable {
         return lhs.nodeID.nodeId < rhs.nodeID.nodeId
     }
 }
+
+func floatToFloat16(_ input : Float) -> [UInt8] {
+    var outputUpper : UInt8 = 0
+    var outputLower : UInt8 = 0
+    
+    if (input == 0.0 && input.sign == .plus) { return [0, 0x00]}
+    if (input == 0.0 && input.sign != .plus) { return [0, 0x80]}
+    
+    var rawExp = 15  // initial bias
+    var trialValue = abs(input)
+    if trialValue > 1.0 {
+        while trialValue >= 2.0 {
+            rawExp += 1
+            trialValue = trialValue/2
+        }
+    } else if trialValue < 1.0 {
+        while trialValue < 1.0 {
+            rawExp -= 1
+            trialValue = trialValue*2.0
+        }
+    }
+    if rawExp > 31 { rawExp = 31 }
+    if rawExp <  0 { rawExp =  0 }
+    let finalExp = rawExp << 2
+    
+    let trialMantissa = trialValue - 1 // should now be between 0 and 1, from 1 to 2
+    let mantissa = Int(round(trialMantissa*1024.0))
+    
+    outputUpper = UInt8((finalExp & 0x7C) | ((mantissa >> 8) & 0x03))
+    if input < 0.0 {outputUpper = 0x80 | outputUpper }
+    outputLower = UInt8(mantissa & 0xFF)
+    
+    return [outputLower, outputUpper]
+}
+
 

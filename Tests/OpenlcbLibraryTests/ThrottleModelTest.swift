@@ -32,13 +32,6 @@ final class ThrottleModelTest: XCTestCase {
         XCTAssertEqual(EventID([0x09, 0x00, 0x99, 0xFF, 0x12, 0x34, 0xFF, 0xE0]), eventID)
     }
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
-
     func testEncodeSpeed() {
         let model = ThrottleModel( CanLink(localNodeID: NodeID(11)))
         
@@ -57,6 +50,59 @@ final class ThrottleModelTest: XCTestCase {
         XCTAssertEqual(model.encodeSpeed(to:  50.0), [0x97, 0xCD])
 
         XCTAssertEqual(model.encodeSpeed(to:   2.0), [0x27, 0xBB])
-
     }
+ 
+#if arch(arm64)
+
+    // on Arm64 (Apple Silicon), we can test our Float16 <-> Float routines against the native ones
+    
+    func testFToF16 () {
+        XCTAssertEqual(floatToFloat16(100.0), Float16(100.0).bytes)
+        XCTAssertEqual(floatToFloat16( 50.0), Float16( 50.0).bytes)
+        XCTAssertEqual(floatToFloat16( 25.0), Float16( 25.0).bytes)
+        XCTAssertEqual(floatToFloat16( 10.0), Float16( 10.0).bytes)
+        XCTAssertEqual(floatToFloat16(  2.0001), Float16(  2.0001).bytes)
+        XCTAssertEqual(floatToFloat16(  2.0), Float16(  2.0).bytes)
+        XCTAssertEqual(floatToFloat16(  1.999), Float16(  1.999).bytes)
+        XCTAssertEqual(floatToFloat16(  1.0), Float16(  1.0).bytes)
+        XCTAssertEqual(floatToFloat16(  0.5), Float16(  0.5).bytes)
+        XCTAssertEqual(floatToFloat16(  0.2), Float16(  0.2).bytes)
+        XCTAssertEqual(floatToFloat16(  0.125), Float16(  0.125).bytes)
+        XCTAssertEqual(floatToFloat16(  0.1), Float16(  0.1).bytes)
+        XCTAssertEqual(floatToFloat16(  0.0), Float16(  0.0).bytes)
+        XCTAssertEqual(floatToFloat16( -0.0), Float16( -0.0).bytes)
+
+        XCTAssertEqual(floatToFloat16(  -0.5), Float16(  -0.5).bytes)
+        XCTAssertEqual(floatToFloat16( -10.0), Float16( -10.0).bytes)
+        XCTAssertEqual(floatToFloat16(-100.0), Float16(-100.0).bytes)
+    }
+    
+    func testF16ToFloat () {
+        XCTAssertEqual(float16ToFloat(Float16( 100.0).bytes), 100.0)
+        XCTAssertEqual(float16ToFloat(Float16(  50.0).bytes),  50.0)
+        XCTAssertEqual(float16ToFloat(Float16(  25.0).bytes),  25.0)
+        XCTAssertEqual(float16ToFloat(Float16(  10.0).bytes),  10.0)
+        
+        XCTAssertEqual(float16ToFloat(Float16( 2.001).bytes), 2.001, accuracy: 0.001)
+        XCTAssertEqual(float16ToFloat(Float16( 2.000).bytes), 2.000, accuracy: 0.001)
+        XCTAssertEqual(float16ToFloat(Float16( 1.999).bytes), 1.999, accuracy: 0.001)
+
+        XCTAssertEqual(float16ToFloat(Float16(   1.0).bytes),   1.0)
+        XCTAssertEqual(float16ToFloat(Float16(   0.5).bytes),   0.5)
+        XCTAssertEqual(float16ToFloat(Float16(   0.2).bytes),   0.2, accuracy: 0.001)
+        XCTAssertEqual(float16ToFloat(Float16( 0.125).bytes), 0.125, accuracy: 0.001)
+        XCTAssertEqual(float16ToFloat(Float16(   0.1).bytes),   0.1, accuracy: 0.001)
+
+        XCTAssertEqual(float16ToFloat(Float16(   0.0).bytes),   0.0)
+        XCTAssertTrue (float16ToFloat(Float16(   0.0).bytes).sign == .plus)
+
+        XCTAssertEqual(float16ToFloat(Float16(  -0.0).bytes),  -0.0)
+        XCTAssertTrue (float16ToFloat(Float16(  -0.0).bytes).sign == .minus)
+
+        XCTAssertEqual(float16ToFloat(Float16(  -0.5).bytes),  -0.5)
+        XCTAssertEqual(float16ToFloat(Float16( -10.0).bytes), -10.0)
+        XCTAssertEqual(float16ToFloat(Float16(-100.0).bytes),-100.0)
+    }
+    
+#endif
 }

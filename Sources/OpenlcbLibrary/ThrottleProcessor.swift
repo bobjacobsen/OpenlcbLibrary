@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-// Float16 not supported on Intel macOS and Rosetta.  See e.g. https://github.com/SusanDoggie/Float16 and https://forums.swift.org/t/float16-for-macos-and-older-version-of-ios/40572
+// Float16 not supported on macOS Rosetta.  Hence we use our own `float16ToFloat` conversion routine, see the bottom of the file.
 
 struct ThrottleProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
@@ -72,9 +72,11 @@ struct ThrottleProcessor : Processor {
                 // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
                 // See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
                 let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
-                let mpsSpeed = Float(alignedBytes.withUnsafeBytes {
-                    $0.load(fromByteOffset: 0, as: Float16.self)
-                })
+                
+                let mpsSpeed = float16ToFloat(alignedBytes)
+//                let mpsSpeed = Float(alignedBytes.withUnsafeBytes {
+//                    $0.load(fromByteOffset: 0, as: Float16.self)
+//                })
                 let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
                 
                 model.speed = abs(mphSpeed)
@@ -161,3 +163,23 @@ struct ThrottleProcessor : Processor {
         case TractionManagement     = 0x40
     }
 }
+
+func float16ToFloat(_ input : [UInt8]) -> Float {
+    let upper = UInt32(input[1])
+    let lower = UInt32(input[0])
+    
+    if upper == 0 && lower == 0 { return +0.0 }
+    if upper == 0x80 && lower == 0 { return -0.0 }
+    
+    let intMantissa = (upper << 8 | lower ) & 0x3FF
+    let floatMantissa = 1.0 + Float(intMantissa)/1024.0
+    
+    let power : Int = Int((upper & 0x7C) >> 2) - 15
+    
+    var result = pow(2.0, Float(power)) * floatMantissa
+    
+    if upper & 0x80 != 0 { result = -1.0 * result }
+    return result
+}
+
+
