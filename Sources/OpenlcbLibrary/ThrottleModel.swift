@@ -9,6 +9,7 @@ import Foundation
 import os
 
 // Float16 not supported on macOS Rosetta.  See e.g. https://github.com/SusanDoggie/Float16 and https://forums.swift.org/t/float16-for-macos-and-older-version-of-ios/40572
+// See also https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
 
 // Data to construct a throttle
 final public class ThrottleModel : ObservableObject {
@@ -279,15 +280,15 @@ final public class ThrottleModel : ObservableObject {
 
 // For converting Float16 to bytes and vice versa
 // See https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
+// See also https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38 for another approach
 extension Float16 {
     var bytes: [UInt8] {
         withUnsafeBytes(of: self, Array.init)
     }
 }
 
-
 // The selection state, referenced here and in ThrottleProcessor
-public enum TC_Selection_State {
+internal enum TC_Selection_State {
     case Idle_no_selection
     // case Wait_on_Verified_Node    // have sent VerifyNode to make sure we have alias - this is now obsolete, as Traction Search event is used instead
     case Wait_on_TC_Search_reply
