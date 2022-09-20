@@ -103,6 +103,12 @@ final public class CdiModel : ObservableObject {
         mservice.requestMemoryWrite(memMemo)
     }
     
+    public func writeUInt64(value : UInt64, at: Int, space: UInt8, length: UInt8) {
+        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: space, address: at, data: mservice.uInt64ToArray(value: value, length: length))
+        
+        mservice.requestMemoryWrite(memMemo)
+    }
+    
     public func writeString(value : String, at: Int, space: UInt8, length: UInt8) {
         let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: space, address: at, data: mservice.stringToArray(value: value, length: length))
         

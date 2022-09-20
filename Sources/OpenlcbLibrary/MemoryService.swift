@@ -290,6 +290,25 @@ final public class MemoryService {
         }
     }
     
+    internal func uInt64ToArray(value: UInt64, length: UInt8) -> [UInt8] {
+        switch length {
+        case 1:
+            return [UInt8(value&0xff)]
+        case 2:
+            return [UInt8((value>>8 )&0xff), UInt8(value&0xff)]
+        case 4:
+            return [UInt8((value>>24)&0xff), UInt8((value>>16)&0xff),
+                    UInt8((value>>8)&0xff),  UInt8(value&0xff)]
+        case 8:
+            return [UInt8((value>>56)&0xff), UInt8((value>>48)&0xff),
+                    UInt8((value>>40)&0xff), UInt8((value>>32)&0xff),
+                    UInt8((value>>24)&0xff), UInt8((value>>16)&0xff),
+                    UInt8((value>>8 )&0xff), UInt8(value&0xff)]
+        default:
+            return []
+        }
+    }
+    
     internal func stringToArray(value: String, length: UInt8) -> ([UInt8]) {
         let strToUInt8:[UInt8] = [UInt8](value.utf8)
         let byteCount = min(Int(length), strToUInt8.count)
