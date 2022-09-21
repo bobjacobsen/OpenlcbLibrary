@@ -13,7 +13,7 @@ struct LocalNodeProcessor : Processor {
         self.linkLayer = linkLayer
     }
     let linkLayer : LinkLayer?
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalNodeProcessor")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalNodeProcessor")
     
     func process( _ message : Message, _ node : Node ) -> Bool {
         guard checkDestID(message, node) else { return false }  // not to us
@@ -106,7 +106,7 @@ struct LocalNodeProcessor : Processor {
         guard !message.isGlobal() else { return } // global messages are ignored
         
         // addressed messages get an OptionalInteractionRejected
-        logger.notice("received unexpected \(message, privacy: .public), sent OIR")
+        LocalNodeProcessor.logger.notice("received unexpected \(message, privacy: .public), sent OIR")
         let msg = Message(mti: MTI.Optional_Interaction_Rejected, source: node.id, destination: message.source,
                           data: [0x10, 0x43, UInt8((message.mti.rawValue>>8)&0xFF), UInt8(message.mti.rawValue&0xFF)]) // permanent error
         linkLayer!.sendMessage(msg)
@@ -114,7 +114,7 @@ struct LocalNodeProcessor : Processor {
     
     private func errorMessageReceived(_ message : Message, _ node : Node) {
         // these are just logged until we have more complex interactions
-        logger.notice("received unexpected \(message, privacy: .public)")
+        LocalNodeProcessor.logger.notice("received unexpected \(message, privacy: .public)")
     }
 
     // MARK: -

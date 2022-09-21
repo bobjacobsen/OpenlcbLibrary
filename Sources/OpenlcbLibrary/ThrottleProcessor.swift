@@ -19,7 +19,7 @@ struct ThrottleProcessor : Processor {
     let linkLayer : LinkLayer?
     let model : ThrottleModel
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleProcessor")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleProcessor")
     
     let isTrainID = EventID("01.01.00.00.00.00.03.03")
     let isTrainIDarray : [UInt8] = [1,1,0,0,0,0,3,3]

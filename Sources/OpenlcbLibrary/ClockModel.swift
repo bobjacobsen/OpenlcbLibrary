@@ -11,7 +11,7 @@ import Foundation
 ///
 /// Works with `ClockProcessor which handles the OpenLCB network interactions
 
-// Interface is via Date objects to that hours and minutes etc can be passed simultaneously.
+// Interface is via Date objects so that hours and minutes etc can be passed simultaneously.
 //  Service routines are provided to convert from/to hours and minutes.
 //
 // Internal date and time throughout use the default UTC timezone; so long as that's used consistently,
@@ -54,8 +54,9 @@ final public class ClockModel : ObservableObject {
     
     /// Sets the current time in the clock.  This is generally set from the
     /// clock master.
-    // Default argument is the usual case; argument is
-    // provided for testing. This structure prevents this
+    /// Default argument is the usual case; argument is
+    /// provided for testing.
+    // This structure prevents Time
     // from being a computed property.
     public func setTime(_ time: Date, _ now : Date = Date()) {
         lastTimeSet = time
@@ -63,9 +64,10 @@ final public class ClockModel : ObservableObject {
     }
     
     /// Gets the current time in the clock.  
-    // Default argument is the usual case; argument is
-    // provided for testing. This structure prevents this
-    // from being a computed property.
+    /// Default argument is the usual case; argument is
+    /// provided for testing.
+    //  This structure prevents Time
+    //  from being a computed property.
     public func getTime(_ now : Date = Date()) -> Date {
         if run {
             return lastTimeSet+(now-timeLastSet)*rate
@@ -74,13 +76,13 @@ final public class ClockModel : ObservableObject {
         }
     }
     
-    // Update the internal calculation so that it
-    // propagates forward from now.
-    //
-    // Used when e.g. the rate changes to base future calculations properly.
-    //
-    // Default arguments are the usual case; argument is
-    // provided for testing.
+    /// Update the internal calculation so that it
+    /// propagates forward from now.
+    ///
+    /// Used when e.g. the rate changes to base future calculations properly.
+    ///
+    /// Default arguments are the usual case; argument is
+    /// provided for testing.
     private func updateTimeCalculation(time: Date? = nil, now: Date? = nil ) {
         timeLastSet = now ?? Date()
         lastTimeSet = time ?? getTime()

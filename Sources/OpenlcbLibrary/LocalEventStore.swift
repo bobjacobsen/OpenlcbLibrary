@@ -19,7 +19,7 @@ final public class LocalEventStore {
     @Published public var eventsConsumed : Set<EventID> = []
     @Published public var eventsProduced : Set<EventID> = []
 
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalEventStore")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "LocalEventStore")
 
     func consumes(_ id : EventID) {
         eventsConsumed.insert(id)

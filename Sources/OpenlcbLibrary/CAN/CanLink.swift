@@ -13,7 +13,7 @@ import os
 ///
 /// This implementation handles one static Local Node and a variable number of Remote Nodes.
 ///  - An alias is allocated for the Local Node when the link comes up.
-///  - Aliases are tracked for the Remote Nodes, but not allocated
+///  - Aliases are tracked for the Remote Nodes, but not allocated here
 ///
 ///  Multi-frame addressed messages are accumulated in parallel
 ///  
@@ -48,7 +48,7 @@ final public class CanLink : LinkLayer {
         case .LinkUp:
             handleReceivedLinkUp(frame)
         case .LinkCollision, .LinkError :
-            logger.notice("Unexpected error report \(frame.header, format:.hex(minDigits: 8))")
+            CanLink.logger.notice("Unexpected error report \(frame.header, format:.hex(minDigits: 8))")
         case .LinkDown :
             handleReceivedLinkDown(frame)
         case .CID :
@@ -69,7 +69,7 @@ final public class CanLink : LinkLayer {
         case .Data :
             handleReceivedData(frame)
         case .UnknownFormat :
-            logger.notice("Unexpected CAN header \(frame.header, format:.hex(minDigits: 8))")
+            CanLink.logger.notice("Unexpected CAN header \(frame.header, format:.hex(minDigits: 8))")
         }
     }
 
@@ -180,14 +180,14 @@ final public class CanLink : LinkLayer {
         if let mapped = aliasToNodeID[frame.header&0xFFF] {
             sourceID = mapped
         } else {
-            // special case for JMRI, which sends VerifiedNodeID but not AMD
+            // special case for JMRI before 5.1.5 which sends VerifiedNodeID but not AMD
             if mti == MTI.Verified_NodeID {
                 sourceID = NodeID(frame.data)
-                logger.info("Verified_NodeID from unknown source alias: \(frame, privacy: .public), continue with observed ID \(sourceID, privacy: .public)")
+                CanLink.logger.info("Verified_NodeID from unknown source alias: \(frame, privacy: .public), continue with observed ID \(sourceID, privacy: .public)")
             } else {
                 sourceID = NodeID(nextInternallyAssignedNodeID)
                 nextInternallyAssignedNodeID += 1
-                logger.error("message from unknown source alias: \(frame, privacy: .public), continue with created ID \(sourceID, privacy: .public)")
+                CanLink.logger.error("message from unknown source alias: \(frame, privacy: .public), continue with created ID \(sourceID, privacy: .public)")
             }
             // register that internally-generated nodeID-alias association
             aliasToNodeID[frame.header&0xFFF] = sourceID
@@ -207,7 +207,7 @@ final public class CanLink : LinkLayer {
                     destID = mapped
                 } else {
                     destID = NodeID(nextInternallyAssignedNodeID)
-                    logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
+                    CanLink.logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
                     // register that internally-generated nodeID-alias association
                     aliasToNodeID[destAlias] = destID
                     nodeIdToAlias[destID] = destAlias
@@ -222,7 +222,7 @@ final public class CanLink : LinkLayer {
                     // check for never properly started, this is an errorn
                     guard accumulator[key] != nil else {
                         // have not-start frame, but never started
-                        logger.error("Dropping non-start datagram frame without accumulation started: \(frame, privacy: .public)")
+                        CanLink.logger.error("Dropping non-start datagram frame without accumulation started: \(frame, privacy: .public)")
                         return // early return to stop processing of this grame
                     }
                 }
@@ -248,7 +248,7 @@ final public class CanLink : LinkLayer {
                     destID = mapped
                 } else {
                     destID = NodeID(nextInternallyAssignedNodeID)
-                    logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
+                    CanLink.logger.error("message from unknown dest alias: \(frame, privacy: .public), continue with \(destID, privacy: .public)")
                     // register that internally-generated nodeID-alias association
                     aliasToNodeID[destAlias] = destID
                     nodeIdToAlias[destID] = destAlias
@@ -264,7 +264,7 @@ final public class CanLink : LinkLayer {
                     // check for first bit set never seen
                     guard accumulator[key] != nil else {
                         // have not-start frame, but never started
-                        logger.error("Dropping non-start frame without accumulation started: \(frame, privacy: .public)")
+                        CanLink.logger.error("Dropping non-start frame without accumulation started: \(frame, privacy: .public)")
                         return // early return to stop processing of this grame
                     }
                 }
@@ -291,7 +291,7 @@ final public class CanLink : LinkLayer {
         }
     }
     
-    override func sendMessage(_ msg : Message) {
+    public override func sendMessage(_ msg : Message) {
         // special case for datagram
         if msg.mti == .Datagram {
             var header = UInt(0x10_000_000)
@@ -303,12 +303,12 @@ final public class CanLink : LinkLayer {
             if let sssAlias = nodeIdToAlias[msg.source] { // might not know it if error
                 header |= (UInt(sssAlias) & 0xFFF)
             } else {
-                logger.error("Did not know source = \(msg.source) on datagram send")
+                CanLink.logger.error("Did not know source = \(msg.source) on datagram send")
             }
             if let dddAlias = nodeIdToAlias[msg.destination!] { // might not know it if error
                 header |= (UInt(dddAlias) & 0xFFF) << 12
             } else {
-                logger.error("Did not know destination = \(msg.source) on datagram send")
+                CanLink.logger.error("Did not know destination = \(msg.source) on datagram send")
             }
             
             if msg.data.count <= 8 {
@@ -341,7 +341,7 @@ final public class CanLink : LinkLayer {
             if let alias = nodeIdToAlias[msg.source] { // might not know it if error
                 header |= (alias & 0xFFF)
             } else {
-                logger.error("Did not know source = \(msg.source) on message send")
+                CanLink.logger.error("Did not know source = \(msg.source) on message send")
             }
             
             // Is a destination address needed? Could be long message
@@ -355,7 +355,7 @@ final public class CanLink : LinkLayer {
                         link!.sendCanFrame( frame )
                     }
                 } else {
-                    logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0))")
+                    CanLink.logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0))")
                 }
             } else {
                 // global still can hold data; assume length is correct by protocol
@@ -420,7 +420,7 @@ final public class CanLink : LinkLayer {
         let abort = (receivedAlias == localAlias)
         if (abort ) {
             // Collision! \\ TODO: are we doing the right thing here on alias collision?
-            logger.notice("alias collision in frame \(frame, privacy: .public), we restart with AMR and attempt to get new alias")
+            CanLink.logger.notice("alias collision in frame \(frame, privacy: .public), we restart with AMR and attempt to get new alias")
             link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
             // Standard 6.2.5
             state = .Inhibited
@@ -492,7 +492,7 @@ final public class CanLink : LinkLayer {
             if let okMTI = MTI(rawValue: canMTI) {
                 return okMTI
             } else {
-                logger.error("unhandled canMTI: \(frame), marked Unknown")
+                CanLink.logger.error("unhandled canMTI: \(frame), marked Unknown")
                 return MTI.Unknown
             }
         } else if (frameType >= 2 && 5 >= frameType) {
@@ -500,7 +500,7 @@ final public class CanLink : LinkLayer {
             return MTI.Datagram
         } else {
             // not handling reserver and stream type except to log
-            logger.error("unhandled canMTI: \(frame), marked Unknown")
+            CanLink.logger.error("unhandled canMTI: \(frame), marked Unknown")
             return MTI.Unknown
         }
     }
@@ -517,5 +517,5 @@ final public class CanLink : LinkLayer {
     }
     var accumulator : [AccumKey: [UInt8]] = [:]
 
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CanLink")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CanLink")
 }

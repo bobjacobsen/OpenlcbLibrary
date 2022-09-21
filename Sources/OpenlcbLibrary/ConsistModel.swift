@@ -15,7 +15,7 @@ final public class ConsistModel : ObservableObject, Processor {
     
     let linkLayer : LinkLayer
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ConsistModel")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ConsistModel")
 
     public init(linkLayer : LinkLayer) {
         self.linkLayer = linkLayer
@@ -138,7 +138,7 @@ final public class ConsistModel : ObservableObject, Processor {
                     }
                     return false
                 default:
-                    logger.error("Received \(message, privacy: .public) in unexpected state \(String(describing: self.fetchConsistState), privacy:.public)")
+                    ConsistModel.logger.error("Received \(message, privacy: .public) in unexpected state \(String(describing: self.fetchConsistState), privacy:.public)")
                     return false
                 }
                 // guard checkSourceID(message, forLoco) else { return false }  // not from top loco?

@@ -16,7 +16,7 @@ final public class ThrottleModel : ObservableObject {
     var linkLayer : LinkLayer?
     var openlcbNetwork : OpenlcbNetwork?
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
     
     /// Speed here is in meters/second.  Views that work in MPH need to do the conversion before
     /// changing `speed` here
@@ -69,7 +69,7 @@ final public class ThrottleModel : ObservableObject {
             fnModels.append(FnModel(number: index, label: "\(index)", model: self))
         }
         
-        logger.debug("init of ThrottleModel complete")
+        ThrottleModel.logger.debug("init of ThrottleModel complete")
     }
     
     // Data to construct a single function button
@@ -117,7 +117,7 @@ final public class ThrottleModel : ObservableObject {
                 return entry.nodeID
             }
         }
-        logger.error("getRosterEntryNodeID asked for \"\(from, privacy:.public)\" which didn't match")
+        ThrottleModel.logger.error("getRosterEntryNodeID asked for \"\(from, privacy:.public)\" which didn't match")
         return NodeID(0)
     }
 
@@ -142,13 +142,13 @@ final public class ThrottleModel : ObservableObject {
     /// Load the labels in roster entries from SNIP if that's been updated
     public func reloadRoster() {
         DispatchQueue.main.async{ // to avoid "publishing changes from within view updates is not allowed"
-            self.logger.trace("reloadRoster starting on main queue")
+            ThrottleModel.logger.trace("reloadRoster starting on main queue")
             for index in 0..<self.roster.count {
                 let newEntry = self.createRosterEntryFromNodeID(for: self.roster[index].nodeID)
                 // remake if label quality has improved or name changed
                 if newEntry.labelSource.rawValue > self.roster[index].labelSource.rawValue
                             || ( newEntry.labelSource.rawValue == self.roster[index].labelSource.rawValue && newEntry.label != self.roster[index].label) {
-                    self.logger.trace("   Updating roster entry due to new label: \(newEntry.label)")
+                    ThrottleModel.logger.trace("   Updating roster entry due to new label: \(newEntry.label)")
                     self.roster[index].label = newEntry.label
                     self.roster[index].labelSource = newEntry.labelSource
                 }

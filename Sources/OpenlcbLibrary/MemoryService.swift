@@ -31,7 +31,7 @@ final public class MemoryService {
         service.registerDatagramReceivedListener(datagramReceivedListener)
     }
     
-    internal let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "MemoryService")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "MemoryService")
 
     // Memo carries request and reply
     public struct MemoryReadMemo {
@@ -163,7 +163,7 @@ final public class MemoryService {
             }
         case 0x86, 0x87 : // Address Space Information Reply
             guard spaceLengthCallback != nil else {
-                logger.error("Address Space Information Reply received with no callback")
+                MemoryService.logger.error("Address Space Information Reply received with no callback")
                 return
             }
             if dmemo.data[1] == 0x86 {
@@ -181,7 +181,7 @@ final public class MemoryService {
             spaceLengthCallback = nil
 
         default:
-            logger.error("Did not expect reply of type \(dmemo.data[1], privacy:.public)")
+            MemoryService.logger.error("Did not expect reply of type \(dmemo.data[1], privacy:.public)")
         }
     }
     
@@ -227,7 +227,7 @@ final public class MemoryService {
     /// Request the length of a specific memory space from a remote node.
     public func requestSpaceLength(space: UInt8, nodeID : NodeID, callback : ((Int) -> ())? ) {
         guard spaceLengthCallback == nil else {
-            logger.error("Overlapping calls to requestSpaceLength")
+            MemoryService.logger.error("Overlapping calls to requestSpaceLength")
             return
         }
         spaceLengthCallback = callback

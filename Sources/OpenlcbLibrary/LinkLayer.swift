@@ -27,21 +27,21 @@ public class LinkLayer {
     }
     public let localNodeID : NodeID // valid default node ID
 
-    func sendMessage(_ msg : Message) {}
+    public func sendMessage(_ msg : Message) {}
     
-    func registerMessageReceivedListener(_ listener : @escaping ( (_ : Message) -> () )) {
+    public func registerMessageReceivedListener(_ listener : @escaping ( (_ : Message) -> () )) {
         listeners.append(listener)
     }
-    var listeners : [( (_ : Message) -> () )] = []
+    private(set) var listeners : [( (_ : Message) -> () )] = []
     
-    func fireListeners(_ msg : Message) {
+    internal func fireListeners(_ msg : Message) {
         for listener in listeners {
             listener(msg)
         }
     }
     
     // invoked when the link layer comes up and down
-    func linkStateChange(state : State) {
+    internal func linkStateChange(state : State) {
         var msg : Message
         if state == State.Permitted {
             msg = Message(mti: MTI.Link_Layer_Up, source: NodeID(0) )

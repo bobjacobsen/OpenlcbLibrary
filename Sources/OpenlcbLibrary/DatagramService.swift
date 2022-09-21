@@ -27,7 +27,7 @@ final public class DatagramService : Processor {
     }
     private let linkLayer : LinkLayer
     
-    private let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "DatagramService")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "DatagramService")
 
     /// Memo carries write request and two reply callbacks
     public struct DatagramWriteMemo : Equatable {
@@ -186,7 +186,7 @@ final public class DatagramService : Processor {
             return memo
         }
         // did not find one
-        logger.error("Did not match memo to message \(message)")
+        DatagramService.logger.error("Did not match memo to message \(message)")
         return nil  // this will prevent firther processing
     }
     

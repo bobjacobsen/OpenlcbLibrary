@@ -9,41 +9,41 @@ import Foundation
 import os
 
 final public class CdiModel : ObservableObject {
-    @Published public var loading : Bool = false  // true while loading - use to show ProgressView
-    @Published public var loaded  : Bool = false  // true when loading is done and data is present
-    @Published public var endOK   : Bool = true   // if false when loaded is true, an error prevented a complete load
+    @Published public internal(set) var loading : Bool = false  // true while loading - use to show ProgressView
+    @Published public internal(set) var loaded  : Bool = false  // true when loading is done and data is present
+    @Published public internal(set) var endOK   : Bool = true   // if false when loaded is true, an error prevented a complete load
     
     @Published public var tree : [CdiXmlMemo] = [] // content!
     
-    let mservice : MemoryService
-    let nodeID : NodeID
+    internal let mservice : MemoryService
+    internal let nodeID : NodeID
     
-    @Published public var nextReadAddress = -1
-    @Published public var cdiLength = 0
+    @Published public internal(set) var nextReadAddress = -1
+    @Published public internal(set) var cdiLength = 0
     
-    var savedDataString = ""
+    internal var savedDataString = ""
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiModel")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiModel")
     
     public init (mservice : MemoryService, nodeID : NodeID) {
         self.mservice = mservice
         self.nodeID = nodeID
     }
     
-    func okReplyCallback(memo : MemoryService.MemoryReadMemo) {
+    internal func okReplyCallback(memo : MemoryService.MemoryReadMemo) {
     }
-    func rejectedReplyCallback(memo : MemoryService.MemoryReadMemo) {
-        logger.error("Memory service replied via rejectedReplyCallback")
+    internal func rejectedReplyCallback(memo : MemoryService.MemoryReadMemo) {
+        CdiModel.logger.error("Memory service replied via rejectedReplyCallback")
         // stop input and try to process
         processAquiredText()
     }
-    func dataReplyCallback(memo : MemoryService.MemoryReadMemo) {
+    internal func dataReplyCallback(memo : MemoryService.MemoryReadMemo) {
         // Assume this is a Read Reply with data
         // Save the data
         if let chars = String(bytes: memo.data, encoding: .utf8) {
             savedDataString.append(chars)
         } else {
-            logger.error("<Received data not in UTF8 form>")
+            CdiModel.logger.error("<Received data not in UTF8 form>")
             processAquiredText()
             return
         }
@@ -62,20 +62,20 @@ final public class CdiModel : ObservableObject {
         mservice.requestMemoryRead(memMemo)
     }
     
-    func findTrailingZero(in memo: MemoryService.MemoryReadMemo) -> (Bool) {
+    internal func findTrailingZero(in memo: MemoryService.MemoryReadMemo) -> (Bool) {
         if memo.data.contains(0x00) {
             return true
         }
         return false
     }
     
-    func processAquiredText() {
+    internal func processAquiredText() {
         // actually process it into an XML tree
         tree = CdiXmlMemo.process(savedDataString.data(using: .utf8)!)[0].children! // index due to null base node
     }
     
-    func memorySpaceCallback(length : Int) {
-        logger.trace("Memory space 0xFF is \(length, privacy: .public) bytes long")
+    internal func memorySpaceCallback(length : Int) {
+        CdiModel.logger.trace("Memory space 0xFF is \(length, privacy: .public) bytes long")
         cdiLength = length
 
         // do the first read and start the loop
@@ -103,7 +103,8 @@ final public class CdiModel : ObservableObject {
         mservice.requestMemoryWrite(memMemo)
     }
     
-    public func writeUInt64(value : UInt64, at: Int, space: UInt8, length: UInt8) {
+    // An event is written as an _unsigned_ quantity to fit in 64 bits
+    public func writeEvent(value : UInt64, at: Int, space: UInt8, length: UInt8) {
         let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: {_ in}, rejectedReply: {_ in }, size: length, space: space, address: at, data: mservice.uInt64ToArray(value: value, length: length))
         
         mservice.requestMemoryWrite(memMemo)
@@ -118,7 +119,7 @@ final public class CdiModel : ObservableObject {
     public func readInt(from: Int, space: UInt8, length: UInt8, action: @escaping (Int)->()) {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
                                                    rejectedReply: {_ in
-            self.logger.error("Rejected reply to readInt of \(from, privacy: .public)")
+            CdiModel.logger.error("Rejected reply to readInt of \(from, privacy: .public)")
         },
                                                    dataReply: {memo in
             action(self.mservice.arrayToInt(data:memo.data, length: length))
@@ -126,11 +127,11 @@ final public class CdiModel : ObservableObject {
         mservice.requestMemoryRead(memMemo)
     }
     
-    // An event is a 64-bit _unsigned_ quantity
+    // An event is read as an _unsigned_ quantity to fit in 64 bits
     public func readEvent(from: Int, space: UInt8, length: UInt8, action: @escaping (UInt64)->()) {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
                                                    rejectedReply: {_ in
-            self.logger.error("Rejected reply to readInt of \(from, privacy: .public)")
+            CdiModel.logger.error("Rejected reply to readInt of \(from, privacy: .public)")
         },
                                                    dataReply: {memo in
             action(self.mservice.arrayToUInt64(data:memo.data, length: length))
@@ -141,7 +142,7 @@ final public class CdiModel : ObservableObject {
     public func readString(from: Int, space: UInt8, length: UInt8, action: @escaping (String)->()) {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: length, space: space, address: from,
                                                    rejectedReply: {_ in
-            self.logger.error("Rejected reply to readString of \(from, privacy: .public)")
+            CdiModel.logger.error("Rejected reply to readString of \(from, privacy: .public)")
         },
                                                    dataReply: {memo in
             action(self.mservice.arrayToString(data:memo.data, length: length))

@@ -15,17 +15,17 @@ public struct SNIP {
 
     // The values of these are updated as more data comes in so othat they're
     // always the best available names.
-    public var manufacturerName = ""
-    public var modelName = ""
-    public var hardwareVersion = ""
-    public var softwareVersion = ""
+    public internal(set) var manufacturerName = ""
+    public internal(set) var modelName = ""
+    public internal(set) var hardwareVersion = ""
+    public internal(set) var softwareVersion = ""
     
-    public var userProvidedNodeName = ""
-    public var userProvidedDescription = ""
+    public internal(set) var userProvidedNodeName = ""
+    public internal(set) var userProvidedDescription = ""
 
     // total SNIP data is 1+41+41+21+21 1+63+64 = 125+128 = 253 bytes
-    var data : [UInt8] = Array(repeating: 0, count: 253)
-    var index = 0; // for loading in multiple messages
+    internal var data : [UInt8] = Array(repeating: 0, count: 253)
+    internal var index = 0; // for loading in multiple messages
     
     public init() {}
     public init(_ mfgName : String, // for debug and SwiftUI preview
@@ -42,9 +42,9 @@ public struct SNIP {
         userProvidedDescription = uDesc
     }
     
-    // we don't (yet) support later versions with e.g. larger strings, etc.
-    // OLCB Strings are fixed length null terminated
-    
+     // OLCB Strings are fixed length null terminated
+     // we don't (yet) support later versions with e.g. larger strings, etc.
+
     /// Get the desired string by string number in the data
     /// 0-indexed
     func getString(n : Int) -> String {
@@ -121,7 +121,7 @@ public struct SNIP {
         }
     }
     
-    // add additional bytes of SNIP data
+    /// Add additional bytes of SNIP data
     mutating func addData(data : [UInt8] ) {
         for i in 0...data.count-1 {
             // protect against overlapping requests causing an overflow
@@ -204,5 +204,5 @@ public struct SNIP {
         return retval
     }
     
-    static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "SNIP")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "SNIP")
 }

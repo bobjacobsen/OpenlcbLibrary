@@ -28,6 +28,7 @@ public final class CdiXmlMemo : Identifiable {
         case INPUT_STRING
         case MAP        // held within a INPUT_* node
     }
+    
     // common values
     public internal(set) var type : XMLMemoType
     public internal(set) var name : String
@@ -35,20 +36,20 @@ public final class CdiXmlMemo : Identifiable {
     public internal(set) var description : String
     
     // input values - usage determined by type
-    public internal(set) var length : Int                 // bytes for data types, replications for GROUP and GROUP_REP
-    public internal(set) var offset : Int                 // initial offset from the CDI
+    public internal(set) var length : Int                 // Bytes for data types, replications for GROUP and GROUP_REP
+    public internal(set) var offset : Int                 // Initial offset from the CDI
     public internal(set) var space : Int
     
     public internal(set) var defaultValue : Int
     public internal(set) var maxValue = 2_147_483_647     // 32 bit max
     public internal(set) var minValue = 0
     
-    public internal(set) var startAddress : Int // set on segment element, otherwise computed
+    public internal(set) var startAddress : Int           // Set on segment element, otherwise computed
     
-    public internal(set) var currentIntValue : Int
-    public internal(set) var currentStringValue : String
+    public var currentIntValue : Int
+    public var currentStringValue : String
 
-    public internal(set) var children : [CdiXmlMemo]? // Optional required to display in SwiftUI?  Never nil here.
+    public internal(set) var children : [CdiXmlMemo]?     // Optional required to display in SwiftUI.  Never nil here.
     
     public internal(set) var properties : [String] = []
     public internal(set) var values : [String] = []
