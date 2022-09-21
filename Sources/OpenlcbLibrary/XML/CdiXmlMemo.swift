@@ -11,8 +11,14 @@ import Foundation
 
 // CdiXmlMemo is a class so that reference semantics can be used to parts of the tree of memos
 // The tree of CdiMemo objects only has downward links, so no cycles are created (nor allowed)
+
+
+/// Represent an XML CDI tree as objects for use by e.g. `CdiModel`
 public final class CdiXmlMemo : Identifiable {
-    public enum XMLMemoType { // represent the type of each node
+    
+    /// Represent the type of each node.
+    /// Maps to `CdiParserDelegate.NextTextOperation` states
+    public enum XMLMemoType {
         case TOPLEVEL // cdi element itself
         case SEGMENT  // Segment is a top-level group
         case GROUP
@@ -23,28 +29,29 @@ public final class CdiXmlMemo : Identifiable {
         case MAP        // held within a INPUT_* node
     }
     // common values
-    public var type : XMLMemoType
-    public var name : String
-    public var repname : String
-    public var description : String
+    public internal(set) var type : XMLMemoType
+    public internal(set) var name : String
+    public internal(set) var repname : String
+    public internal(set) var description : String
+    
     // input values - usage determined by type
-    public var length : Int
-    public var offset : Int                 // initial offset from the CDI
-    public var space : Int
+    public internal(set) var length : Int                 // bytes for data types, replications for GROUP and GROUP_REP
+    public internal(set) var offset : Int                 // initial offset from the CDI
+    public internal(set) var space : Int
     
-    public var defaultValue : Int
-    public var maxValue = 2_147_483_647     // 32 bit max
-    public var minValue = 0
+    public internal(set) var defaultValue : Int
+    public internal(set) var maxValue = 2_147_483_647     // 32 bit max
+    public internal(set) var minValue = 0
     
-    public var startAddress : Int // set on segment element, otherwise computed
+    public internal(set) var startAddress : Int // set on segment element, otherwise computed
     
-    public var currentIntValue : Int
-    public var currentStringValue : String
+    public internal(set) var currentIntValue : Int
+    public internal(set) var currentStringValue : String
 
-    public var children : [CdiXmlMemo]? // Optional required to display in SwiftUI?  Never nil here.
+    public internal(set) var children : [CdiXmlMemo]? // Optional required to display in SwiftUI?  Never nil here.
     
-    public var properties : [String] = []
-    public var values : [String] = []
+    public internal(set) var properties : [String] = []
+    public internal(set) var values : [String] = []
     
     public let id = UUID() // for Identifiable
     
@@ -52,7 +59,7 @@ public final class CdiXmlMemo : Identifiable {
     // TODO: How to handle the identification block?  Present or not? Read-only
     
     /// Copy ctor makes deep copy
-    init(_ memo : CdiXmlMemo) {
+    internal init(_ memo : CdiXmlMemo) {
         self.type = memo.type
         self.name = memo.name
         self.repname = memo.repname
@@ -85,7 +92,7 @@ public final class CdiXmlMemo : Identifiable {
     }
     
     /// Null object ctor - for later fill-out
-    init() {
+    internal init() {
         self.type = .TOPLEVEL
         self.name = ""
         self.repname = ""

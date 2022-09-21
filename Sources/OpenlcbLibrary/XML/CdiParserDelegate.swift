@@ -9,12 +9,16 @@ import Foundation
 
 /// Delegate for use with ``XMLParser``, this is used to process CDI XML files and create a tree of ``CdiXmlMemo`` objects.
 final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inheritance
+    
     // MARK: Delegate methods
+    
     func parserDidStartDocument(_ parser : XMLParser) {
     }
+    
     func parserDidEndDocument(_ parser : XMLParser) {
         // print ("parserDidEndDocument")
     }
+    
     func parser(_: XMLParser, didStartElement: String, namespaceURI: String?, qualifiedName: String?, attributes: [String : String]) {
         switch didStartElement {
         case "cdi" :
@@ -120,8 +124,13 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     }
 
     // MARK: State
+    
     var memoStack : [CdiXmlMemo] = []
     var currentTextState = NextTextOperation.NONE
+    
+    
+    /// Defines a state machine that maps specific XML CDI elements to
+    ///  `CdiXmlMemo` objects.
     enum NextTextOperation {
         case NONE
         case NAME
@@ -135,6 +144,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     }
     
     // MARK: Element methods
+    
     func cdiStart() {
         // push first element
         memoStack.append(CdiXmlMemo())
