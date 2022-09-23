@@ -97,7 +97,6 @@ struct LocalNodeProcessor : Processor {
     
     private func identifyEventsAddressed(_ message : Message, _ node : Node) {
         // EventProtocol in PIP, but no Events here to reply about; no reply necessary
-        // TODO: Hook to eventual Event Processing architecture
     }
     
     ///

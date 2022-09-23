@@ -154,7 +154,7 @@ final public class ThrottleModel : ObservableObject {
                 }
             }
             self.roster.sort()  // sort by .id, which is nodeID
-            //roster.sort { $0.label < $1.label } // TODO: Sorts by label, but alpha sort messes up <None>, 100S vs 21S, etc; need better comparison function
+            //roster.sort { $0.label < $1.label } // TODO: Sorts by label, but alpha sort messes up <None>, 100S vs 21S, etc; need better comparison function; add a 'sortBy' property to roster entries
         }
     }
     
