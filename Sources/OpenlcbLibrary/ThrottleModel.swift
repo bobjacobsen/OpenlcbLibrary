@@ -10,7 +10,7 @@ import os
 
 // Float16 not supported on macOS Rosetta.  Hence we use our own `floatToFloat16` conversion routine, see the bottom of the file.
 
-// Data to construct a throttle
+/// Data to construct a single throttle.
 final public class ThrottleModel : ObservableObject {
     
     var linkLayer : LinkLayer?
@@ -66,7 +66,7 @@ final public class ThrottleModel : ObservableObject {
         // construct the array of function models
         for index in 0...maxFn { // includes 0 and maxFn, i.e. 0 to 28 inclusive
             // default fn labels are just the numbers
-            fnModels.append(FnModel(number: index, label: "\(index)", model: self))
+            fnModels.append(FnModel(number: index, label: "FN \(index)", model: self))
         }
         
         ThrottleModel.logger.debug("init of ThrottleModel complete")
@@ -74,7 +74,7 @@ final public class ThrottleModel : ObservableObject {
     
     // Data to construct a single function button
     final public class FnModel : ObservableObject {
-        public let label : String
+        @Published public var label : String
         public let number : Int
         var model: ThrottleModel
         public let id = UUID()
@@ -211,9 +211,9 @@ final public class ThrottleModel : ObservableObject {
                               destination: entry.nodeID, data: data)
         linkLayer!.sendMessage(command)
         
-        // start the read of the FDI  // TODO: Maybe it's attached to the ThrottleModel instead of a roster entry.
-        // entry.fdiModel = FdiModel(mservice: openlcbNetwork!.mservice, nodeID: entry.nodeID)
-        // entry.fdiModel!.readModel(nodeID: entry.nodeID)
+        // start the read of the FDI
+        fdiModel = FdiModel(mservice: openlcbNetwork!.mservice, nodeID: entry.nodeID, throttleModel: self)
+        fdiModel!.readModel(nodeID: entry.nodeID)
 
     }
     
@@ -261,6 +261,7 @@ final public class ThrottleModel : ObservableObject {
     
     internal var tc_state : TC_Selection_State = .Idle_no_selection
     internal var selected_nodeId : NodeID = NodeID(0)
+    internal var fdiModel : FdiModel? = nil
     
     /// True is a selection has succeeded and a locmotive is selected
     @Published public var selected : Bool = false

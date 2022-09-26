@@ -63,8 +63,10 @@ struct ThrottleProcessor : Processor {
                                           destination: model.selected_nodeId, data: data)
                     linkLayer!.sendMessage(command)
 
-                    // TODO: Need to start the read of FDI here.  But what roster entry do we attach it to?
-                    // TODO: Maybe it's attached to the ThrottleModel instead of a roster entry.
+                    // Start the read of FDI here
+                    model.fdiModel = FdiModel(mservice: model.openlcbNetwork!.mservice, nodeID: message.source, throttleModel: model)
+                    model.fdiModel!.readModel(nodeID: message.source)
+
                 }
             }
         case .Traction_Control_Reply :
