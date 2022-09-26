@@ -81,7 +81,7 @@ public class XmlModel {
             return
         }
         // Check for end of data (< 64 and/or trailing 0 byte)
-        if memo.size < 64 || findTrailingZero(in: memo) {
+        if memo.data.count < 64 || findTrailingZero(in: memo) {
             processAquiredText()
             
             loading = false

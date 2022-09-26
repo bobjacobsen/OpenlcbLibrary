@@ -22,13 +22,20 @@ public class FdiModel : XmlModel, ObservableObject {
     }
     
     override internal func processAquiredText() {
-        // actually process it into an XML tree
-        tree = FdiXmlMemo.process(savedDataString.data(using: .utf8)!)[0].children! // index due to null base node
-        
         // reset the function model items to default content
         for index in 0...throttleModel.maxFn {
             throttleModel.fnModels[index].label = "FN \(index)"
         }
+
+        // actually process it into an XML tree
+        
+        let processedData = FdiXmlMemo.process(savedDataString.data(using: .utf8)!)
+                                               
+        guard processedData.count > 0 else { return }
+        guard processedData[0].children != nil else { return }
+
+        tree = processedData[0].children! // index due to null base node
+        
         // Copy the FDI definitions into the function model items, overwriting standard content
         let segment = tree[0]
         if let group = segment.children?[0] {
@@ -42,7 +49,6 @@ public class FdiModel : XmlModel, ObservableObject {
                 if (number <= throttleModel.maxFn) {
                     throttleModel.fnModels[number].label = name
                     throttleModel.fnModels[number].momentary = momentary
-                    print(name)
                 }
             }
         }

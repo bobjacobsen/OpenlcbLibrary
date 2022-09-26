@@ -135,7 +135,9 @@ final public class MemoryService {
                     }
                     
                     // reply to requestor
-                    tMemoryMemo.data = Array(dmemo.data[offset..<dmemo.data.count])
+                    if dmemo.data.count > offset {
+                        tMemoryMemo.data = Array(dmemo.data[offset..<dmemo.data.count])
+                    }
                     
                     // check for read or read error reply
                     if (dmemo.data[1] & 0x08 == 0) {
