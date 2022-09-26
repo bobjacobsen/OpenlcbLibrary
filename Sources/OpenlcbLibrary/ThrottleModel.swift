@@ -210,6 +210,11 @@ final public class ThrottleModel : ObservableObject {
         let command = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
                               destination: entry.nodeID, data: data)
         linkLayer!.sendMessage(command)
+        
+        // start the read of the FDI  // TODO: Maybe it's attached to the ThrottleModel instead of a roster entry.
+        // entry.fdiModel = FdiModel(mservice: openlcbNetwork!.mservice, nodeID: entry.nodeID)
+        // entry.fdiModel!.readModel(nodeID: entry.nodeID)
+
     }
     
     /// Set speed to 0 Forward and turn off all functions.
@@ -249,8 +254,9 @@ final public class ThrottleModel : ObservableObject {
                 labelSource = .NodeID
             }
         }
-        return RosterEntry(label: label, nodeID: nodeID, labelSource: labelSource)
-
+        let newEntry = RosterEntry(label: label, nodeID: nodeID, labelSource: labelSource)
+        
+        return newEntry
     }
     
     internal var tc_state : TC_Selection_State = .Idle_no_selection
@@ -283,16 +289,6 @@ final public class ThrottleModel : ObservableObject {
     }
 } // end of ThrottleModel class
 
-#if arch(arm64)
-// For converting Float16 to bytes and vice versa (used in some tests on Arm64, even after Float16 removed from main code)
-// See https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
-extension Float16 {
-    var bytes: [UInt8] {
-        withUnsafeBytes(of: self, Array.init)
-    }
-}
-#endif
-
 // The selection state, referenced here and in ThrottleProcessor
 internal enum TC_Selection_State {
     case Idle_no_selection
@@ -308,6 +304,8 @@ internal enum TC_Selection_State {
 final public class RosterEntry : Hashable, Equatable, Comparable {
     public var label : String
     public let nodeID : NodeID
+    public var fdiModel : FdiModel? = nil
+    
     internal var labelSource : LabelSource // quality of label information
     
     // Code where the label came from, in increasing reliability order

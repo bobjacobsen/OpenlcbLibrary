@@ -19,7 +19,7 @@ class CdiXmlMemoTest: XCTestCase {
     }
 
     func testStringElementFromFile() {
-        #if os(macOS)  // file access only works on macOS due to file location?
+#if os(macOS)  // TODO: Works only on macOS with the file in ~/Documents; needs to access local file
         // set up the same file
         //let file = "tower-lcc-cdi.xml" //this is the file we will read from in ~/Documents
         let file = "cdi-pretty.xml" //this is the file we will read from in ~/Documents
@@ -29,7 +29,7 @@ class CdiXmlMemoTest: XCTestCase {
         let _ = CdiXmlMemo.process(data!)
 
         // print (result)
-        #endif
+#endif
     }
 
 // TODO: Bundle-reading not working with standalone tests

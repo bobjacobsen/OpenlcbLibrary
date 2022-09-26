@@ -62,6 +62,9 @@ struct ThrottleProcessor : Processor {
                     let command = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
                                           destination: model.selected_nodeId, data: data)
                     linkLayer!.sendMessage(command)
+
+                    // TODO: Need to start the read of FDI here.  But what roster entry do we attach it to?
+                    // TODO: Maybe it's attached to the ThrottleModel instead of a roster entry.
                 }
             }
         case .Traction_Control_Reply :
@@ -74,9 +77,6 @@ struct ThrottleProcessor : Processor {
                 let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
                 
                 let mpsSpeed = float16ToFloat(alignedBytes)
-//                let mpsSpeed = Float(alignedBytes.withUnsafeBytes {
-//                    $0.load(fromByteOffset: 0, as: Float16.self)
-//                })
                 let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
                 
                 model.speed = abs(mphSpeed)
