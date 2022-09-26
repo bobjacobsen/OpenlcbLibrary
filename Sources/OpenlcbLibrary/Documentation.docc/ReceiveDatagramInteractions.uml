@@ -5,7 +5,6 @@ participant LinkLayer
 participant NodeStore
 participant DatagramProcessor
 participant DatagramService
-participant Node
 participant client
 
 -->> PhysicalLayer
@@ -15,7 +14,6 @@ activate LinkLayer
 LinkLayer -> DatagramProcessor
 
 activate DatagramProcessor
-DatagramProcessor -> Node : get DatagramService
 DatagramProcessor -> DatagramService : present Datagram
 
 activate DatagramService

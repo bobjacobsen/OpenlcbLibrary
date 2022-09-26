@@ -5,11 +5,9 @@ participant LinkLayer
 participant NodeStore
 participant DatagramProcessor
 participant DatagramService
-participant Node
 participant client
 
 activate client
-client -> Node : get Datagram Service
 
 client -> DatagramService : present memo
 DatagramService -> LinkLayer : send Datagram message
@@ -26,7 +24,6 @@ note left of PhysicalLayer : Wait for\nnetwork reply
 activate PhysicalLayer
 PhysicalLayer -> LinkLayer : reply frames
 LinkLayer -> DatagramProcessor : ok/reject message
-DatagramProcessor -> Node : get Datagram Service
 DatagramProcessor -> DatagramService : present ok/reject message
 
 DatagramService -> client : return memo

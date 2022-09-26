@@ -17,8 +17,6 @@ import os
 ///  - exactly one should call positiveReplyToDatagram/negativeReplyToDatagram before returning from listener
 //
 // Implements `Processor`, should be fed as part of common execution
-//
-// TODO: Update the PlantUML diagrams
 
 
 final public class DatagramService : Processor {
