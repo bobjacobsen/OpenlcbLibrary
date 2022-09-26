@@ -18,20 +18,6 @@ class CdiXmlMemoTest: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-// TODO: Bundle-reading not working with standalone tests
-//    func testStringElementFromBundle() {
-//        //#if os(macOS)  // file access only works on macOS due to file location?
-//        // set up the input file
-//        let file = "cdi-pretty" //this is the file we will read from in the bundle
-//        let data = CdiSampleDataAccess.getDataFromBundleFile(file)
-//        print (data as Any)
-//
-//        let _ = CdiXmlMemo.process(data!)
-//
-//        // print (result)
-//        //#endif
-//    }
-
     func testIntElement() throws {
         let data : Data = ("""
                             <cdi><int>

@@ -15,38 +15,7 @@ public struct CdiSampleDataAccess {
     // holds no common data, this is really a collection of methods
     
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiSampleDataAccess")
-    
-    // for testing and sample data
-    // reads from ~/Documents and creates an Data element from the file contents
-    public static func getDataFromFile(_ file : String) -> Data? {
-        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-            logger.error("problem with directory")
-            return nil
-        }
-        do {
-            let fileURL = dir.appendingPathComponent(file)
-            let data = try Data(contentsOf: fileURL)
-            return data
-        } catch {
-            logger.error("caught \(error.localizedDescription, privacy:.public)")
-            return nil
-        }
-    }
-
-    public static func getDataFromBundleFile(_ file : String) -> Data? { // file is without extension, assumed .xml
-        let filePath = Bundle.main.path(forResource: file, ofType: "xml");
-        let URL = NSURL.fileURL(withPath: filePath!)
-
-        do {
-            let string = try String.init(contentsOf: URL)
-            let data = string.data(using: .utf8)!
-            return data
-        } catch  {
-            logger.error("caught \(error.localizedDescription, privacy:.public)")
-        }
-        return nil
-    }
-    
+        
     /// Provide sample CDI as a ``CdiXmlMemo`` tree. Contains
     ///   - a clean sample segement
     ///   - the first segments of an RR-CirKits Tower LCC CDI

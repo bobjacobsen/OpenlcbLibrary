@@ -211,6 +211,7 @@ final public class ThrottleModel : ObservableObject {
                               destination: entry.nodeID, data: data)
         linkLayer!.sendMessage(command)
         
+        // TODO: check for FDI in node PIP?
         // start the read of the FDI
         fdiModel = FdiModel(mservice: openlcbNetwork!.mservice, nodeID: entry.nodeID, throttleModel: self)
         fdiModel!.readModel(nodeID: entry.nodeID)

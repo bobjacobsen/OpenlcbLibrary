@@ -17,33 +17,7 @@ class FdiXmlMemoTest: XCTestCase {
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
-    
-    func testStringElementFromFile() {
-#if os(macOS)  // TODO: Works only on macOS with the file in ~/Documents; needs to access local file
-        // set up the same file
-        //let file = "tower-lcc-cdi.xml" //this is the file we will read from in ~/Documents
-        let file = "fdi-pretty.xml" //this is the file we will read from in ~/Documents
-        let data = CdiSampleDataAccess.getDataFromFile(file)
-        // print (data as Any)
         
-        let _ = FdiXmlMemo.process(data!) // just checking it doesn't fault
-#endif
-    }
-    
-    // TODO: Bundle-reading not working with standalone tests
-    //    func testStringElementFromBundle() {
-    //        //#if os(macOS)  // file access only works on macOS due to file location?
-    //        // set up the same file
-    //        let file = "cdi-pretty" //this is the file we will read from in the bundle
-    //        let data = CdiSampleDataAccess.getDataFromBundleFile(file)
-    //        print (data as Any)
-    //
-    //        let _ = FdiXmlMemo.process(data!)
-    //
-    //        // print (result)
-    //        //#endif
-    //    }
-    
     func testFunctionElement() {
         let data : Data = ("""
                             <fdi>
