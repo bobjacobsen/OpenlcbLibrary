@@ -121,6 +121,7 @@ public final class CdiXmlMemo : Identifiable {
         // and post-process
         processGroupReplication(delegate.memoStack[0])
         _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
+        rmEmptyGroups(delegate.memoStack[0])
         
         return delegate.memoStack
     }
@@ -178,6 +179,39 @@ public final class CdiXmlMemo : Identifiable {
         }
         // print ("node \(memo.name) end: \(newEndAddress) from: \(endAddress) type: \(memo.type) o: \(memo.offset)")
         return newEndAddress
+    }
+
+    /// Recursively scan the  tree, removing any groups that have none of
+    ///  - child nodes, i.e. content
+    ///  - name
+    ///  - or a description
+    ///  By removing them as part of processing, we remove empty lines in the display.
+    ///  Should be run after memory address computation, as may remove a group with an offset
+    static private func rmEmptyGroups(_ memo : CdiXmlMemo) {
+        // descend into children, removing nested groups as necessary
+        if let children = memo.children {
+            for child in children {
+                rmEmptyGroups(child)
+            }
+        }
+
+        // and check that this node's children can now be removed, taking into account that children might be already removed
+        if let children = memo.children {
+            //for (index, child) in children.enumerated() {
+            for index in stride(from: children.count-1, through: 0, by: -1) { // have to go in reverse to allow deletion w/o changing index
+                let child = children[index]
+                // check for empty child that can be removed.
+                
+                print("child[\(index)] of \(memo.name): \(child.type) \(child.name.isEmpty) \(child.description.isEmpty)")
+                if child.children != nil { print ("   \(child.children!.count)")}
+                
+                if child.type == .GROUP && child.name.isEmpty && child.description.isEmpty && (child.children == nil || child.children!.count == 0) {
+                    // Remove this child element
+                    print ("removed a child of \(memo.name)\n")
+                    memo.children?.remove(at: index)
+                }
+            }
+        }
     }
 
 }
