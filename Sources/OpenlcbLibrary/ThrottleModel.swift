@@ -13,6 +13,7 @@ import os
 /// Data to construct a single throttle.
 final public class ThrottleModel : ObservableObject {
     
+    // needed to send messages.  // TODO: Could be replaced by the openlcbNetwork reference for generality
     var linkLayer : LinkLayer?
     var openlcbNetwork : OpenlcbNetwork?
     
@@ -26,10 +27,11 @@ final public class ThrottleModel : ObservableObject {
         }
     }
     
+    // We have separate forward and false to represent the initial case where it's not known what the status is
     @Published public var forward = true
     @Published public var reverse = false
     
-    // Operations methods
+    // MARK: Operations methods
     
     /// 1 scale mph to meters per second for the speed commands.
     /// The screen works in MPH; the model works in meters/sec
@@ -72,7 +74,7 @@ final public class ThrottleModel : ObservableObject {
         ThrottleModel.logger.debug("init of ThrottleModel complete")
     }
     
-    // Data to construct a single function button
+    /// Data to model a single function button
     final public class FnModel : ObservableObject {
         @Published public var label : String
         public let number : Int
@@ -263,7 +265,7 @@ final public class ThrottleModel : ObservableObject {
     internal var selected_nodeId : NodeID = NodeID(0)
     internal var fdiModel : FdiModel? = nil
     
-    /// True is a selection has succeeded and a locmotive is selected
+    /// True iff a selection has succeeded and a locmotive is selected
     @Published public var selected : Bool = false
     /// When `selected` is true, this carries the user-friendly-name of the selected locomotive
     @Published public var selectedLoco : String = "Select"  // "Select" goes with !selected
@@ -290,7 +292,7 @@ final public class ThrottleModel : ObservableObject {
     }
 } // end of ThrottleModel class
 
-// The selection state, referenced here and in ThrottleProcessor
+/// The selection state, referenced here and in ThrottleProcessor
 internal enum TC_Selection_State {
     case Idle_no_selection
     // case Wait_on_Verified_Node    // have sent VerifyNode to make sure we have alias - this is now obsolete, as Traction Search event is used instead
@@ -301,6 +303,9 @@ internal enum TC_Selection_State {
     case Wait_on_TC_Deassign_Reply  // have sent TC Command Desassign, wait on TC Reply OK
 }
 
+/// Represent a single entry in the Roster, including both user-readable name (from the node's SNIP) and
+/// the associated NodeID.  Includes an enum to represent the quality of the information, so that it can
+/// be updated as SNIP data arrives for a newly seen node.
 // This needs reference semantics so that it can be passed and then updated
 final public class RosterEntry : Hashable, Equatable, Comparable {
     public var label : String
@@ -309,8 +314,8 @@ final public class RosterEntry : Hashable, Equatable, Comparable {
     
     internal var labelSource : LabelSource // quality of label information
     
-    // Code where the label came from, in increasing reliability order
-    // This is needed becaue an isATrainEvent might come after e.g. TCAssignReply data was loaded
+    /// Code where the label came from, in increasing reliability order
+    /// This is needed because an isATrainEvent might come after e.g. train SNIP data was loaded
     enum LabelSource : Int {
         case Initial       = 1 // not initialized at all, i.e. from creation of the model before 1st real roster entry is added
         case NodeID        = 2 // inferred from NodeID, i.e. when constructed by isATrain event
@@ -331,13 +336,13 @@ final public class RosterEntry : Hashable, Equatable, Comparable {
     public func hash(into hasher : inout Hasher) {
         hasher.combine(nodeID)
     }
-    // Comparable is defined on the NodeID
+    ///  Comparable is defined on the NodeID
     public static func <(lhs: RosterEntry, rhs: RosterEntry) -> Bool {
         return lhs.nodeID.nodeId < rhs.nodeID.nodeId
     }
     
     /// Used to sort in user-visible lists, implements a "less than" operator
-    ///  Has to handle "<None>",  2S vs 100S, all-alpha entries
+    ///  Has to handle "<None>",  2S vs 100S, all-numeric and all-alpha entries
     internal static func sortBy(_ lhs: RosterEntry, _ rhs: RosterEntry) -> Bool {
         // always push <None> to top
         if lhs.label == "<None>" && rhs.label != "<None>" { return true } // equal is false
@@ -347,8 +352,8 @@ final public class RosterEntry : Hashable, Equatable, Comparable {
     }
     
     internal static func padFrontWithZero(_ label : String ) -> String { // internal for testing
-        for index in 0..<label.count {
-            let nextChar = label[label.index(label.startIndex, offsetBy: index)]
+        for index in 0..<label.count {  // is there a better serach for the index of the 1st non-numeric character?  Maybe regex? But this is quick...
+            let nextChar = label[label.index(label.startIndex, offsetBy: index)]  // for efficiency, turn into an increment: nextIndex = str.index(startIndex, offsetBy: 1)
             if nextChar < "0" || nextChar > "9" {
                 // index of 1st non-numeric character
                 // want the numeric section to be 8 characters long for comparison, pad with zero

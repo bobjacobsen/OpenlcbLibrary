@@ -69,9 +69,9 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         }
     }
     
-    /// The ``configureCanTelnet`` method will set up a system with
+    /// This method will set up a system with
     ///   - A CAN-protocol Telnet connection
-    ///   - ``defaultNode``, a  local node in a ``localNodeStore``
+    ///   - defaultNode, a  local node in a local ``NodeStore``
     ///   - A ``remoteNodeStore`` that will contain every node the implementation sees
     ///
     public func configureCanTelnet(_ canPhysicalLayer : CanPhysicalLayer) { // pass in either a real or mock physical layer
