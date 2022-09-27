@@ -136,7 +136,7 @@ final public class ThrottleModel : ObservableObject {
         } else {
             roster.append(item)
         }
-        roster.sort() // sort by .id, which is nodeID
+        self.roster.sort { RosterEntry.sortBy($0, $1) }
     }
     
     /// Load the labels in roster entries from SNIP if that's been updated
@@ -153,8 +153,7 @@ final public class ThrottleModel : ObservableObject {
                     self.roster[index].labelSource = newEntry.labelSource
                 }
             }
-            self.roster.sort()  // sort by .id, which is nodeID
-            //roster.sort { $0.label < $1.label } // TODO: Sorts by label, but alpha sort messes up <None>, 100S vs 21S, etc; need better comparison function; add a 'sortBy' property to roster entries
+            self.roster.sort { RosterEntry.sortBy($0, $1) }
         }
     }
     
@@ -324,7 +323,7 @@ final public class RosterEntry : Hashable, Equatable, Comparable {
         self.nodeID = nodeID
         self.labelSource = labelSource
     }
-
+    
     /// Equality is defined on the NodeID only.
     public static func ==(lhs: RosterEntry, rhs:RosterEntry) -> Bool {
         return lhs.nodeID == rhs.nodeID
@@ -335,6 +334,30 @@ final public class RosterEntry : Hashable, Equatable, Comparable {
     // Comparable is defined on the NodeID
     public static func <(lhs: RosterEntry, rhs: RosterEntry) -> Bool {
         return lhs.nodeID.nodeId < rhs.nodeID.nodeId
+    }
+    
+    /// Used to sort in user-visible lists, implements a "less than" operator
+    ///  Has to handle "<None>",  2S vs 100S, all-alpha entries
+    internal static func sortBy(_ lhs: RosterEntry, _ rhs: RosterEntry) -> Bool {
+        // always push <None> to top
+        if lhs.label == "<None>" && rhs.label != "<None>" { return true } // equal is false
+        if rhs.label == "<None>" { return false }
+        
+        return padFrontWithZero(lhs.label) < padFrontWithZero(rhs.label)
+    }
+    
+    internal static func padFrontWithZero(_ label : String ) -> String { // internal for testing
+        for index in 0..<label.count {
+            let nextChar = label[label.index(label.startIndex, offsetBy: index)]
+            if nextChar < "0" || nextChar > "9" {
+                // index of 1st non-numeric character
+                // want the numeric section to be 8 characters long for comparison, pad with zero
+                return String(format: "%0\(max(1, 8-index))d\(label)", 0)
+            }
+            // did not find a non-numeric character
+        }
+        let longVersion = "000000000\(label)"
+        return String(longVersion.suffix(8))
     }
 }
 
