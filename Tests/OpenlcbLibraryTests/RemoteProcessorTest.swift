@@ -127,7 +127,7 @@ class RemoteProcessorTest: XCTestCase {
         XCTAssertTrue(node21.events.isConsumed(EventID(0x01_02_03_04_05_06_07_08)))
     }
     
-    func testNewNodeSeen() throws {  // TODO:  Needs to have results checked, esp source and destination ID
+    func testNewNodeSeen() throws {
         node21.state = .Initialized
         let msg = Message(mti : MTI.New_Node_Seen, source: NodeID(21), data: [])
         _ = processor.process(msg, node21)

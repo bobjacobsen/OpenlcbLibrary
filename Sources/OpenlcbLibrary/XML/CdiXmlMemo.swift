@@ -56,7 +56,7 @@ public final class CdiXmlMemo : Identifiable {
     
     public let id = UUID() // for Identifiable
     
-    // TODO: ACDI expansion
+    // TODO: ACDI handling (see also CdiParserDelegate)
     // TODO: How to handle the identification block?  Present or not? Read-only
     
     /// Copy ctor makes deep copy
@@ -200,11 +200,7 @@ public final class CdiXmlMemo : Identifiable {
             //for (index, child) in children.enumerated() {
             for index in stride(from: children.count-1, through: 0, by: -1) { // have to go in reverse to allow deletion w/o changing index
                 let child = children[index]
-                // check for empty child that can be removed.
-                
-                print("child[\(index)] of \(memo.name): \(child.type) \(child.name.isEmpty) \(child.description.isEmpty)")
-                if child.children != nil { print ("   \(child.children!.count)")}
-                
+                // check for empty child that can be removed.                
                 if child.type == .GROUP && child.name.isEmpty && child.description.isEmpty && (child.children == nil || child.children!.count == 0) {
                     // Remove this child element
                     print ("removed a child of \(memo.name)\n")
