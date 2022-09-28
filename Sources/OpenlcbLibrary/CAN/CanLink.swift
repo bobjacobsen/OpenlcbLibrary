@@ -419,7 +419,7 @@ final public class CanLink : LinkLayer {
         let receivedAlias = frame.header & 0x0000_FFF
         let abort = (receivedAlias == localAlias)
         if (abort ) {
-            // Collision! \\ TODO: are we doing the right thing here on alias collision?
+            // Collision!
             CanLink.logger.notice("alias collision in frame \(frame, privacy: .public), we restart with AMR and attempt to get new alias")
             link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
             // Standard 6.2.5
@@ -427,7 +427,6 @@ final public class CanLink : LinkLayer {
             // attempt to get a new alias and go back to .Permitted
             localAliasSeed = CanLink.incrementAlias48(localAliasSeed)
             localAlias = CanLink.createAlias12(localAliasSeed)
-            // TODO: Check that this new alias not already reserved, e.g. in aliasToNodeID
             defineAndReserveAlias()
         }
         return abort
