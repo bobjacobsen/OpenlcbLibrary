@@ -72,6 +72,10 @@ public final class CdiXmlMemo : Identifiable {
         self.space = memo.space
         self.startAddress = memo.startAddress
         self.defaultValue = memo.defaultValue
+        self.minValue = memo.minValue
+        self.maxValue = memo.maxValue
+        self.minSet = memo.minSet
+        self.maxSet = memo.maxSet
         self.currentIntValue = memo.currentIntValue
         self.currentStringValue = memo.currentStringValue
         // make a recursive deep copy of memo.children

@@ -6,9 +6,12 @@
 //
 
 import Foundation
+import os
 
 /// Delegate for use with ``XMLParser``, this is used to process CDI XML files and create a tree of ``CdiXmlMemo`` objects.
 final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inheritance
+    
+    internal static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiParserDelegate")
     
     // MARK: Delegate methods
     
@@ -16,7 +19,6 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     }
     
     func parserDidEndDocument(_ parser : XMLParser) {
-        // print ("parserDidEndDocument")
     }
     
     func parser(_: XMLParser, didStartElement: String, namespaceURI: String?, qualifiedName: String?, attributes: [String : String]) {
@@ -113,7 +115,13 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             memoStack[memoStack.count-1].minValue = Int(foundCharacters) ?? 0
             memoStack[memoStack.count-1].minSet = true
         case .MAX :
-            memoStack[memoStack.count-1].maxValue = Int(foundCharacters) ?? 2_147_483_647  // 32 bit max
+            // max depends on length in bytes, assuming unsigned consistent with default min = 0
+            let maxDefault = (1 << (8*memoStack[memoStack.count-1].length)) - 1
+            memoStack[memoStack.count-1].maxValue = Int(foundCharacters) ?? maxDefault
+            if memoStack[memoStack.count-1].maxValue > maxDefault {
+                CdiParserDelegate.logger.error("Defined max value \(self.memoStack[self.memoStack.count-1].maxValue, privacy:.public) is larger than sized \(maxDefault, privacy:.public)")
+                memoStack[memoStack.count-1].maxValue = maxDefault
+            }
             memoStack[memoStack.count-1].maxSet = true
         case .PROPERTY :
             memoStack[memoStack.count-1].properties.append(foundCharacters)
@@ -271,11 +279,15 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     func intStart(attributes : [String:String]) {
         let thisMemo = CdiXmlMemo()
         thisMemo.length = 1
+        var maxDefault = 255
         if let attr = attributes["size"] {
             if let length = Int(attr) {
                 thisMemo.length = length
+                maxDefault = (1 << (8*length)) - 1
             }
         }
+        thisMemo.maxValue = maxDefault  // this will be overridden if there's a later max element
+
         thisMemo.offset = 0
         if let attr = attributes["offset"] {
             if let offset = Int(attr) {
