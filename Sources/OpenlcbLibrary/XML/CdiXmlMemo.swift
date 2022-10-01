@@ -41,9 +41,11 @@ public final class CdiXmlMemo : Identifiable {
     public internal(set) var space : Int
     
     public internal(set) var defaultValue : Int
-    public internal(set) var maxValue = 2_147_483_647     // 32 bit max
+    public internal(set) var maxValue = 2_147_483_647     // 32 bit max, will be changed as needed
     public internal(set) var minValue = 0
-    
+    public internal(set) var maxSet = false
+    public internal(set) var minSet = false
+
     public internal(set) var startAddress : Int           // Set on segment element, otherwise computed
     
     public var currentIntValue : Int
@@ -203,7 +205,6 @@ public final class CdiXmlMemo : Identifiable {
                 // check for empty child that can be removed.                
                 if child.type == .GROUP && child.name.isEmpty && child.description.isEmpty && (child.children == nil || child.children!.count == 0) {
                     // Remove this child element
-                    print ("removed a child of \(memo.name)\n")
                     memo.children?.remove(at: index)
                 }
             }

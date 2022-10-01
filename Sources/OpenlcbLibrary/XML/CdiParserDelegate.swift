@@ -111,8 +111,10 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             memoStack[memoStack.count-1].currentIntValue = memoStack[memoStack.count-1].defaultValue
         case .MIN :
             memoStack[memoStack.count-1].minValue = Int(foundCharacters) ?? 0
+            memoStack[memoStack.count-1].minSet = true
         case .MAX :
             memoStack[memoStack.count-1].maxValue = Int(foundCharacters) ?? 2_147_483_647  // 32 bit max
+            memoStack[memoStack.count-1].maxSet = true
         case .PROPERTY :
             memoStack[memoStack.count-1].properties.append(foundCharacters)
         case .VALUE :
