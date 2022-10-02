@@ -114,17 +114,21 @@ final public class DatagramService : Processor {
         linkLayer.sendMessage(message)
     }
     
-    /// Register a listener to be notified when each datagram arrives.  One and only one listener should reply positively or negatively to the datagram.
-    public func registerDatagramReceivedListener(_ listener : @escaping ( (_ : DatagramReadMemo) -> () )) {
+    /// Register a listener to be notified when each datagram arrives.  One and only one listener should reply positively or negatively to the datagram and return true.
+    public func registerDatagramReceivedListener(_ listener : @escaping ( (_ : DatagramReadMemo) -> Bool )) {
         listeners.append(listener)
     }
-    private var listeners : [( (_ : DatagramReadMemo) -> () )] = []  // internal for testing
+    private var listeners : [( (_ : DatagramReadMemo) -> Bool )] = []  // internal for testing
     
     internal func fireListeners(_ dg : DatagramReadMemo) { // internal for testing
+        var replied = false
         for listener in listeners {
-            listener(dg)
+            replied = listener(dg) || replied    // order matters on that: Need to always make the call
         }
-        // TODO: If none of the listeners replied by now, send a negative reply
+        // If none of the listeners replied by now, send a negative reply
+        if !replied {
+            negativeReplyToDatagram(dg, err: 0x1042)  // “Not implemented, datagram type unknown” - permanent error
+        }
     }
     
     /// Processor entry point.

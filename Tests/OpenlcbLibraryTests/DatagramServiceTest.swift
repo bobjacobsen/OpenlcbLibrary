@@ -34,9 +34,11 @@ class DatagramServiceTest: XCTestCase {
     // test function marks that the listeners were fired
     var received = false
     var readMemos : [DatagramService.DatagramReadMemo] = []
-    func receiveListener(msg : DatagramService.DatagramReadMemo) {
+    
+    func receiveListener(msg : DatagramService.DatagramReadMemo) -> Bool {
         received = true
         readMemos.append(msg)
+        return true
     }
 
     func testFireListeners() throws {

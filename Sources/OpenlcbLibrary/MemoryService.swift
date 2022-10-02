@@ -108,9 +108,10 @@ final public class MemoryService {
         // this is normal.  Wait for following response to be returned via listener
     }
 
-    internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) {
+    // process a datagram.  Sends the positive reply and returns true iff this is from our service.
+    internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) -> Bool {
         // node received a datagram, is it our service?
-        guard service.datagramType(data: dmemo.data) == DatagramService.ProtocolID.MemoryOperation else { return }
+        guard service.datagramType(data: dmemo.data) == DatagramService.ProtocolID.MemoryOperation else { return false }
         
         // Acknowledge the datagram
         service.positiveReplyToDatagram(dmemo, flags: 0x0000)
@@ -166,13 +167,13 @@ final public class MemoryService {
         case 0x86, 0x87 : // Address Space Information Reply
             guard spaceLengthCallback != nil else {
                 MemoryService.logger.error("Address Space Information Reply received with no callback")
-                return
+                return true
             }
             if dmemo.data[1] == 0x86 {
                 // not present
                 spaceLengthCallback?(-1)
                 spaceLengthCallback = nil
-                return
+                return true
             }
             // normal reply
             let address : Int = Int(dmemo.data[3]) << 24 +
@@ -185,6 +186,8 @@ final public class MemoryService {
         default:
             MemoryService.logger.error("Did not expect reply of type \(dmemo.data[1], privacy:.public)")
         }
+        
+        return true
     }
     
     public struct MemoryWriteMemo {
