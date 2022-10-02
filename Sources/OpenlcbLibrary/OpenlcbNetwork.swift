@@ -30,7 +30,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
     let linkLayer : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
-    private let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
     
     public var description : String { "OpenlcbNetwork w \(remoteNodeStore.nodes.count)"}
     
@@ -54,7 +54,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         mservice = MemoryService(service: dservice)
 
         // stored values initialized, 'self' available below here
-        logger.info("OpenlcbLibrary init")
+        OpenlcbNetwork.logger.info("OpenlcbLibrary init")
         throttleModel0.openlcbNetwork = self
     }
     
@@ -63,7 +63,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
     public convenience init(sample: Bool) {
         self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
-        logger.info("OpenlcbLibrary init(Bool)")
+        OpenlcbNetwork.logger.info("OpenlcbLibrary init(Bool)")
         if (sample) {
             createSampleData()
         }
@@ -158,7 +158,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         publish = remoteNodeStore.invokeProcessorsOnNodes(message: message) || publish // always run invoke Processsors on nodes
         
         if publish {
-            logger.debug("publish change due to \(message, privacy: .public)")
+            OpenlcbNetwork.logger.debug("publish change due to \(message, privacy: .public)")
             self.objectWillChange.send()
         }
     }
