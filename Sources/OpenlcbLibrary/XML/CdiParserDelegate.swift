@@ -11,7 +11,7 @@ import os
 /// Delegate for use with ``XMLParser``, this is used to process CDI XML files and create a tree of ``CdiXmlMemo`` objects.
 final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inheritance
     
-    internal static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiParserDelegate")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "CdiParserDelegate")
     
     // MARK: Delegate methods
     

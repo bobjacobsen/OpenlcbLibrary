@@ -14,7 +14,7 @@ public class RemoteNodeStore : NodeStore, CustomStringConvertible {
         
     // local variables
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeStore")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeStore")
     
     // ID of node that's in the local node store instead of here
     let localNodeID : NodeID
@@ -51,7 +51,7 @@ public class RemoteNodeStore : NodeStore, CustomStringConvertible {
         // need to create the node and process it's New_Node_Seen
         let nodeID = message.source
         let node = Node(nodeID)
-        logger.debug("creating node \(nodeID, privacy: .public)")
+        RemoteNodeStore.logger.debug("creating node \(nodeID, privacy: .public)")
         
         store(node)
         // All nodes process a notification that there's a new node

@@ -20,7 +20,7 @@ public struct RemoteNodeProcessor : Processor {
     
     let linkLayer : CanLink?
     
-    let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeProcessor")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "RemoteNodeProcessor")
     
     public func process( _ message : Message, _ node : Node  ) -> Bool {
         // Do a fast drop of messages not to us, from us, or global - note linkLayer up/down are marked as global
