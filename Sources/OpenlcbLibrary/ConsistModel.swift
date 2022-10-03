@@ -21,7 +21,7 @@ final public class ConsistModel : ObservableObject, Processor {
         self.linkLayer = linkLayer
     }
     
-    // represent a single slement of the consist
+    /// Represent a single slement of the consist
     final public class ConsistEntryModel : ObservableObject {
         @Published public var childLoco : NodeID
         
@@ -53,11 +53,11 @@ final public class ConsistModel : ObservableObject, Processor {
     var fetchConsistState : FetchConsistState = .Idle
     var remainingNodes : [NodeID] = []  // workspace
 
-    // Kick off the process of reading in a single-level, single-link consist
-    // starting with the head loco
-    //
-    // This does direct Query Node operations until a null is returned,
-    // without first getting the count.
+    /// Kick off the process of reading in a single-level, single-link consist
+    /// starting with the head locomotive/
+    ///
+    /// This does direct Query Node operations until a null is returned,
+    /// without first getting the count.
     public func fetchConsist() {
         // clear the existing model
         consist = []
@@ -68,7 +68,9 @@ final public class ConsistModel : ObservableObject, Processor {
         // now it heads over to the consist processor to wait for the reply
     }
     
-    // add a loco to the consist.  // See also `resetFlags`, which seems to do the same thing sort-of
+    /// Add a loco to the consist.
+    /// See also `resetFlags`
+    /// - Parameter add: NodeID of locomotive node to add
     public func addLocoToConsist(add : NodeID) {
         let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, 0x0]+add.toArray())
         linkLayer.sendMessage(message)
@@ -79,6 +81,8 @@ final public class ConsistModel : ObservableObject, Processor {
         }
     }
     
+    /// Removes one locomotive from the consist.
+    /// - Parameter remove: NodeID of locomotive node to remove
     public func removeLocoFromConsist(remove : NodeID) {
         let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x02, 0x00]+remove.toArray())
         linkLayer.sendMessage(message)
@@ -92,6 +96,9 @@ final public class ConsistModel : ObservableObject, Processor {
         }
     }
     
+    /// Set the flags in a specific locomotive to known values. Adds the locomotive to current consist if not present.
+    /// - Parameters:
+    ///   - on: NodeID of a locomotive within the current consist
     public func resetFlags(on : NodeID, reverse : Bool, echoF0: Bool, echoFn: Bool) {
         var byte : UInt8 = 0
         if reverse  { byte |= 0x02 }
@@ -102,7 +109,11 @@ final public class ConsistModel : ObservableObject, Processor {
         linkLayer.sendMessage(message)
     }
     
-    // Consist processor
+    /// Consist-specific message processor
+    /// - Parameters:
+    ///   - message: Incoming message
+    ///   - node: Which node to process messages for, i.e. each individual node holds it's own processing state
+    /// - Returns: Always false: These message don't prompt a global update
     public func process( _ message : Message, _ node : Node ) -> Bool {
         guard checkDestID(message, linkLayer.localNodeID) else { return false }  // not for us?
         guard message.mti == .Traction_Control_Reply else { return false }
