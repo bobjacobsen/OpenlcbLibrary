@@ -59,7 +59,7 @@ public class XmlModel {
         let memMemo = MemoryService.MemoryReadMemo(nodeID: nodeID, size: 64, space: space, address: nextReadAddress, rejectedReply: rejectedReplyCallback, dataReply: dataReplyCallback)
         nextReadAddress = nextReadAddress+64
         mservice.requestMemoryRead(memMemo)
-
+        
         // we'll start reading from that callback
     }
     
@@ -73,15 +73,19 @@ public class XmlModel {
     internal func dataReplyCallback(memo : MemoryService.MemoryReadMemo) {
         // Assume this is a Read Reply with data
         // Save the data
-        if let chars = String(bytes: memo.data, encoding: .utf8) {
+        if let chars = String(bytes: memo.data, encoding: .utf8) {  // was try UTF8 first
+            savedDataString.append(chars)
+        } else if let chars = String(bytes: memo.data, encoding: .ascii) {
+            XmlModel.logger.debug("dropped back to ASCII for \(memo.data, privacy: .public)")
             savedDataString.append(chars)
         } else {
-            XmlModel.logger.error("<Received data not in UTF8 form>")
+            XmlModel.logger.error("<Received data not in processable form> \(memo.data, privacy: .public)")
             processAquiredText()
             return
         }
         // Check for end of data (< 64 and/or trailing 0 byte)
         if memo.data.count < 64 || findTrailingZero(in: memo) {
+            XmlModel.logger.debug("start processing CDI text due to short: \(memo.data.count < 64, privacy:.public) null: \(self.findTrailingZero(in: memo), privacy: .public)")
             processAquiredText()
             
             loading = false
