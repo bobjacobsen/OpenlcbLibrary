@@ -16,26 +16,26 @@ import UIKit
 /// Provides a common base implementation of an OpenLCB/LCC network using this package.
 public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // class to use @Published
 
+    @Published public private(set) var remoteNodeStore : RemoteNodeStore
+
+    @Published public private(set) var clockModel0 : ClockModel          // 0 in case more are added later
+ 
+    @Published public private(set) var throttleModel0 : ThrottleModel    // 0 in case more are added later
+
+    @Published public private(set) var consistModel0 : ConsistModel      // 0 in case more are added later
+
+    public var description : String { "OpenlcbNetwork w \(remoteNodeStore.nodes.count)"}
+
+    internal let linkLayer : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
+    
     let defaultNode : Node      // the node that's implemented here
     
     var localNodeStore : LocalNodeStore
     
-    @Published public var remoteNodeStore : RemoteNodeStore
-
-    @Published public var clockModel0 : ClockModel
- 
-    @Published public var throttleModel0 : ThrottleModel
-
-    @Published public var consistModel0 : ConsistModel
-
-    let linkLayer : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
-    
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
-    
-    public var description : String { "OpenlcbNetwork w \(remoteNodeStore.nodes.count)"}
-    
+        
     let dservice : DatagramService
-    public let mservice : MemoryService
+    public let mservice : MemoryService // needed for `CdCdiView`
 
     /// Initialize a basic system
     /// - Parameter defaultNodeID: NodeiID for this program
@@ -60,7 +60,6 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     
     /// Iniitialize and optionally add sample data for SwiftUI preview
     /// - Parameter sample: Iff true, add the sample nodes.
-
     public convenience init(sample: Bool) {
         self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
         OpenlcbNetwork.logger.info("OpenlcbLibrary init(Bool)")
@@ -81,7 +80,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
                                   PIP.EVENT_EXCHANGE_PROTOCOL,
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         
-        // Load SNIP identification for this node
+        // Define the SNIP identification for this node
         defaultNode.snip.manufacturerName = "Ardenwood.us"
         let dictionary = Bundle.main.infoDictionary!
         if let version : String = dictionary["CFBundleDisplayName"] as? String {
@@ -94,21 +93,21 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         defaultNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
         defaultNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "<Unknown>"
 
-        #if canImport(UIKit)
+#if canImport(UIKit)
         // iOS case
         defaultNode.snip.userProvidedNodeName = UIDevice.current.name
-        #else
+#else
         // macOS case
         if let deviceName = Host.current().localizedName {
             defaultNode.snip.userProvidedNodeName = deviceName
         } else {
             defaultNode.snip.userProvidedNodeName = "Some Mac"
         }
-        #endif
+#endif
         
-        defaultNode.snip.updateSnipDataFromStrings()
+        defaultNode.snip.updateSnipDataFromStrings()    // load the SNIP strings we entered into the SNIP data store
 
-        localNodeStore.store(defaultNode)
+        localNodeStore.store(defaultNode)               // define the node for this program
         
         // connect the physical -> link layers using the CAN-overTCP form (Native Telnet not yet available)
         linkLayer.linkPhysicalLayer(canPhysicalLayer)
@@ -130,12 +129,14 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         remoteNodeStore.processors = [                        rprocessor]
         localNodeStore.processors =  [pprocessor, dservice,             lprocessor, cprocessor, tprocessor, consistModel0]
  
-        // register listener here which will process the node stores without copying them
+        // register listener here to process the node stores without copying them
         linkLayer.registerMessageReceivedListener(processMessageFromLinkLayer)
 
     }
     
     /// Look up the SNIP node name from the RemoteNodeStore
+    /// - Parameter nodeId: NodeID of node to locate
+    /// - Returns: Node name from SNIP information or "" if none
     func lookUpNodeName(for nodeId: NodeID) -> String {
         if let node = remoteNodeStore.lookup(nodeId) {
             return node.snip.userProvidedNodeName
@@ -145,7 +146,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     }
     
     /// Process an incoming message across all the nodes in the remote node store.
-    /// Does a publish operation if any of them indicate a significant change.
+    /// Does a publish operation if any of the nodes indicate a significant change.
     /// - Parameter message: Incoming message to process
     func processMessageFromLinkLayer(_ message: Message) {
         var publish = false
@@ -168,24 +169,32 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     /// - Parameter eventID: Event ID to be produced
     public func produceEvent(eventID: EventID) {
         let msg = Message(mti: .Producer_Consumer_Event_Report, source: linkLayer.localNodeID, data: eventID.toArray())
-        linkLayer.sendMessage(msg)
+        sendMessage(msg)
     }
     
+    /// Send a message to the network
+    /// - Parameter message: Message to forward to network
+    public func sendMessage(_ message: Message) {
+        linkLayer.sendMessage(message)
+    }
     
-    /// Requests that a specific remote node update it's SNIP information (basic text description).  Sends an addressed SNIP request message to do that.
+    /// Requests that a specific remote node update its SNIP information (basic text description).
+    /// Sends an addressed SNIP request message to do that.
     /// - Parameter node: Addressed Node
     public func refreshNode(node : Node ) {
         node.snip = SNIP()
         let messageSNIP = Message(mti: .Simple_Node_Ident_Info_Request, source: linkLayer.localNodeID, destination: node.id)
-        linkLayer.sendMessage(messageSNIP)
+        sendMessage(messageSNIP)
     }
     
+    /// Cause all nodes to identify themselves, refreshing the node store.
+    /// Sends a Verify Node Global to do that
     public func refreshAllNodes() {
         let messageVerify = Message(mti: .Verify_NodeID_Number_Global, source: linkLayer.localNodeID)
-        linkLayer.sendMessage(messageVerify)
+        sendMessage(messageVerify)
     }
     
-    var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``
+    internal var sampleNode = Node(NodeID(0x01_01_01_01_01_01))  // minimal initialization, will be fleshed out in ``createSampleData``
     /// Load some sample nodes, but don't activate them - for use by testing of library clients
     public func createSampleData() {
         // create two remote nodes
