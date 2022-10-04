@@ -76,7 +76,7 @@ public class XmlModel {
         if let chars = String(bytes: memo.data, encoding: .utf8) {  // was try UTF8 first
             savedDataString.append(chars)
         } else if let chars = String(bytes: memo.data, encoding: .ascii) {
-            XmlModel.logger.debug("dropped back to ASCII for \(memo.data, privacy: .public)")
+            XmlModel.logger.debug("dropped back to ASCII for \(memo.data, privacy: .public) \"\(chars, privacy:.public)\"")
             savedDataString.append(chars)
         } else {
             XmlModel.logger.error("<Received data not in processable form> \(memo.data, privacy: .public)")
