@@ -105,18 +105,20 @@ struct ThrottleProcessor : Processor {
                 }
             }
         case .Traction_Control_Command :
-            let subCommand = message.data[0]&0x7F  // TODO: create an enum for this
+            let subCommand = TC_Request_Type(rawValue: message.data[0]&0x7F) // Strip high order bit to include [listener] messages
             switch subCommand {
-            case 0x00:
+            case .SetSpeed:
                 handleSpeedMessage(message)
                 return false
 
-            case 0x01:
+            case .SetFunction:
                 handleFunctionMessage(message)
                 return false
+                
             default:
                 return false
             }
+            
         case .Traction_Control_Reply :
             let subCommand = TC_Reply_Type(rawValue: message.data[0])
             switch subCommand {
@@ -149,6 +151,7 @@ struct ThrottleProcessor : Processor {
                         linkLayer!.sendMessage(reply)
                     }
                 }
+                
             case .TractionManagement :
                 // check for heartbeat request
                 if message.data[1] == 0x03 {
@@ -157,8 +160,10 @@ struct ThrottleProcessor : Processor {
                                           destination: model.selected_nodeId, data: [0x40, 0x03])
                     linkLayer!.sendMessage(heartbeat)
                 }
+                
             default:
                 return false // not of interest
+                
             }
         default:
             return false
