@@ -21,7 +21,9 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     @Published public private(set) var clockModel0 : ClockModel          // 0 in case more are added later
  
     @Published public private(set) var throttleModel0 : ThrottleModel    // 0 in case more are added later
-
+    
+    @Published public private(set) var turnoutModel0 : TurnoutModel      // 0 in case more are added later
+    
     @Published public private(set) var consistModel0 : ConsistModel      // 0 in case more are added later
 
     public var description : String { "OpenlcbNetwork w \(remoteNodeStore.nodes.count)"}
@@ -49,6 +51,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
         clockModel0 = ClockModel()
         throttleModel0 = ThrottleModel(linkLayer)
+        turnoutModel0 = TurnoutModel()
         consistModel0 = ConsistModel(linkLayer: linkLayer)
         dservice = DatagramService(linkLayer)
         mservice = MemoryService(service: dservice)
@@ -56,6 +59,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         // stored values initialized, 'self' available below here
         OpenlcbNetwork.logger.info("OpenlcbLibrary init")
         throttleModel0.openlcbNetwork = self
+        turnoutModel0.network = self
     }
     
     /// Iniitialize and optionally add sample data for SwiftUI preview
@@ -183,6 +187,8 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     /// - Parameter node: Addressed Node
     public func refreshNode(node : Node ) {
         node.snip = SNIP()
+        let messagePIP  = Message(mti:.Protocol_Support_Inquiry, source: linkLayer.localNodeID, destination: node.id)
+        sendMessage(messagePIP)
         let messageSNIP = Message(mti: .Simple_Node_Ident_Info_Request, source: linkLayer.localNodeID, destination: node.id)
         sendMessage(messageSNIP)
     }
