@@ -63,11 +63,49 @@ struct ThrottleProcessor : Processor {
                                           destination: model.selected_nodeId, data: data)
                     linkLayer!.sendMessage(command)
 
+                    model.setUpMonitorConsist(model.selected_nodeId)
+
                     // Start the read of FDI here
                     model.fdiModel = FdiModel(mservice: model.openlcbNetwork!.mservice, nodeID: message.source, throttleModel: model)
                     model.fdiModel!.readModel(nodeID: message.source)
 
                 }
+            }
+        case .Traction_Control_Command :
+            let subCommand = message.data[0]&0x7F  // TODO: create an enum for this
+            switch subCommand {
+            case 0x00:  // set speed // TODO: refactor here and _Reply into single routine
+                // speed message - convert from bytes to Float16
+                // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
+                // See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
+                let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
+                
+                let mpsSpeed = float16ToFloat(alignedBytes)
+                let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
+                
+                model.speed = abs(mphSpeed)
+                if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
+                    model.forward = true
+                    model.reverse = false
+                } else {
+                    model.forward = false
+                    model.reverse = true
+                }
+                
+                return false
+
+            case 0x01: // set function  // TODO: refactor here and _Reply into single routine
+                // function message
+                // Only work with main F0-Fn, so check for that
+                if message.data[1] != 0 || message.data[2] != 0 {
+                    // not, so this is not for us
+                    return false
+                }
+                let fn = Int(message.data[3])
+                model.fnModels[fn].pressed = (message.data[5] != 0)
+                return false
+            default:
+                return false
             }
         case .Traction_Control_Reply :
             let subCommand = TC_Reply_Type(rawValue: message.data[0])

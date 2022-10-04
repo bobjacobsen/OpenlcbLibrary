@@ -33,7 +33,7 @@ struct LocalNodeProcessor : Processor {
                 .Simple_Node_Ident_Info_Reply :
             // this is handled in the RemoteNodeProcessor, ignored here
             break
-        case .Traction_Control_Reply :
+        case .Traction_Control_Command, .Traction_Control_Reply :
             // this is handled in the ThrottleProcessor, ignored here
             break
         case .Datagram, .Datagram_Rejected, .Datagram_Received_OK :

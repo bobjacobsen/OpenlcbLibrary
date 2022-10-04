@@ -186,8 +186,10 @@ final public class ThrottleModel : ObservableObject {
     /// which creates a long address even if it's numerically in the short address 1->127 range
     // works with ThrottleProcessor to execute a state machine
     public func startSelection(address : UInt64, forceLongAddr : Bool = false) {
-        // zero speed, reset functions
-        resetSpeedAndFunctions()
+        // we no longer zero speed, reset functions in current locomotive so as to allow sharing
+
+        tearDownMonitorConsist()
+
         // start search for requested number
         tc_state = .Wait_on_TC_Search_reply
         let shortLongLabel : String = forceLongAddr ? "L" : (address > 127 ? "L" : "S")
@@ -200,8 +202,10 @@ final public class ThrottleModel : ObservableObject {
     
     /// Start the locomotive selection process from a specific RosterEntry.
     public func startSelection(entry: RosterEntry) {
-        // zero speed, reset functions
-        resetSpeedAndFunctions()
+        // we no longer zero speed, reset functions in current locomotive so as to allow sharing
+
+        tearDownMonitorConsist()
+        
         // selection has actual node ID, go straight to sending Assign
         tc_state = .Wait_on_TC_Assign_Reply
         requestedLocoID = entry.label
@@ -212,11 +216,30 @@ final public class ThrottleModel : ObservableObject {
                               destination: entry.nodeID, data: data)
         linkLayer!.sendMessage(command)
         
+        setUpMonitorConsist(entry.nodeID)
+        
         // TODO: check for FDI in node PIP?
         // start the read of the FDI
         fdiModel = FdiModel(mservice: openlcbNetwork!.mservice, nodeID: entry.nodeID, throttleModel: self)
         fdiModel!.readModel(nodeID: entry.nodeID)
 
+    }
+    
+    /// Add this throttle node to a consist to the being-selected loco
+    ///
+    /// Used as part of selection
+    internal func setUpMonitorConsist(_ trainNodeID: NodeID) {
+        let flags : UInt8 = 0x8C  // hidden, link Fn, link F0
+        let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: trainNodeID, data: [0x30, 0x01, flags]+linkLayer!.localNodeID.toArray())
+        linkLayer!.sendMessage(message)
+    }
+    
+    /// Remove this loco from being consisted to this node for e.g. following
+    ///
+    /// Used as part of deselection
+    internal func tearDownMonitorConsist() {
+        let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId, data: [0x30, 0x02, 0x00]+linkLayer!.localNodeID.toArray())
+        linkLayer!.sendMessage(message)
     }
     
     /// Set speed to 0 Forward and turn off all functions.
