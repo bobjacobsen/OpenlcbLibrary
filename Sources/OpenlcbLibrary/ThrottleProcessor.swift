@@ -24,6 +24,39 @@ struct ThrottleProcessor : Processor {
     let isTrainID = EventID("01.01.00.00.00.00.03.03")
     let isTrainIDarray : [UInt8] = [1,1,0,0,0,0,3,3]
     
+    /// Received a speed update message from the command station, update speed
+    /// - Parameter message: speed-containing Command or Reply message
+    fileprivate func handleSpeedMessage(_ message: Message) {
+        // speed message - convert from bytes to Float16
+        // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
+        // See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
+        let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
+        
+        let mpsSpeed = float16ToFloat(alignedBytes)
+        let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
+        
+        model.speed = abs(mphSpeed)
+        if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
+            model.forward = true
+            model.reverse = false
+        } else {
+            model.forward = false
+            model.reverse = true
+        }
+    }
+    
+    /// Received a function update message from command station, update appropriate function value
+    fileprivate func handleFunctionMessage(_ message: Message) {
+        // function message
+        // Only work with main F0-Fn, so check for that
+        if message.data[1] != 0 || message.data[2] != 0 {
+            // not, so this is not for us
+            return
+        }
+        let fn = Int(message.data[3])
+        model.fnModels[fn].pressed = (message.data[5] != 0)
+    }
+    
     public func process( _ message : Message, _ node : Node  ) -> Bool {
         
         // Do a fast drop of messages not to us or global - note linkLayer up/down are marked as global
@@ -74,35 +107,12 @@ struct ThrottleProcessor : Processor {
         case .Traction_Control_Command :
             let subCommand = message.data[0]&0x7F  // TODO: create an enum for this
             switch subCommand {
-            case 0x00:  // set speed // TODO: refactor here and _Reply into single routine
-                // speed message - convert from bytes to Float16
-                // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
-                // See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
-                let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
-                
-                let mpsSpeed = float16ToFloat(alignedBytes)
-                let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
-                
-                model.speed = abs(mphSpeed)
-                if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
-                    model.forward = true
-                    model.reverse = false
-                } else {
-                    model.forward = false
-                    model.reverse = true
-                }
-                
+            case 0x00:
+                handleSpeedMessage(message)
                 return false
 
-            case 0x01: // set function  // TODO: refactor here and _Reply into single routine
-                // function message
-                // Only work with main F0-Fn, so check for that
-                if message.data[1] != 0 || message.data[2] != 0 {
-                    // not, so this is not for us
-                    return false
-                }
-                let fn = Int(message.data[3])
-                model.fnModels[fn].pressed = (message.data[5] != 0)
+            case 0x01:
+                handleFunctionMessage(message)
                 return false
             default:
                 return false
@@ -111,34 +121,13 @@ struct ThrottleProcessor : Processor {
             let subCommand = TC_Reply_Type(rawValue: message.data[0])
             switch subCommand {
             case .QuerySpeeds:
-                // speed message - convert from bytes to Float16
-                // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
-                // See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
-                let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
-                
-                let mpsSpeed = float16ToFloat(alignedBytes)
-                let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
-                
-                model.speed = abs(mphSpeed)
-                if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
-                    model.forward = true
-                    model.reverse = false
-                } else {
-                    model.forward = false
-                    model.reverse = true
-                }
-                
+                handleSpeedMessage(message)
                 return false
+                
             case .QueryFunction:
-                // function message
-                // Only work with main F0-Fn, so check for that
-                if message.data[1] != 0 || message.data[2] != 0 {
-                    // not, so this is not for us
-                    return false
-                }
-                let fn = Int(message.data[3])
-                model.fnModels[fn].pressed = (message.data[5] != 0)
+                handleFunctionMessage(message)
                 return false
+                
             case .ControllerConfig:
                 // check combination of message subtype and state
                 if model.tc_state == .Wait_on_TC_Assign_Reply && message.data[1] == 0x01 {
