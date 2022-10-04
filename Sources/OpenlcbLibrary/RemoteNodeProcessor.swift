@@ -70,7 +70,7 @@ public struct RemoteNodeProcessor : Processor {
     private func initializationComplete(_ message : Message, _ node : Node) {
         if checkSourceID(message, node) {  // Send by us?
             node.state = Node.State.Initialized
-            // clear out PIP, SNIP caches
+            // clear out PIP, SNIP caches - may have changed while node was offline
             node.pipSet = Set<PIP>()
             node.snip = SNIP()
         }
@@ -80,16 +80,12 @@ public struct RemoteNodeProcessor : Processor {
         // affects everybody
         node.state = Node.State.Uninitialized
         // don't clear out PIP, SNIP caches, they're probably still good
-        // node.pipSet = Set<PIP>()
-        // node.snip = SNIP()
     }
     
     private func linkDownMessage(_ message : Message, _ node : Node) {
         // affects everybody
         node.state = Node.State.Uninitialized
         // don't clear out PIP, SNIP caches, they're probably still good
-        // node.pipSet = Set<PIP>()
-        // node.snip = SNIP()
     }
     
     private func newNodeSeen(_ message : Message, _ node : Node) {

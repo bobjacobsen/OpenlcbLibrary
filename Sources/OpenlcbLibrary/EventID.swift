@@ -6,38 +6,34 @@
 
 import Foundation
 
-/// Represents an 8-byte node ID.
+/// Represents an 8-byte event ID.
 ///  Provides conversion to and from Ints and Strings in standard form.
 public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible {
     public let eventID : UInt64 // to ensure 8 byte EventID)
     
     /// Display in standard format
     public var description : String {
-        let part1 = (eventID / 0x01_00_00_00_00_00_00_00 ) & 0xFF
-        let part2 = (eventID / 0x00_01_00_00_00_00_00_00 ) & 0xFF
-        let part3 = (eventID / 0x00_00_01_00_00_00_00_00 ) & 0xFF
-        let part4 = (eventID / 0x00_00_00_01_00_00_00_00 ) & 0xFF
-        let part5 = (eventID / 0x00_00_00_00_01_00_00_00 ) & 0xFF
-        let part6 = (eventID / 0x00_00_00_00_00_01_00_00 ) & 0xFF
-        let part7 = (eventID / 0x00_00_00_00_00_00_01_00 ) & 0xFF
-        let part8 = (eventID / 0x00_00_00_00_00_00_00_01 ) & 0xFF
-        
-        return  "\(String(format:"%02X", part1))." +
-                "\(String(format:"%02X", part2))." +
-                "\(String(format:"%02X", part3))." +
-                "\(String(format:"%02X", part4))." +
-                "\(String(format:"%02X", part5))." +
-                "\(String(format:"%02X", part6))." +
-                "\(String(format:"%02X", part7))." +
-                "\(String(format:"%02X", part8))"
+        let bytes = toArray()
+        return  "\(String(format:"%02X", bytes[0]))." +
+                "\(String(format:"%02X", bytes[1]))." +
+                "\(String(format:"%02X", bytes[2]))." +
+                "\(String(format:"%02X", bytes[3]))." +
+                "\(String(format:"%02X", bytes[4]))." +
+                "\(String(format:"%02X", bytes[5]))." +
+                "\(String(format:"%02X", bytes[6]))." +
+                "\(String(format:"%02X", bytes[7]))"
     }
     
     /// Convert an integer to an eventID
+    ///
+    /// Need to be UInt64 input because an eventID is an 8-byte quantity, and uses the top bit apart from a sign.
     public init(_ eventID : UInt64) {
         self.eventID = eventID
     }
     
     /// Convert a standard-format string 08.09.0A.0B.0C.0D.0E.0F to a NodeID
+    ///
+    /// Leading zeros can be omitted. Accepts truncated values - left fills with zeros. Also accepts single large hex number.
     public init(_ eventID : String) {
         let components = eventID.components(separatedBy: ".")
         var result : UInt64 = 0
@@ -49,6 +45,8 @@ public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible
     }
     
     /// Convert data bytes to eventID
+    ///
+    /// Missing/truncated values are assumed to be zero.
     public init(_ data : [UInt8]) {
         var eventID : UInt64 = 0
         if (data.count > 0) {eventID |= UInt64(data[0] & 0xFF) << 56}
@@ -64,14 +62,14 @@ public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible
     
     public func toArray() -> [UInt8] {
         return [
-            UInt8( (eventID / 0x01_00_00_00_00_00_00_00 ) & 0xFF ),
-            UInt8( (eventID / 0x00_01_00_00_00_00_00_00 ) & 0xFF ),
-            UInt8( (eventID / 0x00_00_01_00_00_00_00_00 ) & 0xFF ),
-            UInt8( (eventID / 0x00_00_00_01_00_00_00_00 ) & 0xFF ),
-            UInt8( (eventID / 0x00_00_00_00_01_00_00_00 ) & 0xFF ),
-            UInt8( (eventID / 0x00_00_00_00_00_01_00_00 ) & 0xFF ),
-            UInt8( (eventID / 0x00_00_00_00_00_00_01_00 ) & 0xFF ),
-            UInt8( (eventID / 0x00_00_00_00_00_00_00_01 ) & 0xFF )
+            UInt8( (eventID >> 56 ) & 0xFF ),
+            UInt8( (eventID >> 48 ) & 0xFF ),
+            UInt8( (eventID >> 40 ) & 0xFF ),
+            UInt8( (eventID >> 32 ) & 0xFF ),
+            UInt8( (eventID >> 24 ) & 0xFF ),
+            UInt8( (eventID >> 16 ) & 0xFF ),
+            UInt8( (eventID >>  8 ) & 0xFF ),
+            UInt8( (eventID       ) & 0xFF )
         ]
     }
     
