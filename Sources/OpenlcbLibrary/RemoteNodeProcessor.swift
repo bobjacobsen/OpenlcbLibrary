@@ -116,14 +116,14 @@ public struct RemoteNodeProcessor : Processor {
     }
     
     private func simpleNodeIdentInfoRequest(_ message : Message, _ node : Node) {
-        if checkDestID(message, node) { // send by us?
+        if checkDestID(message, node) { // sent by us? - overlapping SNIP activity is otherwise confusing
             // clear SNIP in the node to start accumulating
             node.snip = SNIP()
         }
     }
     
     private func simpleNodeIdentInfoReply(_ message : Message, _ node : Node) {
-        if checkSourceID(message, node) { // sent by this node?
+        if checkSourceID(message, node) { // sent by this node? - overlapping SNIP activity is otherwise confusing
             // accumulate data in the node
             if message.data.count > 2 {
                 node.snip.addData(data: message.data)
@@ -134,14 +134,14 @@ public struct RemoteNodeProcessor : Processor {
     }
     
     private func producedEventIndicated(_ message : Message, _ node : Node) {
-        // make an event if form data
+        // make an event id from the data
         let eventID = EventID(message.data)
         // register it
         node.events.produces(eventID)
     }
     
     private func consumedEventIndicated(_ message : Message, _ node : Node) {
-        // make an event if form data
+        // make an event id from the data
         let eventID = EventID(message.data)
         // register it
         node.events.consumes(eventID)
