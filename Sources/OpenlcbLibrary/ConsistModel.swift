@@ -96,15 +96,18 @@ final public class ConsistModel : ObservableObject, Processor {
         }
     }
     
-    /// Set the flags in a specific locomotive to known values. Adds the locomotive to current consist if not present.
+    /// Set the flags in a specific locomotive to known values.
+    ///
+    /// Note: this adds the locomotive to current consist if not present, but only in the A->B direction
     /// - Parameters:
     ///   - on: NodeID of a locomotive within the current consist
-    public func resetFlags(on : NodeID, reverse : Bool, echoF0: Bool, echoFn: Bool) {
+    public func resetFlags(on : NodeID, reverse : Bool, echoF0: Bool, echoFn: Bool, hide: Bool) {
         var byte : UInt8 = 0
         if reverse  { byte |= 0x02 }
         if echoF0   { byte |= 0x04 }
         if echoFn   { byte |= 0x08 }
-        
+        if hide     { byte |= 0x80 }
+
         let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, byte]+on.toArray())
         linkLayer.sendMessage(message)
     }
@@ -135,9 +138,11 @@ final public class ConsistModel : ObservableObject, Processor {
                         // this is a successful read
                         // store the information in a new entry
                         let entry = ConsistEntryModel(childLoco: NodeID(Array(message.data[5...10])))
-                        entry.reverse = message.data[4] & 0x2 != 0
-                        entry.echoF0  = message.data[4] & 0x4 != 0
-                        entry.echoFn  = message.data[4] & 0x8 != 0
+                        let byte4 = message.data[4]
+                        entry.reverse = byte4 & 0x02 != 0
+                        entry.echoF0  = byte4 & 0x04 != 0
+                        entry.echoFn  = byte4 & 0x08 != 0
+                        entry.hide    = byte4 & 0x80 != 0
                         consist.append(entry)
                         // Send next message
                         let nextmsg = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x03, message.data[3]+1]) // to head of consist
