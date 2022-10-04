@@ -72,8 +72,14 @@ final public class ConsistModel : ObservableObject, Processor {
     /// See also `resetFlags`
     /// - Parameter add: NodeID of locomotive node to add
     public func addLocoToConsist(add : NodeID) {
-        let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, 0x0]+add.toArray())
+        // consist additional loco to current selection
+        var message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x01, 0x0]+add.toArray())
         linkLayer.sendMessage(message)
+        
+        // consist current selection to additional loco
+        message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: add, data: [0x30, 0x01, 0x0]+forLoco.toArray())
+        linkLayer.sendMessage(message)
+
         // reload the consist info from the top after a short delay
         let deadlineTime = DispatchTime.now() + .milliseconds(500)
         DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
@@ -84,8 +90,14 @@ final public class ConsistModel : ObservableObject, Processor {
     /// Removes one locomotive from the consist.
     /// - Parameter remove: NodeID of locomotive node to remove
     public func removeLocoFromConsist(remove : NodeID) {
-        let message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x02, 0x00]+remove.toArray())
+        // remove indicated loco from current selection
+        var message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: forLoco, data: [0x30, 0x02, 0x00]+remove.toArray())
         linkLayer.sendMessage(message)
+
+        // remove current selection from indicated loco
+        message = Message(mti: .Traction_Control_Command, source: linkLayer.localNodeID, destination: remove, data: [0x30, 0x02, 0x00]+forLoco.toArray())
+        linkLayer.sendMessage(message)
+
         // remove from our view of the consist
         for index in 0...consist.count {
             let entry = consist[index]
@@ -98,7 +110,7 @@ final public class ConsistModel : ObservableObject, Processor {
     
     /// Set the flags in a specific locomotive to known values.
     ///
-    /// Note: this adds the locomotive to current consist if not present, but only in the A->B direction
+    /// Note: this adds the locomotive to current consist if not present, but only in the A->B direction. That's not great.
     /// - Parameters:
     ///   - on: NodeID of a locomotive within the current consist
     public func resetFlags(on : NodeID, reverse : Bool, echoF0: Bool, echoFn: Bool, hide: Bool) {
