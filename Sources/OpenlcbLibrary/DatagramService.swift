@@ -15,10 +15,8 @@ import os
 /// Reads from remote node:
 ///  - Mlutiple listeners are notified
 ///  - exactly one should call positiveReplyToDatagram/negativeReplyToDatagram before returning from listener
-//
-// Implements `Processor`, should be fed as part of common execution
-
-
+///
+/// Implements `Processor`, should be fed as part of common execution
 final public class DatagramService : Processor {
     public init ( _ linkLayer: LinkLayer) {
         self.linkLayer = linkLayer

@@ -5,9 +5,11 @@
 //  Created by Bob Jacobsen on 10/3/22.
 //
 
-// TODO: Add tracking of turnout state, including when others throw
 import Foundation
 
+// TODO: Add tracking of turnout state, including when others throw
+
+/// Provide Turnout status information and commands for e.g. a Turnout View
 public class TurnoutModel : ObservableObject {
     @Published public private(set) var addressArray : [Int] = []  // address-sorted form of addressSet
     private var addressSet = Set<Int>()
@@ -39,7 +41,7 @@ public class TurnoutModel : ObservableObject {
     /// See the Event Transfer TN section 2.5.3.3 for more information.
     /// - Parameter from: a 1-208 turnout address
     /// - Returns eventID to send in AAAaaaaaaDDD format
-    static func transmogrifyTurnoutId(from : Int) -> Int {
+    static internal func transmogrifyTurnoutId(from : Int) -> Int {  // internal for testing
         let DD = (from-1) & 0x3
         let aaaaaa = (( (from-1) >> 2)+1 ) & 0x3F
         let AAA = ( (from) >> 8) & 0x7

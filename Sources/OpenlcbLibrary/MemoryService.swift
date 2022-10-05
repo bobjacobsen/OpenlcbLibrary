@@ -8,6 +8,8 @@
 import Foundation
 import os
 
+// TODO: Read requests are serialized, but write requests are not yet
+
 /// Does memory read and write requests.
 /// Reads and writes are limited to 64 bytes at a time.
 ///
@@ -17,10 +19,7 @@ import os
 ///
 /// To do memory read:
 /// - create a read memo and submit
-//; - wait for either dataReply or rejectedReply call back.
-
-// TODO: Read requests are serialized, but write requests are not yet
-
+/// - wait for either dataReply or rejectedReply call back.
 final public class MemoryService {
     
     internal let service : DatagramService

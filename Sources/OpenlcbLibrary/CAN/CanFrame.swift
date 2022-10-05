@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct CanFrame : Equatable, CustomStringConvertible {
+internal struct CanFrame : Equatable, CustomStringConvertible {
     var header : UInt
     var data : [UInt8]
     

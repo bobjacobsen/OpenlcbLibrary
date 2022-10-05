@@ -11,11 +11,12 @@ import Foundation
 ///
 import Foundation
 
-// FdiiXmlMemo is a class so that reference semantics can be used to parts of the tree of memos
-// The tree of FdiMemo objects only has downward links, so no cycles are created (nor allowed)
-// This doesn't track the memory locations, because traction control is using absolute memory locations from the S&TN
-
-/// Represent an XML FDI tree as objects for use
+/// Represent an XML FDI tree as objects for use by e,g, FdiModel.
+///
+/// FdiiXmlMemo is a class so that reference semantics can be used to parts of the tree of memos.
+/// The tree of FdiMemo objects only has downward links, so no cycles are created (nor allowed).
+/// This doesn't track the memory locations, because traction control FDI doesn't have a corresponding configuration memory.
+/// Instead, the absolute addresses are defined in the S&TN.
 public final class FdiXmlMemo : Identifiable {
     
     /// Represent the type of each node.

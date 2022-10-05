@@ -7,6 +7,7 @@
 
 import Foundation
 import os
+
 /// Handles link-layer formatting and unformatting for CAN-frame links.
 ///
 /// Uses a ``CanPhysicalLayer`` implementation at the ``CanFrame`` layer.
