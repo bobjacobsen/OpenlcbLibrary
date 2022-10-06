@@ -147,6 +147,7 @@ public final class CdiXmlMemo : Identifiable {
             for i in 1...memo.length {
                 let tempChildNode = CdiXmlMemo(newChildNode)  // create a new, to-be child node
                 tempChildNode.name = memo.repname+" \(i)"
+                tempChildNode.offset = 0  // offset is only on original node, kept in place there
                 memo.children?.append(tempChildNode)
             }
         }
@@ -169,13 +170,15 @@ public final class CdiXmlMemo : Identifiable {
             newEndAddress = memo.startAddress
         } else {
             memo.startAddress = endAddress+memo.offset
-            if memo.type != .GROUP && memo.type != .GROUP_REP {  // in GROUP and GROUP_REP, length is replication count
+            if memo.type != .GROUP && memo.type != .GROUP_REP {  // in GROUP and GROUP_REP, length is replication count not bytes of length
                 newEndAddress = memo.startAddress+memo.length
+            } else {
+                newEndAddress = memo.startAddress  // .GROUP and .GROUP_REP case
             }
         }
         memo.space = nextSpace
         
-        newEndAddress = newEndAddress+memo.offset
+        //+ newEndAddress = newEndAddress+memo.offset
         
         // descend into children (including the new .GROUP_REP nodes)
         if let children = memo.children {
