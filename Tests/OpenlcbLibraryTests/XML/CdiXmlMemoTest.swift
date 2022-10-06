@@ -141,19 +141,19 @@ class CdiXmlMemoTest: XCTestCase {
         XCTAssertEqual(result[0].children![0].children![2].type, .INPUT_EVENTID)
         XCTAssertEqual(result[0].children![0].children![2].name, "NameE")
         XCTAssertEqual(result[0].children![0].children![2].description, "DescE")
-        XCTAssertEqual(result[0].children![0].children![2].startAddress, 13)
+        XCTAssertEqual(result[0].children![0].children![2].startAddress, 9)
     }
 
     func testTripleRepGroupOfTwoElement() throws {
         let data : Data = ("""
-                            <cdi><group replication="3">
+                            <cdi><group replication="3" offset="2">
                                     <name>NameGroup</name>
                                     <repname>Repl Name</repname>
                                     <description>DescGroup</description>
                                     <int>
                                         <name>Int Name</name>
                                         <description>Desc</description></int>"
-                                    <string></string>
+                                    <string size="5"></string>
                             </group></cdi>
                         """.data(using: .utf8))!
  
@@ -177,23 +177,29 @@ class CdiXmlMemoTest: XCTestCase {
 
         
         XCTAssertEqual(result[0].children![0].children![0].children![0].type, .INPUT_INT) // each repl contains all elements
+        XCTAssertEqual(result[0].children![0].children![0].children![0].startAddress, 2)
         XCTAssertEqual(result[0].children![0].children![0].children![0].name, "Int Name")  // created from replication name and number
         XCTAssertEqual(result[0].children![0].children![0].children![0].description, "Desc")
         XCTAssertEqual(result[0].children![0].children![0].children![1].type, .INPUT_STRING)
+        XCTAssertEqual(result[0].children![0].children![0].children![1].startAddress, 3)
         XCTAssertEqual(result[0].children![0].children![0].children![1].name, "")
         XCTAssertEqual(result[0].children![0].children![0].children![1].description, "")
 
         XCTAssertEqual(result[0].children![0].children![1].children![0].type, .INPUT_INT) // each repl contains all elements
+        XCTAssertEqual(result[0].children![0].children![1].children![0].startAddress, 8)
         XCTAssertEqual(result[0].children![0].children![1].children![0].name, "Int Name")
         XCTAssertEqual(result[0].children![0].children![1].children![0].description, "Desc")
         XCTAssertEqual(result[0].children![0].children![1].children![1].type, .INPUT_STRING)
+        XCTAssertEqual(result[0].children![0].children![1].children![1].startAddress, 9)
         XCTAssertEqual(result[0].children![0].children![1].children![1].name, "")
         XCTAssertEqual(result[0].children![0].children![1].children![1].description, "")
 
         XCTAssertEqual(result[0].children![0].children![2].children![0].type, .INPUT_INT) // each repl contains all elements
+        XCTAssertEqual(result[0].children![0].children![2].children![0].startAddress, 14)
         XCTAssertEqual(result[0].children![0].children![2].children![0].name, "Int Name")
         XCTAssertEqual(result[0].children![0].children![2].children![0].description, "Desc")
         XCTAssertEqual(result[0].children![0].children![2].children![1].type, .INPUT_STRING)
+        XCTAssertEqual(result[0].children![0].children![2].children![1].startAddress, 15)
         XCTAssertEqual(result[0].children![0].children![2].children![1].name, "")
         XCTAssertEqual(result[0].children![0].children![2].children![1].description, "")
 
