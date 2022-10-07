@@ -10,6 +10,8 @@ import os
 
 // Float16 not supported on macOS Rosetta.  Hence we use our own `float16ToFloat` conversion routine, see the bottom of the file.
 
+// TODO: Received speed messages have delayed processing to damp out update loops from more than one throttle. A similar thing is needed for momentary functions.
+
 /// Process messages for the `ThrottleModel`
 struct ThrottleProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
@@ -34,15 +36,30 @@ struct ThrottleProcessor : Processor {
         let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
         
         let mpsSpeed = float16ToFloat(alignedBytes)
-        let mphSpeed = mpsSpeed / ThrottleModel.mps_per_MPH
         
-        model.speed = abs(mphSpeed)
-        if (message.data[1] & 0x80 == 0) {  // explicit check of sign bit
-            model.forward = true
-            model.reverse = false
-        } else {
-            model.forward = false
-            model.reverse = true
+        // compute updated speed and direction bits
+        let nextMphSpeed = round(abs(mpsSpeed / ThrottleModel.mps_per_MPH))
+        
+        var nextForward = true
+        var nextReverse = false
+        if (message.data[1] & 0x80 != 0) {  // explicit check of sign bit
+            nextForward = false
+            nextReverse = true
+        }
+        
+        // remember the current speed
+        let currentMph = model.speed
+        
+        // wait a bit, then update if the current conditions have not changed.
+        // this is done to damp down race condition between multiple throttles.
+        let deadlineTime = DispatchTime.now() + .milliseconds(100)
+        DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
+            if model.speed == currentMph {
+                // objective conditions have not changed, do the update
+                model.speed = nextMphSpeed
+                model.forward = nextForward
+                model.reverse = nextReverse
+            }
         }
     }
     

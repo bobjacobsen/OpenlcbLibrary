@@ -10,6 +10,8 @@ import os
 
 // Float16 not supported on macOS Rosetta.  Hence we use our own `floatToFloat16` conversion routine, see the bottom of the file.
 
+// Speed is quantized to integers to reduce the amount of output.  This is enforced both here and in `ThrottleProcessor`
+
 /// Data to construct a single throttle.
 final public class ThrottleModel : ObservableObject {
     
@@ -26,6 +28,9 @@ final public class ThrottleModel : ObservableObject {
             sendSetSpeed(to: speed)
         }
     }
+    
+    // keep track of the last one you sent to not repeat yourself
+    var lastSentMphSpeed : Float = 0.0
     
     // We have separate forward and false to represent the initial case where it's not known what the status is
     @Published public var forward = true
@@ -45,7 +50,12 @@ final public class ThrottleModel : ObservableObject {
             return
         }
         
-        let bytes = encodeSpeed(to: mphSpeed)
+        if abs(mphSpeed - lastSentMphSpeed) < 0.5 {
+            return // don't send duplicates
+        }
+        lastSentMphSpeed = mphSpeed
+        
+        let bytes = encodeSpeed(to: round(mphSpeed))
         
         let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId,
                               data: [0x00, bytes[1], bytes[0]])
