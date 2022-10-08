@@ -111,7 +111,13 @@ final public class MemoryService {
     internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) -> Bool {
         // node received a datagram, is it our service?
         guard service.datagramType(data: dmemo.data) == DatagramService.ProtocolID.MemoryOperation else { return false }
-        
+
+        // datagram must has a command value
+        if dmemo.data.count < 2 {
+            MemoryService.logger.error("Memory service datagram too short: \(dmemo.data.count, privacy: .public)")
+            service.negativeReplyToDatagram(dmemo, err: 0x1041)
+            return true;  // error, but for our service; sent negative reply
+        }
         // Acknowledge the datagram
         service.positiveReplyToDatagram(dmemo, flags: 0x0000)
         
@@ -123,18 +129,18 @@ final public class MemoryService {
                 if readMemos[index].nodeID == dmemo.srcID {
                     var tMemoryMemo = readMemos[index]
                     readMemos.remove(at: index)
-                    // decode type of operation, hence data offset
+                    // decode type of operation, hence offset for start of data
                     var offset = 6
-                    if dmemo.data[1] == 0x50 {
+                    if dmemo.data[1] == 0x50 || dmemo.data[1] == 0x58 {
                         offset = 7
                     }
                     
-                    // are there any more to send?
+                    // are there any additional requests queued to send?
                     if readMemos.count > 0 {
                         requestMemoryReadNext(memo: readMemos[0])
                     }
                     
-                    // reply to requestor
+                    // fill data for call-back to requestor
                     if dmemo.data.count > offset {
                         tMemoryMemo.data = Array(dmemo.data[offset..<dmemo.data.count])
                     }
