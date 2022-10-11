@@ -20,11 +20,11 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
     @Published public private(set) var clockModel0 : ClockModel          // 0 in case more are added later
  
-    @Published public private(set) var throttleModel0 : ThrottleModel    // 0 in case more are added later
+    @Published public private(set) var throttleModel0 : ThrottleModel    // 0 in case more are added later // TODO: allow multiple throttles e.g. on macOS, with a single Roster
     
     @Published public private(set) var turnoutModel0 : TurnoutModel      // 0 in case more are added later
     
-    @Published public private(set) var consistModel0 : ConsistModel      // 0 in case more are added later
+    @Published public private(set) var consistModel0 : ConsistModel      // 0 in case more are added later // TODO: Allow independent consisting views e.g. on macOS
 
     public var description : String { "OpenlcbNetwork w \(remoteNodeStore.nodes.count)"}
 
