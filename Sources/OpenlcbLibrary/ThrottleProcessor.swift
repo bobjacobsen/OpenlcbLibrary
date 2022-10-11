@@ -10,8 +10,6 @@ import os
 
 // Float16 not supported on macOS Rosetta.  Hence we use our own `float16ToFloat` conversion routine, see the bottom of the file.
 
-// TODO: Received speed messages have delayed processing to damp out update loops from more than one throttle. A similar thing is needed for momentary functions.
-
 /// Process messages for the `ThrottleModel`
 struct ThrottleProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
@@ -31,8 +29,6 @@ struct ThrottleProcessor : Processor {
     /// - Parameter message: speed-containing Command or Reply message
     fileprivate func handleSpeedMessage(_ message: Message) {
         // speed message - convert from bytes to Float16
-        // https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
-        // See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
         let alignedBytes : [UInt8] = [message.data[2], message.data[1]]
         
         let mpsSpeed = float16ToFloat(alignedBytes)
@@ -59,6 +55,8 @@ struct ThrottleProcessor : Processor {
                 model.speed = nextMphSpeed
                 model.forward = nextForward
                 model.reverse = nextReverse
+            } else {
+                ThrottleProcessor.logger.trace("skipping speed update as model.speed has changed")
             }
         }
     }
@@ -72,7 +70,26 @@ struct ThrottleProcessor : Processor {
             return
         }
         let fn = Int(message.data[3])
-        model.fnModels[fn].pressed = (message.data[5] != 0)
+        let capturedN = fn
+        let capturedState = model.fnModels[fn].pressed
+        let nextState = (message.data[5] != 0)
+        
+        // not a change, no action
+        if (nextState == capturedState) { return }
+        
+        // wait a bit, then update if the current conditions have not changed.
+        // this is done to damp down race condition between multiple throttles.
+        let deadlineTime = DispatchTime.now() + .milliseconds(100)
+        DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
+            if model.fnModels[fn].pressed == capturedState {
+                // objective conditions have not changed, do the update
+                model.fnModels[capturedN].pressed = nextState
+            } else {
+                ThrottleProcessor.logger.trace("skipping speed update as fn \(capturedN, privacy: .public) has changed")
+            }
+        }
+
+        
     }
     
     public func process( _ message : Message, _ node : Node  ) -> Bool {
@@ -215,6 +232,10 @@ struct ThrottleProcessor : Processor {
         case TractionManagement     = 0x40
     }
 }
+
+// For native Float <-> Float16 on Arm see
+// https://stackoverflow.com/questions/36812583/how-to-convert-a-float-value-to-byte-array-in-swift
+// See code in https://gist.github.com/codelynx/eeaeeda00828568aaf577c0341964c38
 
 func float16ToFloat(_ input : [UInt8]) -> Float {
     let upper = UInt32(input[1])
