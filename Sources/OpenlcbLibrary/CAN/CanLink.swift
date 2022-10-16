@@ -48,6 +48,8 @@ final public class CanLink : LinkLayer {
         switch decodeControlFrameFormat(frame) {
         case .LinkUp:
             handleReceivedLinkUp(frame)
+        case .LinkRestarted:
+            handleReceivedLinkRestarted(frame)
         case .LinkCollision, .LinkError :
             CanLink.logger.notice("Unexpected error report \(frame.header, format:.hex(minDigits: 8))")
         case .LinkDown :
@@ -92,12 +94,14 @@ final public class CanLink : LinkLayer {
         // these are non-OLCB values used for internal signaling
         // their values have a bit set above what can come from a CAN Frame
         case LinkUp         = 0x20000
-        case LinkCollision  = 0x20001
-        case LinkError      = 0x20002
-        case LinkDown       = 0x20003
+        case LinkRestarted  = 0x20001
+        case LinkCollision  = 0x20002
+        case LinkError      = 0x20003
+        case LinkDown       = 0x20004
         case UnknownFormat  = 0x21000
     }
     
+    /// Link started, update state, start process to create alias. LinkUp message will be sent when alias process completes.
     func handleReceivedLinkUp(_ frame : CanFrame) {
         // start the alias allocation in Inhibited state
         state = .Inhibited
@@ -105,7 +109,13 @@ final public class CanLink : LinkLayer {
         // notify upper layers
         linkStateChange(state: state)
     }
-        
+
+    /// Send a LinkRestarted message upstream.
+    func handleReceivedLinkRestarted(_ frame : CanFrame) {
+        let msg = Message(mti: MTI.Link_Layer_Restarted, source: NodeID(0) )
+        fireListeners(msg)
+    }
+
     func defineAndReserveAlias() {
         sendAliasAllocationSequence()
         
@@ -121,6 +131,8 @@ final public class CanLink : LinkLayer {
         link!.sendCanFrame( CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias) )
     }
     
+    // TODO: (restart) Should this set inhibited every time? LinkUp not called on restart
+    // TODO: (restart) This is not called; there's no callback for it in Telnet library
     func handleReceivedLinkDown(_ frame : CanFrame) {
         // return to Inhibited state until link back up
         // Note: since no working link, not sending the AMR frame

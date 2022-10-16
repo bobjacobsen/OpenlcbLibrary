@@ -27,12 +27,22 @@ public class CanPhysicalLayer : PhysicalLayer {
         }
     }
     
-    // invoked when the physical implementation has actually come up
+    /// Invoked from OpenlcbNetwork when the physical link implementation has initially come up
     public func physicalLayerUp() {
         // notify link layer
         let cf = CanFrame(control : CanLink.ControlFrame.LinkUp.rawValue, alias : 0)
         fireListeners(cf)
     }
+    
+    /// Invoked from OpenlcbNetwork when the physical link implementation has come up 2nd or later times
+    public func physicalRestart() {
+        // notify link layer
+        let cf = CanFrame(control : CanLink.ControlFrame.LinkRestarted.rawValue, alias : 0)
+        fireListeners(cf)
+    }
+    
+    /// Invoked from OpenlcbNetwork when the physical link implementation has gone down
+    // TODO: Is this invoked? Used?
     public func physicalLayerDown() {
         // notify link layer
         let cf = CanFrame(control : CanLink.ControlFrame.LinkDown.rawValue, alias : 0)

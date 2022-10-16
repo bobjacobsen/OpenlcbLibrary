@@ -25,6 +25,8 @@ final public class DatagramService : Processor {
     
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "DatagramService")
 
+    private var currentOutstandingMemo : DatagramWriteMemo? = nil
+    
     /// Memo carries write request and two reply callbacks
     public struct DatagramWriteMemo : Equatable {
         
@@ -110,6 +112,7 @@ final public class DatagramService : Processor {
         // Send datagram message
         let message = Message(mti: MTI.Datagram, source: linkLayer.localNodeID, destination: memo.destID, data: memo.data)
         linkLayer.sendMessage(message)
+        currentOutstandingMemo = memo
     }
     
     /// Register a listener to be notified when each datagram arrives.  One and only one listener should reply positively or negatively to the datagram and return true.
@@ -132,16 +135,18 @@ final public class DatagramService : Processor {
     /// Processor entry point.
     /// - Returns: Always false; a datagram doesn't mutate the node, it's the actions brought by that datagram that does.
     public func process( _ message : Message, _ node : Node ) -> Bool {
-        // Check that it's to us
-        guard checkDestID(message, linkLayer.localNodeID) else { return false }
+        // Check that it's to us or a global (for link layer up)
+        guard message.isGlobal() || checkDestID(message, linkLayer.localNodeID) else { return false }
         
         switch message.mti {
-        case MTI.Datagram :
+        case .Datagram :
             handleDatagram(message)
-        case MTI.Datagram_Rejected :
+        case .Datagram_Rejected :
             handleDatagramRejected(message)
-        case MTI.Datagram_Received_OK :
+        case .Datagram_Received_OK :
             handleDatagramReceivedOK(message)
+        case .Link_Layer_Restarted :
+            handleLinkRestarted(message)
         default:
             // no need to do anything
             break
@@ -160,6 +165,13 @@ final public class DatagramService : Processor {
     private func handleDatagramReceivedOK(_ message : Message) {
         // match to the memo and remove from queue
         let memo = matchToWriteMemo(message: message)
+        
+        // check of tracking logic
+        if currentOutstandingMemo != memo {
+            DatagramService.logger.error("Outstanding and replied-to memos don't match on OK reply")
+        }
+        currentOutstandingMemo = nil
+        
         // fire the callback
         memo?.okReply?(memo!)
         
@@ -170,10 +182,25 @@ final public class DatagramService : Processor {
     private func handleDatagramRejected(_ message : Message) {
         // match to the memo and remove from queue
         let memo = matchToWriteMemo(message: message)
+
+        // check of tracking logic
+        if currentOutstandingMemo != memo {
+            DatagramService.logger.error("Outstanding and replied-to memos don't match on rejected")
+        }
+        currentOutstandingMemo = nil
+
         // fire the callback
         memo?.rejectedReply?(memo!)
 
         sendNextDatagramFromQueue()
+    }
+    
+    // Link restarted after outage: if write datagram(s) pending reply, resend them
+    private func handleLinkRestarted(_ message : Message) {
+        guard let currentOutstandingMemo else {return}
+        // there's a current outstanding memo to repeat
+        DatagramService.logger.info("Retrying datagram after restart")
+        sendDatagramMessage(memo: currentOutstandingMemo)
     }
     
     private func matchToWriteMemo(message : Message) -> DatagramService.DatagramWriteMemo? {

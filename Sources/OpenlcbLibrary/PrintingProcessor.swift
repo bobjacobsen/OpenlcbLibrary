@@ -60,7 +60,11 @@ public struct PrintingProcessor : Processor {
                 .Producer_Consumer_Event_Report :
             simpleGlobalMessage(message, node, dataString)
             
-        case    .Link_Layer_Up, .Link_Layer_Down, .New_Node_Seen, .Unknown :
+        case    .Link_Layer_Up,
+                .Link_Layer_Restarted,
+                .Link_Layer_Down,
+                .New_Node_Seen,
+                .Unknown :
             internalMessage(message, dataString)
         }
         return false
