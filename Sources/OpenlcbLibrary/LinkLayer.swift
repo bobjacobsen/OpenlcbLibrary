@@ -41,7 +41,7 @@ public class LinkLayer {
     }
     
     // invoked when the link layer comes up and down
-    // TODO: (Restart) Does this need to be involved in restart?  
+    // TODO: (Restart) Does this need to be involved in restart?  I.e. does state change on restart?
     internal func linkStateChange(state : State) {
         var msg : Message
         if state == State.Permitted {
