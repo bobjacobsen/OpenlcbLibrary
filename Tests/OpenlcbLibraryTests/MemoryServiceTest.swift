@@ -142,7 +142,7 @@ class MemoryServiceTest: XCTestCase {
         XCTAssertEqual(aut, [0x41, 0x42])
 
         aut = mService.stringToArray(value: "ABCD", length: 6)
-        XCTAssertEqual(aut, [0x41, 0x42, 0x43, 0x44])
+        XCTAssertEqual(aut, [0x41, 0x42, 0x43, 0x44, 0x00, 0x00])
     }
     
     func testSpaceDecode() {

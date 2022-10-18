@@ -9,6 +9,7 @@ import Foundation
 import os
 
 // TODO: Read requests are serialized, but write requests are not yet
+// TODO: (Restart) Datagram retry will (hopefully) get the read datagram there, but what if we lose the reply datagram with data back? Can't catch restart, because sometimes restart is OK.  Time out and fail?  Time out and retry N times?
 
 /// Does memory read and write requests.
 /// Reads and writes are limited to 64 bytes at a time.
@@ -319,10 +320,15 @@ final public class MemoryService {
         }
     }
     
+    /// Converts a string to a UInt8 array, padding with 0 bytes as needed
     internal func stringToArray(value: String, length: UInt8) -> ([UInt8]) {
         let strToUInt8:[UInt8] = [UInt8](value.utf8)
         let byteCount = min(Int(length), strToUInt8.count)
-        return Array(strToUInt8[0...byteCount-1])
+        let contentPart = Array(strToUInt8[0..<byteCount])
+        let padding = [UInt8](repeating: 0, count: Int(length))
+        let both = contentPart + padding
+        
+        return Array(both[0..<Int(length)])
     }
     
     
