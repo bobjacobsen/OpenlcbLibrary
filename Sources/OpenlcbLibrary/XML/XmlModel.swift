@@ -64,12 +64,18 @@ public class XmlModel {
         // we'll start reading from that callback
     }
     
-    internal func okReplyCallback(memo : MemoryService.MemoryReadMemo) {
-    }
     internal func rejectedReplyCallback(memo : MemoryService.MemoryReadMemo) {
         XmlModel.logger.error("Memory service replied via rejectedReplyCallback")
-        // stop input and try to process
+        // stop input and try to process data received so far
         processAquiredText()
+
+        loading = false
+        endOK = false
+        loaded = true
+
+        // TODO: Should this retry?  How many times?
+        
+        return
     }
     internal func dataReplyCallback(memo : MemoryService.MemoryReadMemo) {
         // Assume this is a Read Reply with data
@@ -82,6 +88,11 @@ public class XmlModel {
         } else {
             XmlModel.logger.error("<Received data not in processable form> \(memo.data, privacy: .public)")
             processAquiredText()
+            
+            loading = false
+            endOK = false
+            loaded = true
+            
             return
         }
         // Check for end of data (< 64 and/or trailing 0 byte)
