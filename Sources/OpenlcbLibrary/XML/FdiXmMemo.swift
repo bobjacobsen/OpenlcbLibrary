@@ -37,32 +37,32 @@ public final class FdiXmlMemo : Identifiable {
     public internal(set) var momentaryKind : Bool
 
     // input values - usage determined by type
-    public internal(set) var offset : Int                 // Initial offset from the FDI
-    public internal(set) var space : Int
+    public internal(set) var offset : Int                 // Initial offset from the FDI // TODO: Confirm needed for _F_DI
+    public internal(set) var space : Int                  // TODO: Confirm needed for _F_DI
             
-    public internal(set) var children : [FdiXmlMemo]?     // Optional required to display in SwiftUI.  Never nil here.
+    public internal(set) var children : [FdiXmlMemo]?     // Optional required to display in SwiftUI.  Never nil here, but can be empty []
     
     public let id = UUID() // for Identifiable
         
-    /// Copy ctor makes deep copy
-    internal init(_ memo : FdiXmlMemo) {
-        self.type = memo.type
-        self.name = memo.name
-        self.description = memo.description
-        self.number = memo.number
-        self.binaryKind = memo.binaryKind
-        self.momentaryKind = memo.momentaryKind
-        self.offset = memo.offset
-        self.space = memo.space
-        // make a recursive deep copy of memo.children
-        self.children = nil
-        if let children = memo.children {
-            self.children = []
-            for child in children {
-                self.children!.append(FdiXmlMemo(child))
-            }
-        }
-    }
+//+    /// Copy ctor makes deep copy
+//+    internal init(_ memo : FdiXmlMemo) {
+//        self.type = memo.type
+//        self.name = memo.name
+//        self.description = memo.description
+//        self.number = memo.number
+//        self.binaryKind = memo.binaryKind
+//        self.momentaryKind = memo.momentaryKind
+//        self.offset = memo.offset
+//        self.space = memo.space
+//        // make a recursive deep copy of memo.children
+//        self.children = nil
+//        if let children = memo.children {
+//            self.children = []
+//            for child in children {
+//                self.children!.append(FdiXmlMemo(child))
+//            }
+//        }
+//    }
     
     /// Null object ctor - for later fill-out
     internal init() {
