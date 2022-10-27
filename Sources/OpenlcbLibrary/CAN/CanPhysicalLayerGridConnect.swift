@@ -53,8 +53,8 @@ final public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
         //logger.debug("receive \(data, privacy: .public)")
         inboundBuffer += data
         var lastByte = 0
-        if inboundBuffer.contains(0x3B) {  // ';' ends message so we have at least one
-            // found end, now find start
+        if inboundBuffer.contains(0x3B) {  // ';' ends message so we have at least one (CR/LF not required)
+            // found end, now find start of that same message, earlier in buffer
             for index in 0...inboundBuffer.count-1 {
                 var outData : [UInt8] = []
                 if !inboundBuffer[index...inboundBuffer.count-1].contains(0x3B) { break }
@@ -86,7 +86,7 @@ final public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
                     fireListeners(cf)
                 }
             }
-            // shorten buffer
+            // shorten buffer by removing the processed message
             inboundBuffer = Array(inboundBuffer[lastByte...inboundBuffer.count-1])
         }
         
