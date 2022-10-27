@@ -61,6 +61,7 @@ public struct PrintingProcessor : Processor {
             simpleGlobalMessage(message, node, dataString)
             
         case    .Link_Layer_Up,
+                .Link_Layer_Quiesce,
                 .Link_Layer_Restarted,
                 .Link_Layer_Down,
                 .New_Node_Seen,

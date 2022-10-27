@@ -176,6 +176,14 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         sendMessage(msg)
     }
     
+    /// Application has gone to .inactive state
+    /// Send a `Link_Layer_Quiesced` MTI to inform application
+    public func appInactive() {
+        OpenlcbNetwork.logger.info("appInactive sends Quiesce")
+        let msg = Message(mti: .Link_Layer_Quiesce, source: linkLayer.localNodeID)
+        processMessageFromLinkLayer(msg)
+    }
+    
     /// Send a message to the network
     /// - Parameter message: Message to forward to network
     public func sendMessage(_ message: Message) {

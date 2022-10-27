@@ -9,7 +9,7 @@ import Foundation
 import os
 
 // TODO: Read requests are serialized, but write requests are not yet
-// TODO: (Restart) Datagram retry will (hopefully) get the read datagram there, but what if we lose the reply datagram with data back? Can't catch restart, because sometimes restart is OK.  Time out and fail?  Time out and retry N times?
+// Datagram retry handles the link being queisced/restarted, so it's not explicitly handled here.
 
 /// Does memory read and write requests.
 /// Reads and writes are limited to 64 bytes at a time.

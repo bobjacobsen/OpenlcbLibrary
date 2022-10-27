@@ -51,9 +51,11 @@ public enum MTI : Int {
     
     // these are used for internal signalling and are not present in the MTI specification.
     case Link_Layer_Up                      = 0x2000   // entered Permitted state; needs to be marked global
-    case Link_Layer_Restarted               = 0x2010   // link cycled without change of node state; needs to be marked global // TODO: needs to be generated when link is reconnected
-    case Link_Layer_Down                    = 0x2020   // entered Inhibited state; needs to be marked global
-    case New_Node_Seen                      = 0x2028   // alias resolution found new node; marked addressed (0x8 bit)
+    case Link_Layer_Quiesce                 = 0x2010   // Link needs to be drained, will come back with Link_Layer_Restarted next
+    case Link_Layer_Restarted               = 0x2020   // link cycled without change of node state; needs to be marked global
+    case Link_Layer_Down                    = 0x2030   // entered Inhibited state; needs to be marked global
+    
+    case New_Node_Seen                      = 0x2048   // alias resolution found new node; marked addressed (0x8 bit)
 
     
     public func priority() -> Int { return (self.rawValue & 0x0C00) >> 10 }

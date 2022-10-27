@@ -8,6 +8,7 @@
 import Foundation
 import os
 
+
 /// Provide a service interface for reading and writing Datagrams.
 /// Writes to remote node:
 /// - Create a WriteMemo and submit
@@ -17,11 +18,16 @@ import os
 ///  - exactly one should call positiveReplyToDatagram/negativeReplyToDatagram before returning from listener
 ///
 /// Implements `Processor`, should be fed as part of common execution
+/// Handles link quiesce/restart so that higher level services don't have to.
+///    1) If there's an outstanding datagram reply with link restarts, resend it
+///    2) Once the link has been quiesced, datagrams are held until it's restarted
+///    
 final public class DatagramService : Processor {
     public init ( _ linkLayer: LinkLayer) {
         self.linkLayer = linkLayer
     }
     private let linkLayer : LinkLayer
+    private var quiesced = false
     
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "DatagramService")
 
@@ -145,6 +151,8 @@ final public class DatagramService : Processor {
             handleDatagramRejected(message)
         case .Datagram_Received_OK :
             handleDatagramReceivedOK(message)
+        case .Link_Layer_Quiesce :
+            handleLinkQuiesce(message)
         case .Link_Layer_Restarted :
             handleLinkRestarted(message)
         default:
@@ -194,13 +202,26 @@ final public class DatagramService : Processor {
 
         sendNextDatagramFromQueue()
     }
-    
+   
+    // Link quiesced before outage: stop operation
+    private func handleLinkQuiesce(_ message : Message) {
+        quiesced = true
+    }
+
     // Link restarted after outage: if write datagram(s) pending reply, resend them
     private func handleLinkRestarted(_ message : Message) {
-        guard let currentOutstandingMemo else {return}
-        // there's a current outstanding memo to repeat
-        DatagramService.logger.info("Retrying datagram after restart")
-        sendDatagramMessage(memo: currentOutstandingMemo)
+        quiesced = false
+        if currentOutstandingMemo != nil {
+            // there's a current outstanding memo to repeat
+            DatagramService.logger.info("Retrying datagram after restart")
+            sendDatagramMessage(memo: currentOutstandingMemo!)
+            return
+        } else {
+            // are there any queued datagrams? If so, send first
+            if pendingWriteMemos.count > 0 {
+                sendNextDatagramFromQueue()
+            }
+        }
     }
     
     private func matchToWriteMemo(message : Message) -> DatagramService.DatagramWriteMemo? {
