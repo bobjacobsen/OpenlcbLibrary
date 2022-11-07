@@ -8,7 +8,7 @@ CanPhysicalLayer <|-- CanUsbLink
 class LinkLayer
 LinkLayer <|-- CanLink
 
-CanLink *-l-> CanPhysicalLayer : listener
+CanLink *--> CanPhysicalLayer : listener
 CanLink : CanPhysicalLayer
 
 protocol Processor
@@ -22,8 +22,6 @@ Processor <|-- LocalNodeProcessor
 Processor <|-- DatagramProcessor
 
 class Node
-Node : DatagramService
-Node : MemoryService
 
 protocol NodeStore
 NodeStore : Set<Node>
@@ -35,15 +33,18 @@ NodeStore <|-- RemoteNodeStore
 struct LocalNodeStore
 NodeStore <|-- LocalNodeStore
 
-
-Node --> DatagramService
-Node --> MemoryService
-
 class DatagramService
 class MemoryService
 
-NodeStore *-l-> LinkLayer
-NodeStore -r-> Node
-NodeStore -r-> Processor : reference
+NodeStore --> Node
+NodeStore --> Processor : reference
+
+class OpenlcbNetwork
+OpenlcbNetwork *--> LinkLayer
+OpenlcbNetwork --> NodeStore
+OpenlcbNetwork --> DatagramService
+OpenlcbNetwork --> MemoryService
+
+MemoryService *-->  DatagramService
 
 @enduml
