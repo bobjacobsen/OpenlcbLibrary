@@ -1,15 +1,6 @@
 @startuml
 
-protocol PhysicalLayer
-PhysicalLayer <|-- CanPhysicalLayer : implements
-CanPhysicalLayer <|-- CanTelnetLink
-CanPhysicalLayer <|-- CanUsbLink
-
 class LinkLayer
-LinkLayer <|-- CanLink
-
-CanLink *--> CanPhysicalLayer : listener
-CanLink : CanPhysicalLayer
 
 protocol Processor
 Processor : process(Message:, Node:)
@@ -19,7 +10,6 @@ struct LocalNodeProcessor
 struct DatagramProcessor
 Processor <|-- RemoteNodeProcessor
 Processor <|-- LocalNodeProcessor
-Processor <|-- DatagramProcessor
 
 class Node
 
@@ -44,6 +34,8 @@ OpenlcbNetwork *--> LinkLayer
 OpenlcbNetwork --> NodeStore
 OpenlcbNetwork --> DatagramService
 OpenlcbNetwork --> MemoryService
+
+Processor <|-- DatagramService
 
 MemoryService *-->  DatagramService
 

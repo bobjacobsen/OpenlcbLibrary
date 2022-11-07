@@ -23,6 +23,10 @@ The ``OpenlcbNetwork`` class can be used to build a complete configuration.
 
 ![High-Level Class Diagram](Classes.png)
 
+Implementations of the Link Level communications
+
+![Link-Level Class Diagram](LinkClasses.png)
+
 Processing of a frame from the physical layer into a message, which then updates the node(s):
 
 ![High-Level Physical -> Client Interaction Diagram](PtoCInteractions.png)

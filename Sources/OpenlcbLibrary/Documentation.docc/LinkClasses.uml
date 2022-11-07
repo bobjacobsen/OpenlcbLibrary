@@ -1,0 +1,14 @@
+@startuml
+
+protocol PhysicalLayer
+PhysicalLayer <|-- CanPhysicalLayer : implements
+CanPhysicalLayer <|-- CanTelnetLink
+CanPhysicalLayer <|-- CanUsbLink
+
+class LinkLayer
+LinkLayer <|-- CanLink
+
+CanLink *--> CanPhysicalLayer : listener
+CanLink : CanPhysicalLayer
+
+@enduml
