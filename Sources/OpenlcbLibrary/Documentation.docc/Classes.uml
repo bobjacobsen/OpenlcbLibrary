@@ -6,8 +6,10 @@ protocol Processor
 Processor : process(Message:, Node:)
 
 struct RemoteNodeProcessor
-struct LocalNodeProcessor
 Processor <|-- RemoteNodeProcessor
+
+struct LocalNodeProcessor
+LocalNodeProcessor : LinkLayer
 Processor <|-- LocalNodeProcessor
 
 class Node
@@ -18,24 +20,28 @@ NodeStore : Set<Processor>
 NodeStore : LinkLayer
 
 struct RemoteNodeStore
+
 NodeStore <|-- RemoteNodeStore
 struct LocalNodeStore
 NodeStore <|-- LocalNodeStore
 
 class DatagramService
+DatagramService : LinkLayer
 class MemoryService
+class ThrottleModel
 
 NodeStore --> Node
 NodeStore --> Processor : reference
 
 class OpenlcbNetwork
-OpenlcbNetwork *--> LinkLayer
+OpenlcbNetwork *--> LinkLayer : listener
 OpenlcbNetwork --> NodeStore
 OpenlcbNetwork --> DatagramService
 OpenlcbNetwork --> MemoryService
+OpenlcbNetwork --> ThrottleModel
 
 Processor <|-- DatagramService
 
-MemoryService *-->  DatagramService
+MemoryService *-->  DatagramService : listener
 
 @enduml
