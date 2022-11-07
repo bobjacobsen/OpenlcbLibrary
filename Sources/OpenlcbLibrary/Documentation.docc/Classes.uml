@@ -7,7 +7,6 @@ Processor : process(Message:, Node:)
 
 struct RemoteNodeProcessor
 struct LocalNodeProcessor
-struct DatagramProcessor
 Processor <|-- RemoteNodeProcessor
 Processor <|-- LocalNodeProcessor
 
