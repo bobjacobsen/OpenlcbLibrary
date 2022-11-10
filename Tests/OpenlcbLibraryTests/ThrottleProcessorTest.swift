@@ -21,7 +21,7 @@ final class ThrottleProcessorTest: XCTestCase {
     func testPCERmatch() {
         let node1 = Node(NodeID(1))
         let model = ThrottleModel(nil)
-        model.openlcbNetwork = OpenlcbNetwork(defaultNodeID: NodeID(1))
+        model.openlcbNetwork = OpenlcbNetwork(localNodeID: NodeID(1))
         
         // clear debug content, if any
         model.roster = []

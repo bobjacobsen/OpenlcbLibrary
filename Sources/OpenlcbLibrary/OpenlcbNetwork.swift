@@ -30,7 +30,8 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
     internal let linkLayer : CanLink   // link to OpenLCB network; GridConnect-over-TCP implementation here.
     
-    let defaultNode : Node      // the node that's implemented here
+    let localNode : Node      // the node that's implemented here
+    let localNodeID : NodeID  // ID of the node implemented here
     
     var localNodeStore : LocalNodeStore
     
@@ -41,14 +42,15 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
     /// Initialize a basic system
     /// - Parameter defaultNodeID: NodeiID for this program
-    public init(defaultNodeID : NodeID) {
+    public init(localNodeID : NodeID) {
         
-        defaultNode = Node(defaultNodeID)  // i.e. 0x05_01_01_01_03_01; user responsible for uniqueness of value
+        self.localNodeID = localNodeID
+        localNode = Node(localNodeID)  // i.e. 0x05_01_01_01_03_01; user responsible for uniqueness of value
         
-        linkLayer = CanLink(localNodeID: defaultNodeID)
+        linkLayer = CanLink(localNodeID: localNodeID)
 
         localNodeStore   = LocalNodeStore()
-        remoteNodeStore  = RemoteNodeStore(localNodeID: defaultNodeID)
+        remoteNodeStore  = RemoteNodeStore(localNodeID: localNodeID)
         clockModel0 = ClockModel()
         throttleModel0 = ThrottleModel(linkLayer)
         turnoutModel0 = TurnoutModel()
@@ -65,7 +67,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     /// Iniitialize and optionally add sample data for SwiftUI preview
     /// - Parameter sample: Iff true, add the sample nodes.
     public convenience init(sample: Bool) {
-        self.init(defaultNodeID: NodeID(0x05_01_01_01_03_01))
+        self.init(localNodeID: NodeID(0x05_01_01_01_03_01))
         OpenlcbNetwork.logger.info("OpenlcbLibrary init(Bool)")
         if (sample) {
             createSampleData()
@@ -80,38 +82,38 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
     public func configureCanTelnet(_ canPhysicalLayer : CanPhysicalLayer) { // pass in either a real or mock physical layer
         
         // local node has limited capability
-        defaultNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to receive replies to memory requests
+        localNode.pipSet = Set([PIP.DATAGRAM_PROTOCOL,  // needed to receive replies to memory requests
                                   PIP.EVENT_EXCHANGE_PROTOCOL,
                                   PIP.SIMPLE_NODE_IDENTIFICATION_PROTOCOL])
         
         // Define the SNIP identification for this node
-        defaultNode.snip.manufacturerName = "Ardenwood.us"
+        localNode.snip.manufacturerName = "Ardenwood.us"
         let dictionary = Bundle.main.infoDictionary!
         if let version : String = dictionary["CFBundleDisplayName"] as? String {
-            defaultNode.snip.userProvidedDescription = version
-            defaultNode.snip.modelName = "Full \(version) App"
+            localNode.snip.userProvidedDescription = version
+            localNode.snip.modelName = "Full \(version) App"
         } else {
-            defaultNode.snip.userProvidedDescription = "OpenlcbLibrary"
-            defaultNode.snip.modelName = "Full OpenlcbLibrary App"
+            localNode.snip.userProvidedDescription = "OpenlcbLibrary"
+            localNode.snip.modelName = "Full OpenlcbLibrary App"
         }
-        defaultNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
-        defaultNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "<Unknown>"
+        localNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
+        localNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "<Unknown>"
 
 #if canImport(UIKit)
         // iOS case
-        defaultNode.snip.userProvidedNodeName = UIDevice.current.name
+        localNode.snip.userProvidedNodeName = UIDevice.current.name
 #else
         // macOS case
         if let deviceName = Host.current().localizedName {
-            defaultNode.snip.userProvidedNodeName = deviceName
+            localNode.snip.userProvidedNodeName = deviceName
         } else {
-            defaultNode.snip.userProvidedNodeName = "Some Mac"
+            localNode.snip.userProvidedNodeName = "Some Mac"
         }
 #endif
         
-        defaultNode.snip.updateSnipDataFromStrings()    // load the SNIP strings we entered into the SNIP data store
+        localNode.snip.updateSnipDataFromStrings()    // load the SNIP strings we entered into the SNIP data store
 
-        localNodeStore.store(defaultNode)               // define the node for this program
+        localNodeStore.store(localNode)               // define the node for this program
         
         // connect the physical -> link layers using the CAN-overTCP form (Native Telnet not yet available)
         linkLayer.linkPhysicalLayer(canPhysicalLayer)

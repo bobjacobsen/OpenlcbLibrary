@@ -14,7 +14,7 @@ final class OpenlcbNetworkTests: XCTestCase {
     let canPhysicalLayer = CanPhysicalLayerSimulation()
     
     func testCanSetupRuns() {
-        let lib = OpenlcbNetwork(defaultNodeID: NodeID(0x05_01_01_01_03_01))
+        let lib = OpenlcbNetwork(localNodeID: NodeID(0x05_01_01_01_03_01))
         lib.configureCanTelnet(canPhysicalLayer)
         
         lib.createSampleData()
@@ -25,13 +25,13 @@ final class OpenlcbNetworkTests: XCTestCase {
     
     /// More of an acceptance test than a unit test.
     func testOperation() {
-        let lib = OpenlcbNetwork(defaultNodeID: NodeID(0x05_01_01_01_03_01))
+        let lib = OpenlcbNetwork(localNodeID: NodeID(0x05_01_01_01_03_01))
         lib.configureCanTelnet(canPhysicalLayer)
         lib.createSampleData()
         lib.bringLinkUp(canPhysicalLayer)
         
         // check initialization messages
-        XCTAssertEqual(lib.defaultNode.state, Node.State.Initialized)
+        XCTAssertEqual(lib.localNode.state, Node.State.Initialized)
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 12) // should be 12 with the Initialization Complete, Verify Global, ID clock range and clock query, request for isATrain events
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[5].header))", "0x10701240") // Allocation AMDefinition
         XCTAssertEqual("\(String(format:"0x%08X", canPhysicalLayer.receivedFrames[6].header))", "0x10702240") // Acquire rest of network with AMEnquiry
