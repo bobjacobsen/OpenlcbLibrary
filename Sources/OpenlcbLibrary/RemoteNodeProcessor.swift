@@ -130,17 +130,21 @@ public struct RemoteNodeProcessor : Processor {
     }
     
     private func producedEventIndicated(_ message : Message, _ node : Node) {
-        // make an event id from the data
-        let eventID = EventID(message.data)
-        // register it
-        node.events.produces(eventID)
+        if checkSourceID(message, node) { // produced by this node?
+            // make an event id from the data
+            let eventID = EventID(message.data)
+            // register it
+            node.events.produces(eventID)
+        }
     }
     
     private func consumedEventIndicated(_ message : Message, _ node : Node) {
-        // make an event id from the data
-        let eventID = EventID(message.data)
-        // register it
-        node.events.consumes(eventID)
+        if checkSourceID(message, node) { // consumed by this node?
+            // make an event id from the data
+            let eventID = EventID(message.data)
+            // register it
+            node.events.consumes(eventID)
+        }
     }
     
 }
