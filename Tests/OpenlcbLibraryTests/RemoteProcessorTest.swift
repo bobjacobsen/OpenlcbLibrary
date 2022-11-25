@@ -115,18 +115,32 @@ class RemoteProcessorTest: XCTestCase {
    
     func testProducerIdentified() throws {
         node21.state = .Initialized
-        let msg = Message(mti : MTI.Producer_Identified_Active, source: NodeID(0), data: [01,02,03,04,05,06,07,08])
+        let msg = Message(mti : MTI.Producer_Identified_Active, source: node21.id, data: [01,02,03,04,05,06,07,08])
         _ = processor.process(msg, node21)
         XCTAssertTrue(node21.events.isProduced(EventID(0x01_02_03_04_05_06_07_08)))
     }
-    
+
+    func testProducerIdentifiedDifferentNode() throws {
+        node21.state = .Initialized
+        let msg = Message(mti : MTI.Producer_Identified_Active, source: NodeID(1), data: [01,02,03,04,05,06,07,08])
+        _ = processor.process(msg, node21)
+        XCTAssertFalse(node21.events.isProduced(EventID(0x01_02_03_04_05_06_07_08)))
+    }
+
     func testConsumerIdentified() throws {
         node21.state = .Initialized
-        let msg = Message(mti : MTI.Consumer_Identified_Active, source: NodeID(0), data: [01,02,03,04,05,06,07,08])
+        let msg = Message(mti : MTI.Consumer_Identified_Active, source: node21.id, data: [01,02,03,04,05,06,07,08])
         _ = processor.process(msg, node21)
         XCTAssertTrue(node21.events.isConsumed(EventID(0x01_02_03_04_05_06_07_08)))
     }
-    
+
+    func testConsumerIdentifiedDifferentNode() throws {
+        node21.state = .Initialized
+        let msg = Message(mti : MTI.Consumer_Identified_Active, source: NodeID(1), data: [01,02,03,04,05,06,07,08])
+        _ = processor.process(msg, node21)
+        XCTAssertFalse(node21.events.isConsumed(EventID(0x01_02_03_04_05_06_07_08)))
+    }
+
     func testNewNodeSeen() throws {
         node21.state = .Initialized
         let msg = Message(mti : MTI.New_Node_Seen, source: NodeID(21), data: [])
