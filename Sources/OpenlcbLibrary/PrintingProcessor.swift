@@ -119,7 +119,7 @@ final public class MonitorModel: ObservableObject {
 }
 
 /// Represents a single message line
-public struct MonitorLine {
+public struct MonitorLine : Hashable {
     public let id = UUID()
     public let line : String
 }
