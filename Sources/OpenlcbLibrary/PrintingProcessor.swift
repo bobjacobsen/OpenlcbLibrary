@@ -109,7 +109,9 @@ public func printingProcessorPublishLine(string : String) { // set this as ``res
     }
 
     // publish to ObservedObject
-    MonitorModel.sharedInstance.printingProcessorContentArray = lotsOfLinesToDisplay
+    DispatchQueue.main.async {   // don't publish from background thread
+        MonitorModel.sharedInstance.printingProcessorContentArray = lotsOfLinesToDisplay
+    }
 }
 
 /// Global ObservableObject publlishing the last `NIMBER_OF_LINES` of messages
