@@ -13,13 +13,13 @@ final class ClockProcessorTest: XCTestCase {
     var node21 = Node(NodeID(12))
     var clock0 = ClockModel()
     var clock1 = ClockModel()
-    var processor : Processor = ClockProcessor(nil, [])
+    var processor : Processor = ClockProcessor(nil, nil, [])
         
     override func setUpWithError() throws {
         node21 = Node(NodeID(21))
         clock0 = ClockModel()
         clock1 = ClockModel()
-        processor = ClockProcessor(nil, [clock0, clock1])
+        processor = ClockProcessor(nil, nil, [clock0, clock1])
     }
     
     override func tearDownWithError() throws {

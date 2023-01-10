@@ -19,6 +19,10 @@ import Foundation
 
 final public class ClockModel : ObservableObject {
     
+    var processor : ClockProcessor? = nil  // will be initialized in network initialization
+    
+    @Published public var showingControlSheet = false  // used to determine whether the control sheet is visible on macOS
+    
     public init() {
         calendar = Calendar.current
     }
@@ -52,7 +56,7 @@ final public class ClockModel : ObservableObject {
     private var timeLastSet = Date()  // default is now
     private var lastTimeSet = Date()  // default is now
     
-    /// Sets the current time in the clock.  This is generally set from the
+    /// Sets the current time in the local clock.  This is generally set from the
     /// clock master.
     /// Default argument is the usual case; argument is
     /// provided for testing.
@@ -74,6 +78,24 @@ final public class ClockModel : ObservableObject {
         } else {
             return lastTimeSet
         }
+    }
+    
+    /// Set the time in the master clock.  Normally, this will then
+    /// propagate back via the OpenLCB network to the local clock.
+    public func setTimeInMaster(to newTime: Date) {
+        processor!.sendSetTime(getHour(newTime), getMinute(newTime))
+    }
+    
+    /// Set the run state in the master clock.  Normally, this will then
+    /// propagate back via the OpenLCB network to the local clock.
+    public func setRunStateInMaster(to newRun: Bool) {
+        processor!.sendSetRunState(to: newRun)
+    }
+    
+    /// Set the run rate in the master clock.  Normally, this will then
+    /// propagate back via the OpenLCB network to the local clock.
+    public func setRunRateInMaster(to newRate: Double) {
+        processor!.sendSetRunRate(to: newRate)
     }
     
     /// Update the internal calculation so that it
@@ -135,7 +157,7 @@ final public class ClockModel : ObservableObject {
 
 }
 
-// provide a - operator for times:
+// provide a "-" subtraction operator for times:
 //   Date - Date = TimeInterval
 //  see: https://stackoverflow.com/questions/50950092/calculating-the-difference-between-two-dates-in-swift
 

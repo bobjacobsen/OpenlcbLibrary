@@ -9,10 +9,13 @@ import Foundation
 
 // a slave clock with limited ability to send commands (just run, basically)
 struct ClockProcessor : Processor {
-    public init ( _ linkLayer: LinkLayer?, _ clocks: [ClockModel]) {
+    public init ( _ openlcbnetwork : OpenlcbNetwork?, _ linkLayer: LinkLayer?, _ clocks: [ClockModel]) {
+        self.openlcbnetwork = openlcbnetwork
         self.linkLayer = linkLayer
         self.clocks = clocks
     }
+    
+    let openlcbnetwork : OpenlcbNetwork?
     let linkLayer : LinkLayer?
     let clocks : [ClockModel]  // provided array of valid clocks, 0 to 4 entries
 
@@ -45,13 +48,16 @@ struct ClockProcessor : Processor {
         linkLayer?.sendMessage(msg2)
     }
 
-    func eventReport(_ message : Message, _ node : Node) {
+    func checkUpperPart(in message : Message) -> Bool {
         let event = message.data
-        if !(event[0] == 1 && event[1] == 1 && event[2] == 0 && event[3] == 0 && event[4] == 1) {
-            return
-        }
+        return (event[0] == 1 && event[1] == 1 && event[2] == 0 && event[3] == 0 && event[4] == 1)
+    }
+        
+    func eventReport(_ message : Message, _ node : Node) {
+        guard checkUpperPart(in: message) else { return } // not right kind of event
         
         // here the event references a clock - which?
+        let event = message.data
         let index = Int(event[5])
         if index >= clocks.count {
             // not a valid clock number, so not really a clock event
@@ -103,5 +109,26 @@ struct ClockProcessor : Processor {
         
         // have now loaded a new time, set it
         clock.setTime(calendar.date(from: components) ?? Date())
+    }
+    
+    func sendSetRunState(to : Bool) {
+        if to {
+            let event = EventID(0x01_01_00_00_01_00_F0_02 )
+            openlcbnetwork!.produceEvent(eventID: event)
+        } else {
+            let event = EventID(0x01_01_00_00_01_00_F0_01 )
+            openlcbnetwork!.produceEvent(eventID: event)
+        }
+    }
+    
+    func sendSetTime(_ hour: Int, _ minute: Int) {
+        let event = EventID([0x01, 0x01, 0x00, 0x00, 0x01, 0x00, UInt8(0x80+hour), UInt8(minute)] )
+        openlcbnetwork!.produceEvent(eventID: event)
+    }
+    
+    func sendSetRunRate(to : Double) {
+        let timeBits = Int(to*4)
+        let event = EventID([0x01, 0x01, 0x00, 0x00, 0x01, 0x00, UInt8(0xC0+(timeBits>>8)), UInt8(timeBits&0xFF)] )
+        openlcbnetwork!.produceEvent(eventID: event)
     }
 }

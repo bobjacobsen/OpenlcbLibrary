@@ -18,7 +18,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
     @Published public private(set) var remoteNodeStore : RemoteNodeStore
 
-    @Published public private(set) var clockModel0 : ClockModel          // 0 in case more are added later
+    @Published public var clockModel0 : ClockModel          // 0 in case more are added later, maniuplated by ClockView
  
     @Published public private(set) var throttleModel0 : ThrottleModel    // 0 in case more are added later // TODO: allow multiple throttles e.g. on macOS, with a single Roster
     
@@ -123,7 +123,8 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
 
         let lprocessor : Processor = LocalNodeProcessor(linkLayer)  // track effect of messages on Local Node
 
-        let cprocessor : Processor = ClockProcessor(linkLayer, [clockModel0])   // clock processor doesn't affect node status
+        let cprocessor : ClockProcessor = ClockProcessor(self, linkLayer, [clockModel0])   // clock processor doesn't affect node status
+        clockModel0.processor = cprocessor
 
         let pprocessor : Processor = PrintingProcessor(printingProcessorPublishLine) // Publishes to SwiftUI
         

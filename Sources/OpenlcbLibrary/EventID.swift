@@ -31,7 +31,7 @@ public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible
         self.eventID = eventID
     }
     
-    /// Convert a standard-format string 08.09.0A.0B.0C.0D.0E.0F to a NodeID
+    /// Convert a standard-format string 08.09.0A.0B.0C.0D.0E.0F to an eventID
     ///
     /// Leading zeros can be omitted. Accepts truncated values - left fills with zeros. Also accepts single large hex number.
     public init(_ eventID : String) {
