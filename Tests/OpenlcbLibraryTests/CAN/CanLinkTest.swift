@@ -36,9 +36,27 @@ class CanLinkTest: XCTestCase {
         
         // test shift and multiplation operations
         let next : UInt64 = CanLink.incrementAlias48(0x0000_0000_0001)
-        XCTAssertEqual(next, 0x1B0C_A37A_4FAA)
+        XCTAssertEqual(next, 0x1B0C_A37A_4DAA)
     }
     
+    func testIncrementAliasSequence() {
+        // sequence from TN
+        var next = CanLink.incrementAlias48(0);
+        XCTAssertEqual(next, 0x1B0C_A37A_4BA9, "0 initial value")
+        
+        next = CanLink.incrementAlias48(next);
+        XCTAssertEqual(next, 0x4F_60_3B_8B_E9_52)
+        
+        next = CanLink.incrementAlias48(next);
+        XCTAssertEqual(next, 0x2A_E3_F6_D8_D8_FB)
+        
+        next = CanLink.incrementAlias48(next);
+        XCTAssertEqual(next, 0x0D_DE_4C_05_1A_A4)
+        
+        next = CanLink.incrementAlias48(next);
+        XCTAssertEqual(next, 0xE5_82_F9_B4_AE_4D)
+    }
+
     func testCreateAlias12() {
         // check precision of calculation
         XCTAssertEqual(CanLink.createAlias12(0x001), 0x001, "0x001 input")
@@ -166,7 +184,7 @@ class CanLinkTest: XCTestCase {
         canPhysicalLayer.fireListeners(CanFrame(control: CanLink.ControlFrame.RID.rawValue, alias: ourAlias))
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 8)  // includes recovery of new alias 4 CID, RID, AMR, AME
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMR.rawValue, alias: ourAlias, data: [5, 1, 1, 1, 3, 1]))
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[6], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: 0x936, data: [5, 1, 1, 1, 3, 1])) // new alias
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[6], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: 0x539, data: [5, 1, 1, 1, 3, 1])) // new alias
         XCTAssertEqual(canLink.state, CanLink.State.Permitted)
     }
     

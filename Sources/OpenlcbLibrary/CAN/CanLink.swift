@@ -458,8 +458,8 @@ final public class CanLink : LinkLayer {
     ///  generation mechanism:  a 48-bit computation
     ///  of x(i+1) = (2^9+1) x(i) + c  where c = 29,741,096,258,473 or 0x1B0CA37A4BA9
     static func incrementAlias48(_ oldAlias : UInt64) -> UInt64 {
-        let newProduct : UInt64 = oldAlias * (UInt64(2)<<9 + UInt64(1)) + UInt64(0x1B0CA37A4BA9)
-        let maskedProduct : UInt64 = newProduct & 0xFFFF_FFFF_FFFFF
+        let newProduct : UInt64 = (oldAlias << 9) + oldAlias + UInt64(0x1B0CA37A4BA9)
+        let maskedProduct : UInt64 = newProduct & 0xFFFF_FFFF_FFFF
         return maskedProduct;
     }
     
