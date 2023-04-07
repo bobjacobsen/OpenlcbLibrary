@@ -4,7 +4,7 @@ An implementation of the OpenLCB protocols in Swift package form.
 
 Released under the GPL2 license.
 
-Full documentation is built in XCode once you've installed this package, see also the [overview](Sources/OpenlcbLibrary/Documentation.docc/Documentation.md)
+Documentation is available [on the web](http://bobjacobsen.github.io/OpenlcbLibrary/documentation/openlcblibrary) and within XCode.
 
 To build and run tests:
     swift test
