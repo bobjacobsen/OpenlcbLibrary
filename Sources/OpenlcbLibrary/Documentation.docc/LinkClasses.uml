@@ -2,8 +2,8 @@
 
 protocol PhysicalLayer
 PhysicalLayer <|-- CanPhysicalLayer : implements
-CanPhysicalLayer <|-- CanTelnetLink
-CanPhysicalLayer <|-- CanUsbLink
+CanPhysicalLayer <|-- CanPhysicalLayerGridConnect
+CanPhysicalLayer <|-- CanPhysicalLayerSimulation
 
 class LinkLayer
 LinkLayer <|-- CanLink

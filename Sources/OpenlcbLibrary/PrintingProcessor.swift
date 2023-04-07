@@ -6,7 +6,6 @@
 
 import Foundation
 
-///
 /// Provide String versions of the processed messages, one line per message
 ///
 public struct PrintingProcessor : Processor {

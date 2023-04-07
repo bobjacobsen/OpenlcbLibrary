@@ -9,7 +9,6 @@ import Foundation
 import os
 
 // Float16 not supported on macOS Rosetta.  Hence we use our own `floatToFloat16` conversion routine, see the bottom of the file.
-
 // Speed is quantized to integers to reduce the amount of output.  This is enforced both here and in `ThrottleProcessor`
 
 /// Data to construct a single throttle.

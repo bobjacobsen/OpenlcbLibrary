@@ -8,6 +8,7 @@
 import Foundation
 import os
 
+/// Process messages destined for the node(s) implemented by this application.
 struct LocalNodeProcessor : Processor {
     init ( _ linkLayer: LinkLayer? = nil) {
         self.linkLayer = linkLayer

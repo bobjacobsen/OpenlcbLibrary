@@ -11,8 +11,6 @@ import os
 /// physical node out on the layout.
 ///
 /// Tracks node status, PIP and SNIP information, but deliberately does not track memory (config, CDI) contents due to size.
-///
-
 public struct RemoteNodeProcessor : Processor {
     init ( _ linkLayer: CanLink? = nil) {
         self.linkLayer = linkLayer

@@ -7,7 +7,8 @@
 import Foundation
 
 /// Represents a 6-byte node ID.
-///  Provides conversion to and from Ints and Strings in standard form.
+/// 
+/// Provides conversion to and from Ints and Strings in standard form.
 public struct NodeID : Equatable, Hashable, CustomStringConvertible {
     let nodeId : UInt64 // UInt64 to ensure 6 byte ID (analogy to 8 byte EventID)
                     

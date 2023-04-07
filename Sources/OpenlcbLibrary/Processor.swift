@@ -9,8 +9,6 @@ import Foundation
 /// Process an incoming message, adjusting state and replying as needed.
 ///
 ///  Acts on a specific node
-///
-
 public protocol Processor {
     /// accept a Message, adjust state as needed, possibly reply
     ///  Returns: True is the contains of the node changed in a way that should be published, i.e. a PIP, SNIP or event model change

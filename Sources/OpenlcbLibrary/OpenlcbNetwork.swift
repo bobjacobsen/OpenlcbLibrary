@@ -4,8 +4,6 @@
 //  Created by Bob Jacobsen on 6/1/22.
 //
 
-/// Configures a working OpenlcbLibrary subsystem.
-///
 import Foundation
 import os
 
@@ -14,6 +12,7 @@ import UIKit
 #endif
 
 /// Provides a common base implementation of an OpenLCB/LCC network using this package.
+/// Configures a working OpenlcbLibrary subsystem.
 public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // class to use @Published
 
     @Published public private(set) var remoteNodeStore : RemoteNodeStore

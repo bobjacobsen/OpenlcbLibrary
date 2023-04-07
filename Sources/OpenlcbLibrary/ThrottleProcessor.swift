@@ -10,7 +10,7 @@ import os
 
 // Float16 not supported on macOS Rosetta.  Hence we use our own `float16ToFloat` conversion routine, see the bottom of the file.
 
-/// Process messages for the `ThrottleModel`
+/// Process messages for the ``ThrottleModel``
 struct ThrottleProcessor : Processor {
     public init ( _ linkLayer: LinkLayer? = nil, model: ThrottleModel) {
         self.linkLayer = linkLayer

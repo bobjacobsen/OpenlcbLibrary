@@ -7,6 +7,8 @@
 //
 
 import Foundation
+
+/// A simple Queue implementation.
 struct Queue<T> {
     var list = [T]()
     

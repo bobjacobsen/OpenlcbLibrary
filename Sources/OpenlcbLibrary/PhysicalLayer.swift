@@ -7,7 +7,7 @@
 import Foundation
 
 /// Generalize access to the physical layer;.
-/// Not much present as yet.
+///
 /// Parent of `CanPhysicalLayer`
 ///
 public protocol PhysicalLayer {

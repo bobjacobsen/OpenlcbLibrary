@@ -39,7 +39,7 @@ public class TurnoutModel : ObservableObject {
     
     /// Convert from a 1-2048 turnout address to the Olcb format for NMRA DCC.
     /// See the Event Transfer TN section 2.5.3.3 for more information.
-    /// - Parameter from: a 1-208 turnout address
+    /// - Parameter from: a 1-2048 turnout address
     /// - Returns eventID to send in AAAaaaaaaDDD format
     static internal func transmogrifyTurnoutId(from : Int) -> Int {  // internal for testing
         let DD = (from-1) & 0x3

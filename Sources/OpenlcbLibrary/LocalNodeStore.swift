@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Stores the node(s) implemented by this application.
 class LocalNodeStore : NodeStore {
 
 }
