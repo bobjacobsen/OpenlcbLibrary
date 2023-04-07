@@ -10,23 +10,23 @@ import Foundation
 ///
 /// This is a struct for efficiency reasons.
 ///
-struct Event : Equatable, Hashable, CustomStringConvertible {
+public struct Event : Equatable, Hashable, CustomStringConvertible {
     let eventID : EventID  // eventID is immutable
     
     init( _ eventID : EventID) {
         self.eventID = eventID
     }
     
-    var description : String { "Event (\(eventID))"}
+    public var description : String { "Event (\(eventID))"}
     
     // MARK: - protocols
     
     /// Equality is defined on the EventID only.
-    static func ==(lhs : Event, rhs : Event) -> Bool {
+    static public func ==(lhs : Event, rhs : Event) -> Bool {
         return lhs.eventID == rhs.eventID
     }
     /// Hash is defined on the EventID only
-    func hash(into hasher : inout Hasher) {
+    public func hash(into hasher : inout Hasher) {
         hasher.combine(eventID)
     }
 }

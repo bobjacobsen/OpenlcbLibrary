@@ -7,9 +7,8 @@
 
 import Foundation
 
-/// A slave clock with limited ability to send commands (just run, basically).
-
-struct ClockProcessor : Processor {
+/// A slave clock with limited ability to send commands.
+public struct ClockProcessor : Processor {
     public init ( _ openlcbnetwork : OpenlcbNetwork?, _ linkLayer: LinkLayer?, _ clocks: [ClockModel]) {
         self.openlcbnetwork = openlcbnetwork
         self.linkLayer = linkLayer

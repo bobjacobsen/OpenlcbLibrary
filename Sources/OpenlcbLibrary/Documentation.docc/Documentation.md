@@ -19,7 +19,7 @@ At the message layer:
  - ``RemoteNodeProcessor``: keeps track of remote nodes and provides access to their internal information
 
  ``Node``s, ``NodeStore``s, and Link-layer and Physical-layer implementations are permanent: Once they are created, they persist until the end of the program.  Therefore ARC loops are permitted. 
- ``Message``s, Events, and the various ID structs are immutable and not permanent. Processors are in-between: They are immutable once created, but long-lasting hence are allowed to have references to other objects.
+ ``Message``s, ``Event``s, and the various ID structs are immutable and not permanent. Processors are in-between: They are immutable once created, but long-lasting hence are allowed to have references to other objects.
 
 The ``OpenlcbNetwork`` class can be used to build a complete configuration.
 

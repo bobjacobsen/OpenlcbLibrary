@@ -9,13 +9,11 @@
 ///
 import Foundation
 
-// CdiXmlMemo is a class so that reference semantics can be used to parts of the tree of memos
-// The tree of CdiMemo objects only has downward links, so no cycles are created (nor allowed)
-
-
-/// Represent an XML CDI tree as objects for use by e.g. `CdiModel`
+/// Represent an XML CDI tree as objects for use by e.g. `CdiModel`.
 public final class CdiXmlMemo : Identifiable {
-    
+    // CdiXmlMemo is a class so that reference semantics can be used to parts of the tree of memos
+    // The tree of CdiMemo objects only has downward links, so no cycles are created (nor allowed)
+
     /// Represent the type of each node.
     /// Maps to `CdiParserDelegate.NextTextOperation` states
     public enum XMLMemoType {

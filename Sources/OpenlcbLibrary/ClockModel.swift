@@ -14,12 +14,10 @@ import Foundation
 /// Interface is via Date objects so that hours and minutes etc can be passed simultaneously.
 ///
 /// Service routines are provided to convert from/to hours and minutes.
-
-// Internal date and time throughout use the default UTC timezone; so long as that's used consistently,
-// it avoids issues with properly selecting the local timezone if operating remotely.
-
 final public class ClockModel : ObservableObject {
-    
+    // Internal date and time throughout use the default UTC timezone; so long as that's used consistently,
+    // it avoids issues with properly selecting the local timezone if operating remotely.
+
     var processor : ClockProcessor? = nil  // will be initialized in network initialization
     
     @Published public var showingControlSheet = false  // used to determine whether the control sheet is visible on macOS
@@ -59,21 +57,21 @@ final public class ClockModel : ObservableObject {
     
     /// Sets the current time in the local clock.  This is generally set from the
     /// clock master.
+    ///
     /// Default argument is the usual case; argument is
     /// provided for testing.
-    // This structure prevents Time
-    // from being a computed property.
     public func setTime(_ time: Date, _ now : Date = Date()) {
+        // This structure prevents Time
+        // from being a computed property.
         lastTimeSet = time
         timeLastSet = now
     }
     
-    /// Gets the current time in the clock.  
-    /// Default argument is the usual case; argument is
+    /// Gets the current time in the clock. Default argument is the usual case; argument is
     /// provided for testing.
-    //  This structure prevents Time
-    //  from being a computed property.
     public func getTime(_ now : Date = Date()) -> Date {
+        //  This structure prevents Time
+        //  from being a computed property.
         if run {
             return lastTimeSet+(now-timeLastSet)*rate
         } else {

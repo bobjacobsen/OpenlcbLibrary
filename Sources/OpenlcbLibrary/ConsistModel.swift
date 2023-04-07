@@ -1,6 +1,5 @@
 //
 //  ConsistModel.swift
-//  OpenlcbLibrary
 //
 //  Created by Bob Jacobsen on 8/1/22.
 //
@@ -8,6 +7,9 @@
 import Foundation
 import os
 
+/// Represents a single consist.
+///
+/// Provides support for reading and writing consists in the command station node.
 final public class ConsistModel : ObservableObject, Processor {
     
     @Published public var forLoco : NodeID = NodeID(0)
@@ -21,7 +23,7 @@ final public class ConsistModel : ObservableObject, Processor {
         self.linkLayer = linkLayer
     }
     
-    /// Represent a single slement of the consist
+    /// Represent a single element of a consist
     final public class ConsistEntryModel : ObservableObject {
         @Published public var childLoco : NodeID
         
@@ -54,7 +56,7 @@ final public class ConsistModel : ObservableObject, Processor {
     var remainingNodes : [NodeID] = []  // workspace
 
     /// Kick off the process of reading in a single-level, single-link consist
-    /// starting with the head locomotive/
+    /// starting with the head locomotive.
     ///
     /// This does direct Query Node operations until a null is returned,
     /// without first getting the count.
@@ -69,6 +71,7 @@ final public class ConsistModel : ObservableObject, Processor {
     }
     
     /// Add a loco to the consist.
+    ///
     /// See also `resetFlags`
     /// - Parameter add: NodeID of locomotive node to add
     public func addLocoToConsist(add : NodeID) {

@@ -13,9 +13,9 @@ import os
 ///  See also ``GlobalEventStore``
 ///
 ///  Serves as a View model for displaying the events used by a node
-
-// TODO: Add support for ranges
 final public class LocalEventStore {
+    // TODO: Add support for ranges
+
     @Published public var eventsConsumed : Set<EventID> = []
     @Published public var eventsProduced : Set<EventID> = []
 

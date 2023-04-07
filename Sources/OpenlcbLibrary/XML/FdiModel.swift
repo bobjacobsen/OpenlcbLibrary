@@ -8,7 +8,7 @@
 import Foundation
 import os
 
-/// Provide a model for use by e.g. ThrottleView for function type and name information.
+/// Provide a model for use by e.g. a ThrottleView for function type and name information.
 public class FdiModel : XmlModel, ObservableObject {
     
     @Published public var tree : [FdiXmlMemo] = [] // content!

@@ -8,7 +8,9 @@
 import Foundation
 import os
 
-/// Delegate for use with ``XMLParser``, this is used to process FDI XML files and create a tree of ``FdiXmlMemo`` objects.
+/// FDI delegate for use with ``XMLParser``.
+/// 
+/// This is used to process FDI XML files and create a tree of ``FdiXmlMemo`` objects.
 final class FdiParserDelegate : NSObject, XMLParserDelegate { // class for inheritance
     
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "FdiParserDelegate")

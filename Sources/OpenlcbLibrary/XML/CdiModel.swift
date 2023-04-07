@@ -8,6 +8,10 @@
 import Foundation
 import os
 
+/// Represents the content of a Configuration Description Information (CDI) memory space.
+///
+/// Includes methods for reading and writing the variables defined by this CDI.
+/// 
 final public class CdiModel : XmlModel, ObservableObject {
     
     @Published public var tree : [CdiXmlMemo] = [] // content!

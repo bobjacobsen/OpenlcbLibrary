@@ -8,10 +8,9 @@
 import Foundation
 import os
 
-/**
-  This is the base class for CdiModel and FdiModel.
-  Provides the basic read support.
- */
+/// This is the base class for CdiModel and FdiModel.
+///
+/// Provides the basic read support.
 public class XmlModel {
     @Published public internal(set) var loading : Bool = false  // true while loading - use to show ProgressView
     @Published public internal(set) var loaded  : Bool = false  // true when loading is done and data is present

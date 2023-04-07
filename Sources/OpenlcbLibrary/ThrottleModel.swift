@@ -325,7 +325,7 @@ final public class ThrottleModel : ObservableObject {
     }
 } // end of ThrottleModel class
 
-/// The selection state, referenced here and in ThrottleProcessor
+/// The selection state during a locomotive selection.
 internal enum TC_Selection_State {
     case Idle_no_selection
     // case Wait_on_Verified_Node    // have sent VerifyNode to make sure we have alias - this is now obsolete, as Traction Search event is used instead
@@ -337,10 +337,12 @@ internal enum TC_Selection_State {
 }
 
 /// Represent a single entry in the Roster, including both user-readable name (from the node's SNIP) and
-/// the associated NodeID.  Includes an enum to represent the quality of the information, so that it can
+/// the associated NodeID.
+///
+/// Includes an enum to represent the quality of the information, so that it can
 /// be updated as SNIP data arrives for a newly seen node.
-// This needs reference semantics so that it can be passed and then updated
 final public class RosterEntry : Hashable, Equatable, Comparable {
+    // This needs reference semantics so that it can be passed and then updated
     public var label : String
     public let nodeID : NodeID
     public var fdiModel : FdiModel? = nil

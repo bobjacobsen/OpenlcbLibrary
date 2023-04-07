@@ -1,16 +1,14 @@
 //
 //  CdiSampleDataAccess.swift
-//  
 //
 //  Created by Bob Jacobsen on 6/29/22.
 //
 
-/// Methods to process access to sample data.  Used for testing, but kept in main
-///  file tree so that it can provide sample data to users of the library as example screens, etc.
-
 import Foundation
 import os
 
+/// Methods to process access to sample data.  Used for testing, but kept in main
+///  file tree so that it can provide sample data to users of the library as example screens, etc.
 public struct CdiSampleDataAccess {
     // holds no common data, this is really a collection of methods
     
