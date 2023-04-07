@@ -5,14 +5,15 @@
 //  Created by Bob Jacobsen on 6/14/22.
 //
 
-/// Provide a CanPhysicalLayer for GridConnect format strings
-///
-/// Works with frames like
-///         :X19490365N;
-///         :X19170365N020112FE056C;
-
 import Foundation
 import os
+
+/// Provide a CanPhysicalLayer for GridConnect format strings.
+///
+///
+/// Works with frames like
+///  -      :X19490365N;
+///  -      :X19170365N020112FE056C;
 
 final public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
     

@@ -12,15 +12,17 @@ import os
 // Datagram retry handles the link being queisced/restarted, so it's not explicitly handled here.
 
 /// Does memory read and write requests.
+///
 /// Reads and writes are limited to 64 bytes at a time.
 ///
 /// To do memory write:
-/// - create a write memo and submit
-/// - wait for either okReply or rejectedReply call back.
+/// - Create a ``MemoryWriteMemo`` and submit via ``requestMemoryWrite(_:)``
+/// - Wait for either okReply or rejectedReply call back.
 ///
 /// To do memory read:
-/// - create a read memo and submit
-/// - wait for either dataReply or rejectedReply call back.
+/// - Create a ``MemoryReadMemo`` and submit via ``requestMemoryRead(_:)``
+/// - Wait for either dataReply or rejectedReply call back.
+/// 
 final public class MemoryService {
     
     internal let service : DatagramService

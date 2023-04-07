@@ -10,7 +10,7 @@ import os
 
 /// Handles link-layer formatting and unformatting for CAN-frame links.
 ///
-/// Uses a ``CanPhysicalLayer`` implementation at the ``CanFrame`` layer.
+/// Uses a ``CanPhysicalLayer`` implementation at the CanFrame layer.
 ///
 /// This implementation handles one static Local Node and a variable number of Remote Nodes.
 ///  - An alias is allocated for the Local Node when the link comes up.

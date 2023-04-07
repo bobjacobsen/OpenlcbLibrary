@@ -7,9 +7,12 @@
 import Foundation
 
 /// Store the available Events and provide multiple means of retrieval.
-///  Intended to provide access to data carried with  an Event, i.e. event names
+///
+///  Intended to provide access to data carried with  an Event, i.e. event names.
 ///  Storage and indexing methods are an internal detail.
+///
 ///  You can't remove an Event; once we know about it, we know about it.
+///
 ///  This is intended for a global store, not a local store (i.e. not by node), see ``LocalEventStore``
 public struct GlobalEventStore {
     private var byIdMap : [EventID : Event] = [:]

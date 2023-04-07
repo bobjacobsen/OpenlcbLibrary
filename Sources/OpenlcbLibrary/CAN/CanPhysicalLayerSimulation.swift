@@ -7,7 +7,8 @@
 
 import Foundation
 
-/// Simulated CanPhysicalLayer to record frames requested to be sent
+/// Simulated CanPhysicalLayer to record frames requested to be sent.
+/// 
 final public class CanPhysicalLayerSimulation : CanPhysicalLayer {
     var receivedFrames : [CanFrame] = []
     override func sendCanFrame(_ frame : CanFrame) { receivedFrames.append(frame) }

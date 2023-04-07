@@ -10,14 +10,17 @@ import os
 
 
 /// Provide a service interface for reading and writing Datagrams.
+/// 
 /// Writes to remote node:
 /// - Create a WriteMemo and submit
 /// - Get an OK or NotOK callback
+///
 /// Reads from remote node:
-///  - Mlutiple listeners are notified
-///  - exactly one should call positiveReplyToDatagram/negativeReplyToDatagram before returning from listener
+///  - Multiple listeners are notified
+///  - Exactly one should call positiveReplyToDatagram/negativeReplyToDatagram before returning from listener
 ///
 /// Implements `Processor`, should be fed as part of common execution
+///
 /// Handles link quiesce/restart so that higher level services don't have to.
 ///    1) If there's an outstanding datagram reply with link restarts, resend it
 ///    2) Once the link has been quiesced, datagrams are held until it's restarted

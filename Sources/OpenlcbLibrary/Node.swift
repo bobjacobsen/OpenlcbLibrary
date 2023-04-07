@@ -7,6 +7,7 @@
 import Foundation
 
 /// Central organizing point for information contained in a physical Node.
+///
 ///  This is a class, not a struct, because an instance corresponds to an external object (the actual Node), so
 ///  there's no semantic meaning to making multiple copies.
 ///

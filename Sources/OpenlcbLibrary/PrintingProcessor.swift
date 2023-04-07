@@ -120,7 +120,7 @@ final public class MonitorModel: ObservableObject {
     @Published public var printingProcessorContentArray: [MonitorLine] = [MonitorLine(line: "No Content Yet")]
 }
 
-/// Represents a single message line
+/// Represents a single message line output from the ``PrintingProcessor``.
 public struct MonitorLine : Hashable {
     public let id = UUID()
     public let line : String

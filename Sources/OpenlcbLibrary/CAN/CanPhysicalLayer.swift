@@ -7,7 +7,8 @@
 
 import Foundation
 
-/// Generalize a CAN physica layer, real or simulated.
+/// Generalize a CAN physical layer, real or simulated.
+///
 /// This is a class because it represents a single physical connection to a layout and is subclassed.
 /// 
 public class CanPhysicalLayer : PhysicalLayer {

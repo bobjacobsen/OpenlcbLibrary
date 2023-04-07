@@ -6,11 +6,10 @@
 
 import Foundation
 
-/// Central organizing point for information associated with a specific Event
+/// Central organizing point for information associated with a specific Event.
 ///
-//
-// This is a struct for efficiency reasons.
-//
+/// This is a struct for efficiency reasons.
+///
 struct Event : Equatable, Hashable, CustomStringConvertible {
     let eventID : EventID  // eventID is immutable
     
