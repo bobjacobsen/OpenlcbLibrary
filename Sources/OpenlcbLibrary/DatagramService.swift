@@ -12,12 +12,13 @@ import os
 /// Provide a service interface for reading and writing Datagrams.
 /// 
 /// Writes to remote node:
-/// - Create a WriteMemo and submit
+/// - Create a ``DatagramWriteMemo`` and submit via ``sendDatagram(_:)``
 /// - Get an OK or NotOK callback
 ///
 /// Reads from remote node:
-///  - Multiple listeners are notified
-///  - Exactly one should call positiveReplyToDatagram/negativeReplyToDatagram before returning from listener
+///  - One or more listeners register via ``registerDatagramReceivedListener(_:)``
+///  - Listeners are notified via call back
+///  - Exactly one should call ``positiveReplyToDatagram(_:flags:)`` or ``negativeReplyToDatagram(_:err:)`` before returning from listener
 ///
 /// Implements `Processor`, should be fed as part of common execution
 ///
@@ -36,7 +37,9 @@ final public class DatagramService : Processor {
 
     private var currentOutstandingMemo : DatagramWriteMemo? = nil
     
-    /// Memo carries write request and two reply callbacks
+    /// Immutable memo carrying write request and two reply callbacks.
+    ///
+    /// Source is automatically this node.
     public struct DatagramWriteMemo : Equatable {
         
         // source is this node
@@ -64,11 +67,12 @@ final public class DatagramService : Processor {
         }
     }
     
-    /// Memo carries read result
+    /// Immutable memo carrying read result.
+    ///
+    /// Destination of operations is automatically this node.
     public struct DatagramReadMemo : Equatable {
         
         let srcID : NodeID
-        // destination is this node
         let data : [UInt8]
         
         // for Equatable
@@ -93,8 +97,9 @@ final public class DatagramService : Processor {
         case Unrecognized    = 0xFF // Not formally assigned
     }
     
-    /// Determine the protocol type of the content of the dataagram.
-    /// Returns Unrecognized if there is no type specified, i.e. the datagram is empty
+    /// Determine the protocol type of the content of the datagram.
+    ///
+    ///  - Returns: 'Unrecognized' if there is no type specified, i.e. the datagram is empty
     public func datagramType(data : [UInt8]) -> ProtocolID {
         guard data.count != 0 else { return .Unrecognized }
         if let retval = ProtocolID(rawValue: data[0]) {
@@ -106,7 +111,7 @@ final public class DatagramService : Processor {
     
     private var pendingWriteMemos : [DatagramWriteMemo] = []
     
-    /// Queue a memo that writes a datagram to the network
+    /// Queue a ``DatagramWriteMemo`` to send a datagram to another node on the network.
     public func sendDatagram(_ memo : DatagramWriteMemo) {
         // Make a record of memo for reply
         pendingWriteMemos.append(memo)
@@ -124,7 +129,9 @@ final public class DatagramService : Processor {
         currentOutstandingMemo = memo
     }
     
-    /// Register a listener to be notified when each datagram arrives.  One and only one listener should reply positively or negatively to the datagram and return true.
+    /// Register a listener to be notified when each datagram arrives.
+    ///
+    /// One and only one listener should reply positively or negatively to the datagram and return true.
     public func registerDatagramReceivedListener(_ listener : @escaping ( (_ : DatagramReadMemo) -> Bool )) {
         listeners.append(listener)
     }
@@ -250,13 +257,19 @@ final public class DatagramService : Processor {
         }
     }
     
-    /// Send a positive reply to a received datagram
+    /// Send a positive reply to a received datagram.
+    /// - Parameters:
+    ///   - dg: Datagram memo being responded to.
+    ///   - flags: Flag byte to be returned to sender, see Datagram S&TN for meaning.
     public func positiveReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, flags : UInt8 = 0) {
         let message = Message(mti: .Datagram_Received_OK, source: linkLayer.localNodeID, destination: dg.srcID, data: [flags])
         linkLayer.sendMessage(message)
     }
     
-    /// Send a negative reply to a received datagram
+    /// Send a negative reply to a received datagram.
+    /// - Parameters:
+    ///   - dg: Datagram memo being responded to.
+    ///   - err: Error code(s) to be returned to sender, see Datagram S&TN for meaning.
     public func negativeReplyToDatagram(_ dg : DatagramService.DatagramReadMemo, err : UInt16) {
         let data0 = UInt8((err >> 8 ) & 0xFF)
         let data1 = UInt8(err & 0xFF)
