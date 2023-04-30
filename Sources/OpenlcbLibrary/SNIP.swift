@@ -42,11 +42,12 @@ public struct SNIP {
         userProvidedDescription = uDesc
     }
     
-     // OLCB Strings are fixed length null terminated
-     // we don't (yet) support later versions with e.g. larger strings, etc.
+     // OLCB Strings are fixed length null terminated.
+     // We don't (yet) support later versions with e.g. larger strings, etc.
 
-    /// Get the desired string by string number in the data
-    /// 0-indexed
+    /// Get the desired string by string number in the data.
+    /// - Parameter n: 0-based number of the String
+    /// - Returns: Requested String up to but not including the terminating zero byte
     func getString(n : Int) -> String {
         let start = findString(n: n)
         var len = 0
@@ -66,8 +67,9 @@ public struct SNIP {
         return getString(first: start, maxLength: len)
     }
     ///  FInd start index of the nth string.
-    ///  Zero indexed
-    ///  Is aware of the 2nd version code byte
+    ///
+    ///  Zero indexed.
+    ///  Is aware of the 2nd version code byte.
     ///  Logs and returns -1 if the string isn't found withn the buffer
     func findString(n : Int) -> Int {
         if n == 0 {
@@ -99,6 +101,7 @@ public struct SNIP {
     }
     
     ///  Retrieve a string from a starting byte index and largest possible length
+    ///
     ///   The `maxLength` parameter prevents overflow
     func getString(first : Int, maxLength : Int) -> String {
         var last = first

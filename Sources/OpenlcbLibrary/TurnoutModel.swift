@@ -9,7 +9,7 @@ import Foundation
 
 // TODO: Add tracking of turnout state, including when others throw
 
-/// Provide Turnout status information and commands for e.g. a Turnout View
+/// Provide Turnout commands for e.g. a Turnout View
 public class TurnoutModel : ObservableObject {
     @Published public private(set) var addressArray : [Int] = []  // address-sorted form of addressSet
     private var addressSet = Set<Int>()
@@ -18,17 +18,24 @@ public class TurnoutModel : ObservableObject {
     init() {
     }
     
+    /// Make sure a layout turnout is set closed
+    /// - Parameter address: Address in 1-2048 form
     public func setClosed(_ address : Int) {
         processAddress(address)
         let eventID : UInt64 = UInt64(0x01_01_02_00_00_FF_00_00+TurnoutModel.transmogrifyTurnoutId(from: address))+1
         network!.produceEvent(eventID: EventID(eventID))
     }
     
+    /// Make sure a layout turnout is set thrown
+    /// - Parameter address: Address in 1-2048 form
     public func setThrown(_ address : Int) {
         processAddress(address)
         let eventID : UInt64 = UInt64(0x01_01_02_00_00_FF_00_00+TurnoutModel.transmogrifyTurnoutId(from: address))+0
         network!.produceEvent(eventID: EventID(eventID))
     }
+    
+    /// Add an address to the list of known addresses
+    /// - Parameter address: Address in 1-2048 form
     func processAddress(_ address : Int) {
         if !addressSet.contains(address) {
             // only do this if needed to avoid unnecesary publishes
@@ -45,10 +52,7 @@ public class TurnoutModel : ObservableObject {
         let DD = (from-1) & 0x3
         let aaaaaa = (( (from-1) >> 2)+1 ) & 0x3F
         let AAA = ( (from) >> 8) & 0x7
-        // print ( "\(from): \(AAA) \(aaaaaa) \(DD)")
-        
         let retval = 0x0000 | (AAA << 9) | (aaaaaa << 3) | DD << 1
-        // print (String(format:"%04X", retval))
         return retval
     }
 }
