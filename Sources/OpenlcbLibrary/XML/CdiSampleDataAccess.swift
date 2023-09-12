@@ -16,7 +16,7 @@ public struct CdiSampleDataAccess {
         
     /// Provide sample CDI as a ``CdiXmlMemo`` tree. Contains
     ///   - a clean sample segement
-    ///   - the first segments of an RR-CirKits Tower LCC CDI
+    ///   - was initlally the first part of a RR-CirKits Tower CDI
     ///
     public static func sampleCdiXmlData() -> [CdiXmlMemo] {
         let data : Data = ("""
