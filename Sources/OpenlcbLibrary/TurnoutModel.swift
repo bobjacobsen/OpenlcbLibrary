@@ -13,16 +13,21 @@ import Foundation
 public class TurnoutModel : ObservableObject {
     @Published public private(set) var addressArray : [Int] = []  // address-sorted form of addressSet
     private var addressSet = Set<Int>()
+    @Published public private(set) var macroArray : [Int] = []  // number-sorted form of macroSet
+    private var macroSet = Set<Int>()
     internal var network : OpenlcbNetwork?  // set during contruction
     
     init() {
     }
     
+    let TURNOUT_BASE_EVENTID : UInt64   = UInt64(0x01_01_02_00_00_FF_00_00)
+    let MACRO_BASE_EVENTID : UInt64     = UInt64(0x09_00_99_FE_FF_FE_00_00)
+    
     /// Make sure a layout turnout is set closed
     /// - Parameter address: Address in 1-2048 form
     public func setClosed(_ address : Int) {
         processAddress(address)
-        let eventID : UInt64 = UInt64(0x01_01_02_00_00_FF_00_00+TurnoutModel.transmogrifyTurnoutId(from: address))+1
+        let eventID : UInt64 = UInt64(TURNOUT_BASE_EVENTID+TurnoutModel.transmogrifyTurnoutId(from: address))+1
         network!.produceEvent(eventID: EventID(eventID))
     }
     
@@ -30,7 +35,15 @@ public class TurnoutModel : ObservableObject {
     /// - Parameter address: Address in 1-2048 form
     public func setThrown(_ address : Int) {
         processAddress(address)
-        let eventID : UInt64 = UInt64(0x01_01_02_00_00_FF_00_00+TurnoutModel.transmogrifyTurnoutId(from: address))+0
+        let eventID : UInt64 = UInt64(TURNOUT_BASE_EVENTID+TurnoutModel.transmogrifyTurnoutId(from: address))+0
+        network!.produceEvent(eventID: EventID(eventID))
+    }
+    
+    /// Make sure a layout turnout is set thrown
+    /// - Parameter macro: Macro in 1-65535 form
+    public func setMacro(_ macro : Int) {
+        processMacro(macro)
+        let eventID : UInt64 = UInt64(MACRO_BASE_EVENTID+TurnoutModel.transmogrifyTurnoutId(from: macro))
         network!.produceEvent(eventID: EventID(eventID))
     }
     
@@ -44,15 +57,25 @@ public class TurnoutModel : ObservableObject {
         }
     }
     
+    /// Add an macro to the list of known macros
+    /// - Parameter macro: Address in 1-65535 form
+    func processMacro(_ macro : Int) {
+        if !macroSet.contains(macro) {
+            // only do this if needed to avoid unnecesary publishes
+            macroSet.insert(macro)
+            macroArray = macroSet.sorted()
+        }
+    }
+    
     /// Convert from a 1-2048 turnout address to the Olcb format for NMRA DCC.
     /// See the Event Transfer TN section 2.5.3.3 for more information.
     /// - Parameter from: a 1-2048 turnout address
     /// - Returns eventID to send in AAAaaaaaaDDD format
-    static internal func transmogrifyTurnoutId(from : Int) -> Int {  // internal for testing
+    static internal func transmogrifyTurnoutId(from : Int) -> UInt64 {  // internal for testing
         let DD = (from-1) & 0x3
         let aaaaaa = (( (from-1) >> 2)+1 ) & 0x3F
         let AAA = ( (from) >> 8) & 0x7
-        let retval = 0x0000 | (AAA << 9) | (aaaaaa << 3) | DD << 1
+        let retval : UInt64 = (UInt64) (0x0000 | (AAA << 9) | (aaaaaa << 3) | DD << 1)
         return retval
     }
 }

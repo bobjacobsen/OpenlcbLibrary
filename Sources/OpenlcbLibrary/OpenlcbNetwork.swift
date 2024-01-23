@@ -192,6 +192,13 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         linkLayer.sendMessage(message)
     }
     
+    /// Cause a remote node to "identify" itself by lighting its transmit LED
+    /// Works by doing a VerifyNodeIdNumberAddressed request to the node
+    public func identify(node : Node ) {
+        let messageVerify  = Message(mti:.Verify_NodeID_Number_Addressed, source: linkLayer.localNodeID, destination: node.id)
+        sendMessage(messageVerify)
+    }
+    
     /// Requests that a specific remote node update its SNIP information (basic text description).
     /// Sends an addressed SNIP request message to do that.
     /// - Parameter node: Addressed Node
