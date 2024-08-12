@@ -93,23 +93,13 @@ public struct PrintingProcessor : Processor {
 // ---------------------
 // MARK: Send to a View
 // ---------------------
-var lotsOfLinesToDisplay : [MonitorLine] = []
 
 ///
 /// Pass this routine into init(..) to publish the messages to a single global ObservedObject.
 public func printingProcessorPublishLine(string : String) { // set this as ``result`` handler
-    let NUMBER_OF_LINES = 100
 
-    lotsOfLinesToDisplay.append(MonitorLine(line: string))
-    
-    // truncate to length
-    if (lotsOfLinesToDisplay.count > NUMBER_OF_LINES) {
-        lotsOfLinesToDisplay = Array(lotsOfLinesToDisplay[lotsOfLinesToDisplay.count-NUMBER_OF_LINES...lotsOfLinesToDisplay.count-1])
-    }
-
-    // publish to ObservedObject
     DispatchQueue.main.async {   // don't publish from background thread
-        MonitorModel.sharedInstance.printingProcessorContentArray = lotsOfLinesToDisplay
+        MonitorModel.sharedInstance.addLine(line: MonitorLine(line: string))
     }
 }
 
@@ -117,6 +107,25 @@ public func printingProcessorPublishLine(string : String) { // set this as ``res
 final public class MonitorModel: ObservableObject {
     public static let sharedInstance = MonitorModel()
     @Published public var printingProcessorContentArray: [MonitorLine] = [MonitorLine(line: "No Content Yet")]
+    
+    /// Add a line
+    public func addLine(line : MonitorLine) {
+        let NUMBER_OF_LINES = 100
+
+        printingProcessorContentArray.append(line)
+
+        // truncate to length
+        if (printingProcessorContentArray.count > NUMBER_OF_LINES) {
+            printingProcessorContentArray = Array(printingProcessorContentArray[printingProcessorContentArray.count-NUMBER_OF_LINES...printingProcessorContentArray.count-1])
+        }
+
+        // publishing is one by the assignments to printingProcessorContentArray
+    }
+    
+    /// Clear the accumulated lines
+    public func clear() {
+        printingProcessorContentArray = [MonitorLine(line: "No Content Yet")]
+    }
 }
 
 /// Represents a single message line output from the ``PrintingProcessor``.
