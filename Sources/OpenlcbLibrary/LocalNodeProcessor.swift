@@ -115,6 +115,19 @@ struct LocalNodeProcessor : Processor {
     private func errorMessageReceived(_ message : Message, _ node : Node) {
         // these are just logged until we have more complex interactions
         LocalNodeProcessor.logger.notice("received unexpected \(message, privacy: .public)")
+        if message.mti == .Optional_Interaction_Rejected {
+            // if this is flagged as a response to PIP or SNIP and temporary error, repeat
+            let replyTo = Int(message.data[2])*256 + Int(message.data[3])
+            if replyTo == MTI.Protocol_Support_Inquiry.rawValue || replyTo == MTI.Simple_Node_Ident_Info_Request.rawValue {
+                let errorCode : Int = Int(message.data[0])*256 + Int(message.data[1])
+                if errorCode & 0xFFF0 == 0x1000 {
+                    let mti = MTI(rawValue: replyTo)
+                    let msg = Message(mti: mti!, source: node.id, destination: message.source,
+                                      data: [])
+                    linkLayer!.sendMessage(msg)
+                }
+            }
+        }
     }
 
     // MARK: -
