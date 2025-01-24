@@ -25,6 +25,8 @@ public final class CdiXmlMemo : Identifiable {
         case INPUT_INT
         case INPUT_STRING
         case MAP        // held within a INPUT_* node
+        case UNKNOWN_SIZED // unknown (future) element with a size attribute
+        case UNKNOWN_UNSIZED
     }
     
     // common values

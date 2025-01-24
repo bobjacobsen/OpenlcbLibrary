@@ -22,6 +22,10 @@ final public class CdiModel : XmlModel, ObservableObject {
         super.init(mservice: mservice, nodeID: nodeID, space: 0xFF)
     }
 
+    public func setTree(newTree : [CdiXmlMemo]) {
+        tree = newTree
+    }
+    
     override internal func processAquiredText() {
         // actually process it into an XML tree
         tree = CdiXmlMemo.process(savedDataString.data(using: .utf8)!)[0].children! // index due to null base node

@@ -28,18 +28,32 @@ class CdiXmlMemoTest: XCTestCase {
                                 <max>20</max>
                             </int></cdi>
                         """.data(using: .utf8))!
- 
+        
         let result = CdiXmlMemo.process(data)
         
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result[0].children!.count, 1)
-
+        
         XCTAssertEqual(result[0].children![0].type, .INPUT_INT)
         XCTAssertEqual(result[0].children![0].minValue, 15)
         XCTAssertEqual(result[0].children![0].maxValue, 20)
         XCTAssertEqual(result[0].children![0].defaultValue, 12)
     }
-
+    
+    func testFutureExpansion() throws {
+        let data : Data = ("""
+                            <cdi><someFutureElement size="12">
+                            </someFutureElement></cdi>
+                        """.data(using: .utf8))!
+        
+        let result = CdiXmlMemo.process(data)
+        
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
+        
+        XCTAssertEqual(result[0].children![0].type, .UNKNOWN_SIZED)
+    }
+    
     func testSeqmentOfIntElement() throws {
         let data : Data =  ("""
                         <cdi>

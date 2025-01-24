@@ -29,6 +29,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             cdiStart()
         case "identification" :
             identificationStart()
+        case "manufacturer", "model", "hardwareVersion","softwareVersion", "map", "relation":
+            break  // known uninteresting items
         case "acdi" :
             acdiStart()
         case "segment" :
@@ -58,7 +60,9 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         case "value" :
             valueStart()
         default:
-            break
+            // This is an unknown element!
+            CdiParserDelegate.logger.error("Unknown element start: \(didStartElement, privacy:.public)")
+            unknownStart(attributes: attributes)
         }
     }
 
@@ -68,6 +72,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             cdiEnd()
         case "identification" :
             identificationEnd()
+        case "manufacturer", "model", "hardwareVersion","softwareVersion", "map", "relation":
+            break
         case "acdi" :
             acdiEnd()
         case "segment" :
@@ -97,10 +103,12 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         case "value" :
             valueEnd()
         default:
-            break // have to say something
+            // This is an unknown element!
+            unknownEnd(name: didEndElement)
         }
     }
 
+    /// Process text found within elements
     func parser(_ : XMLParser, foundCharacters: String) {
         // check state, store as requested
         switch currentTextState { // what kind of element was this text within?
@@ -344,6 +352,32 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     func stringEnd()  {
         let current = memoStack.removeLast()
         current.type = .INPUT_STRING
+        // add to children of parent (now last on stack)
+        memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
+        current.children = nil
+    }
+    
+    func unknownStart(attributes : [String:String]) {
+        // is there a size attribute?
+        let thisMemo = CdiXmlMemo()
+        thisMemo.length = -1  // indicates no size attribute
+        if let attr = attributes["size"] {
+            if let length = Int(attr) {
+                thisMemo.length = length
+            }
+        }
+        memoStack.append(thisMemo)
+    }
+    func unknownEnd(name: String) {
+        let current = memoStack.removeLast()
+        if current.length == -1 {
+            current.type = .UNKNOWN_UNSIZED
+        } else {
+            current.type = .UNKNOWN_SIZED
+        }
+        if memoStack[memoStack.count-1].name == " "{
+            memoStack[memoStack.count-1].name = name
+        }
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
         current.children = nil
