@@ -13,6 +13,7 @@ public enum MTI : Int {
     case Verify_NodeID_Number_Addressed     = 0x0488
     case Verify_NodeID_Number_Global        = 0x0490
     case Verified_NodeID                    = 0x0170
+    case Verified_NodeID_Simple             = 0x0171
     case Optional_Interaction_Rejected      = 0x0068
     case Terminate_Due_To_Error             = 0x00A8
     

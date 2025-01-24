@@ -44,6 +44,7 @@ public struct PrintingProcessor : Processor {
                 .Initialization_Complete_Simple,
                 .Verify_NodeID_Number_Global,
                 .Verified_NodeID,
+                .Verified_NodeID_Simple,
                 .Identify_Consumer,
                 .Identify_Producer,
                 .Consumer_Range_Identified,
