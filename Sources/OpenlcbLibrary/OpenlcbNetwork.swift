@@ -99,7 +99,7 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         localNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "<Unknown>"
 
 #if canImport(UIKit)
-        // iOS case
+        // iOS case - requires User Assigned Device Name entitlement to work in iOS 16 and later
         localNode.snip.userProvidedNodeName = UIDevice.current.name
 #else
         // macOS case
