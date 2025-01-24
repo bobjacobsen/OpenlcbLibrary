@@ -95,12 +95,13 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
             localNode.snip.userProvidedDescription = "OpenlcbLibrary"
             localNode.snip.modelName = "Full OpenlcbLibrary App"
         }
-        localNode.snip.hardwareVersion  = "15.0"           // holds required iOS version
-        localNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "<Unknown>"
+        localNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "<Unknown>"
 
 #if canImport(UIKit)
         // iOS case - requires User Assigned Device Name entitlement to work in iOS 16 and later
         localNode.snip.userProvidedNodeName = UIDevice.current.name
+        localNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "<Unknown>"
+        localNode.snip.hardwareVersion  = UIDevice.current.systemVersion  // holds current OS version
 #else
         // macOS case
         if let deviceName = Host.current().localizedName {
@@ -108,6 +109,13 @@ public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // cla
         } else {
             localNode.snip.userProvidedNodeName = "Some Mac"
         }
+        localNode.snip.softwareVersion  = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "<Unknown>"
+        let osVersionBlock = ProcessInfo.processInfo.operatingSystemVersion
+        let major = osVersionBlock.majorVersion
+        let minor = osVersionBlock.minorVersion
+        let patch = osVersionBlock.patchVersion
+        let osVersionString = "\(major).\(minor).\(patch)"
+        localNode.snip.hardwareVersion  = osVersionString // holds current OS version
 #endif
         
         localNode.snip.updateSnipDataFromStrings()    // load the SNIP strings we entered into the SNIP data store
