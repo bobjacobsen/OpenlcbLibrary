@@ -158,12 +158,30 @@ class LocalNodeProcessorTest: XCTestCase {
     }
 
     func testDontRejectOIR() {
-        let msg1 = Message(mti : MTI.Optional_Interaction_Rejected, source : NodeID(13), destination : NodeID(21))
+        let msg1 = Message(mti : MTI.Optional_Interaction_Rejected, source : NodeID(13), destination : NodeID(21), data: [0x01, 0x00, 0x08, 0x00])
         _ = processor.process(msg1, node21)
         
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 0)
     }
- 
+    
+    func testOIRtoPip() {
+        let msg1 = Message(mti : MTI.Optional_Interaction_Rejected, source : NodeID(13), destination : NodeID(21), data: [0x10, 0x00, 0x08, 0x28])
+        _ = processor.process(msg1, node21)
+        
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.Protocol_Support_Inquiry)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 0)
+    }
+    
+    func testOIRtoSNIP() {
+        let msg1 = Message(mti : MTI.Optional_Interaction_Rejected, source : NodeID(13), destination : NodeID(21), data: [0x10, 0x00, 0x0D, 0xE8])
+        _ = processor.process(msg1, node21)
+        
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.Simple_Node_Ident_Info_Request)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 0)
+    }
+    
     func testDontRejectTDE() {
         let msg1 = Message(mti : MTI.Terminate_Due_To_Error, source : NodeID(13), destination : NodeID(21))
         _ = processor.process(msg1, node21)
