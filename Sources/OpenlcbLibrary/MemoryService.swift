@@ -118,15 +118,15 @@ final public class MemoryService {
         // datagram must has a command value
         if dmemo.data.count < 2 {
             MemoryService.logger.error("Memory service datagram too short: \(dmemo.data.count, privacy: .public)")
-            service.negativeReplyToDatagram(dmemo, err: 0x1041)
+            service.negativeReplyToDatagram(dmemo, err: 0x1041)  // Permanent error: Not implemented, subcommand is unknown.
             return true;  // error, but for our service; sent negative reply
         }
-        // Acknowledge the datagram
-        service.positiveReplyToDatagram(dmemo, flags: 0x0000)
         
         // decode if read, write or some other reply
         switch dmemo.data[1] {
         case 0x50, 0x51, 0x52, 0x53, 0x58, 0x59, 0x5A, 0x5B : // read or read-error reply
+            // Acknowledge the datagram
+            service.positiveReplyToDatagram(dmemo, flags: 0x0000)
             // return data to requestor: first find matching memory read memo, then reply
             for index in 0...readMemos.count {
                 if readMemos[index].nodeID == dmemo.srcID {
@@ -159,6 +159,8 @@ final public class MemoryService {
                 }
             }
         case 0x10, 0x11, 0x12, 0x13, 0x18, 0x19, 0x1A, 0x1B : // write reply good, bad
+            // Acknowledge the datagram
+            service.positiveReplyToDatagram(dmemo, flags: 0x0000)
             // return data to requestor: first find matching memory write memo, then reply
             for index in 0...writeMemos.count {
                 if writeMemos[index].nodeID == dmemo.srcID {
@@ -173,6 +175,9 @@ final public class MemoryService {
                 }
             }
         case 0x86, 0x87 : // Address Space Information Reply
+            // Acknowledge the datagram
+            service.positiveReplyToDatagram(dmemo, flags: 0x0000)
+
             guard spaceLengthCallback != nil else {
                 MemoryService.logger.error("Address Space Information Reply received with no callback")
                 return true
@@ -193,6 +198,8 @@ final public class MemoryService {
 
         default:
             MemoryService.logger.error("Did not expect reply of type \(dmemo.data[1], privacy:.public)")
+            // Reject the datagram
+            service.negativeReplyToDatagram(dmemo, err: 0x1041) // Permanent error: Not implemented, subcommand is unknown.
         }
         
         return true
