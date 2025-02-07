@@ -51,6 +51,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             maxSubStart()
         case "int" :
             intStart(attributes: attributes)
+        case "slider" :
+            sliderStart(attributes: attributes)
         case "eventid" :
             eventIdStart(attributes: attributes)
         case "string" :
@@ -94,6 +96,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             maxSubEnd()
         case "int" :
             intEnd()
+        case "slider" :
+            sliderEnd()
         case "eventid" :
             eventIdEnd()
         case "string" :
@@ -313,6 +317,12 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
         // no children in current node
         current.children = nil
+    }
+
+    func sliderStart(attributes : [String:String]) {
+    }
+    func sliderEnd() {
+        memoStack[memoStack.count-1-1].isSlider = true // want prior item in the stack
     }
 
     func eventIdStart(attributes : [String:String]) {
