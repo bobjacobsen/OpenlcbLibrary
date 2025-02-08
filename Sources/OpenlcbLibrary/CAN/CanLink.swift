@@ -316,12 +316,12 @@ final public class CanLink : LinkLayer {
             if let sssAlias = nodeIdToAlias[msg.source] { // might not know it if error
                 header |= (UInt(sssAlias) & 0xFFF)
             } else {
-                CanLink.logger.error("Did not know source = \(msg.source) on datagram send")
+                CanLink.logger.error("Did not know source = \(msg.source, privacy: .public) on datagram send")
             }
             if let dddAlias = nodeIdToAlias[msg.destination!] { // might not know it if error
                 header |= (UInt(dddAlias) & 0xFFF) << 12
             } else {
-                CanLink.logger.error("Did not know destination = \(msg.source) on datagram send")
+                CanLink.logger.error("Did not know destination = \(msg.source, privacy: .public) on datagram send")
             }
             
             if msg.data.count <= 8 {
@@ -351,10 +351,10 @@ final public class CanLink : LinkLayer {
             // Remap the mti
             var header = UInt( 0x19_000_000 | ((msg.mti.rawValue & 0xFFF) << 12) )
             
-            if let alias = nodeIdToAlias[msg.source] { // might not know it if error
+            if let alias = nodeIdToAlias[msg.source] { // might not know it earlier AME-no-data had dropped cache
                 header |= (alias & 0xFFF)
             } else {
-                CanLink.logger.error("Did not know source = \(msg.source) on message send")
+                CanLink.logger.error("Did not know source = \(msg.source, privacy: .public) on message send")
             }
             
             // Is a destination address needed? Could be long message
@@ -368,7 +368,7 @@ final public class CanLink : LinkLayer {
                         link!.sendCanFrame( frame )
                     }
                 } else {
-                    CanLink.logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0))")
+                    CanLink.logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0), privacy: .public)")
                 }
             } else {
                 // global still can hold data; assume length is correct by protocol
@@ -504,7 +504,7 @@ final public class CanLink : LinkLayer {
             if let okMTI = MTI(rawValue: canMTI) {
                 return okMTI
             } else {
-                CanLink.logger.error("unhandled canMTI: \(frame), marked Unknown")
+                CanLink.logger.error("unhandled canMTI: \(frame, privacy: .public), marked Unknown")
                 return MTI.Unknown
             }
         } else if (frameType >= 2 && 5 >= frameType) {
@@ -512,7 +512,7 @@ final public class CanLink : LinkLayer {
             return MTI.Datagram
         } else {
             // not handling reserver and stream type except to log
-            CanLink.logger.error("unhandled canMTI: \(frame), marked Unknown")
+            CanLink.logger.error("unhandled canMTI: \(frame, privacy: .public), marked Unknown")
             return MTI.Unknown
         }
     }
