@@ -96,7 +96,7 @@ public class XmlModel {
         }
         // Check for end of data (< 64 and/or trailing 0 byte)
         if memo.data.count < 64 || findTrailingZero(in: memo) {
-            XmlModel.logger.debug("start processing CDI text due to short: \(memo.data.count < 64, privacy:.public) null: \(self.findTrailingZero(in: memo), privacy: .public)")
+            XmlModel.logger.debug("start processing XML text due to short: \(memo.data.count < 64, privacy:.public) null: \(self.findTrailingZero(in: memo), privacy: .public)")
             processAquiredText()
             
             loading = false
