@@ -247,8 +247,11 @@ final public class ThrottleModel : ObservableObject {
     ///
     /// Used as part of deselection
     internal func tearDownMonitorConsist() {
-        let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId, data: [0x30, 0x02, 0x00]+linkLayer!.localNodeID.toArray())
-        linkLayer!.sendMessage(message)
+        ThrottleModel.logger.debug("tearDownMonitorConsist for destination: \(self.selected_nodeId)")
+        if (selected_nodeId.nodeId != 0) { // only send if we have a node previously selected
+            let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId, data: [0x30, 0x02, 0x00]+linkLayer!.localNodeID.toArray())
+            linkLayer!.sendMessage(message)
+        }
     }
     
     /// Set speed to 0 Forward and turn off all functions.
