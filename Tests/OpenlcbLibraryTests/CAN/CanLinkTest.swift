@@ -114,6 +114,8 @@ class CanLinkTest: XCTestCase {
     
     // MARK: - Test AME (Local Node)
     func testAMEnoData() {
+        // Receive an AME in Permitted state without a NodeID
+        // Test that an AMD frame with proper contents is sent.
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
@@ -126,7 +128,9 @@ class CanLinkTest: XCTestCase {
     }
     
     func testAMEnoDataInhibited() {
-        let canPhysicalLayer = CanPhysicalLayerSimulation()
+        // Receive an AME in Inhibited state without a NodeID
+        // Test that no response is sent.
+       let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Inhibited
@@ -135,7 +139,9 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 0)
     }
     
-    func testAMEMatchEvent() {
+    func testAMEMatchNode() {
+        // Receive an AME with our NodeID in Permitted state
+        // Test that an AMD frame with proper contents is sent.
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
@@ -149,7 +155,9 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0], CanFrame(control: CanLink.ControlFrame.AMD.rawValue, alias: ourAlias, data: canLink.localNodeID.toArray()))
     }
     
-    func testAMEnotMatchEvent() {
+    func testAMEnotMatchNode() {
+        // Receive an AME in Permitted state with an NodeID,  but not a NodeID we know about.
+        // Test that no response is sent.
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
