@@ -31,6 +31,9 @@ final public class CanLink : LinkLayer {
     var aliasToNodeID : [UInt:NodeID] = [:]
     var nodeIdToAlias : [NodeID:UInt] = [:]
     
+    // place to keep pending transmit messages
+    var pendingMessages : [NodeID:[Message]] = [:]
+    
     var nextInternallyAssignedNodeID : UInt64 = 1
 
     public init(localNodeID : NodeID) {
@@ -159,10 +162,21 @@ final public class CanLink : LinkLayer {
         let alias = frame.header & 0xFFF
         aliasToNodeID[alias] = nodeID
         nodeIdToAlias[nodeID] = alias
+        // Send any pending messages to this node
+        sendPendingMessages(nodeID)
     }
     
     func handleReceivedAME(_ frame : CanFrame) {
         if (checkAndHandleAliasCollision(frame)) { return }
+        // check for empty node ID and handle
+        if (frame.data.count == 0) {
+            // drop alias <-> nodeID mapping
+            aliasToNodeID.removeAll()
+            nodeIdToAlias.removeAll()
+            // but restore map entry for local nodeID alias
+            aliasToNodeID[localAlias] = localNodeID
+            nodeIdToAlias[localNodeID] = localAlias
+        }
         if (state != .Permitted) { return }
         // check node ID
         var matchNodeID = localNodeID
@@ -170,7 +184,7 @@ final public class CanLink : LinkLayer {
             matchNodeID = NodeID(frame.data)
         }
         if (localNodeID == matchNodeID) {
-            // matched, send RID
+            // matched, send AMD
             let returnFrame = CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray())
             link!.sendCanFrame( returnFrame )
         }
@@ -304,6 +318,35 @@ final public class CanLink : LinkLayer {
         }
     }
     
+    func queuePendingMessage(_ node : NodeID, _ msg : Message) {
+        // add to appropriate array entry in pendingMessages
+        if pendingMessages[node] == nil {
+            pendingMessages[node] = []
+        }
+        // now sure array exists, append to it
+        pendingMessages[node]!.append(msg)
+        CanLink.logger.notice("Queued message to \(node, privacy: .public): \(msg, privacy: .public)")
+        // send the addressed AME to get the alias and eventually send the data
+        let ameFrame = CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias, data: node.toArray())
+        if let activeLink = link { // this check is to simplify testing
+            activeLink.sendCanFrame( ameFrame )
+        }
+
+    }
+    
+    func sendPendingMessages(_ node : NodeID) {
+        // are there any pending messages for the given NodeID?
+        if let pending = pendingMessages[node] {
+            // send all those
+            for msg in pending {
+                CanLink.logger.notice("Dequeued message sent to \(node, privacy: .public): \(msg, privacy: .public)")
+                sendMessage(msg)
+            }
+            // clear list for next time
+            pendingMessages.removeValue(forKey: node)
+        }
+    }
+    
     public override func sendMessage(_ msg : Message) {
         // special case for datagram
         if msg.mti == .Datagram {
@@ -321,7 +364,9 @@ final public class CanLink : LinkLayer {
             if let dddAlias = nodeIdToAlias[msg.destination!] { // might not know it if error
                 header |= (UInt(dddAlias) & 0xFFF) << 12
             } else {
-                CanLink.logger.error("Did not know destination = \(msg.source, privacy: .public) on datagram send")
+                CanLink.logger.notice("Did not know destination = \(msg.source, privacy: .public) on datagram send, queued")
+                queuePendingMessage(msg.destination!, msg)
+                return
             }
             
             if msg.data.count <= 8 {
@@ -368,7 +413,9 @@ final public class CanLink : LinkLayer {
                         link!.sendCanFrame( frame )
                     }
                 } else {
-                    CanLink.logger.error("Oon't know alias for destination = \(msg.destination ?? NodeID(0), privacy: .public)")
+                    CanLink.logger.notice("Oon't know alias for destination = \(msg.destination ?? NodeID(0), privacy: .public), queued")
+                    queuePendingMessage(msg.destination!, msg)
+                    return
                 }
             } else {
                 // global still can hold data; assume length is correct by protocol
