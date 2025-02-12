@@ -47,6 +47,8 @@ public final class CdiXmlMemo : Identifiable {
     public internal(set) var minSet = false
 
     public internal(set) var isSlider = false
+    public internal(set) var readOnly = false
+
     
     public internal(set) var startAddress : Int           // Set on segment element, otherwise computed
     

@@ -37,6 +37,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             segmentStart(attributes: attributes)
         case "group" :
             groupStart(attributes: attributes)
+        case "readOnly" :
+            readOnlyStart()
         case "name" :
             nameSubStart()
         case "repname" :
@@ -82,6 +84,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
             segmentEnd()
         case "group" :
             groupEnd()
+        case "readOnly" :
+            readOnlyEnd()
         case "name" :
             nameSubEnd()
         case "repname" :
@@ -234,6 +238,22 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         current.type = .GROUP
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
+        // clear readonly flag in case it's set
+        if readOnlyFlag {
+            CdiParserDelegate.logger.error("group end resets flag")
+            readOnlyFlag = false
+        }
+    }
+
+    var readOnlyFlag : Bool = true
+    
+    func readOnlyStart() {
+        CdiParserDelegate.logger.error("readOnly start sets flag")
+        readOnlyFlag = true
+    }
+    
+    func readOnlyEnd() {
+        CdiParserDelegate.logger.error("readOnly end")
     }
 
     func nameSubStart() {
@@ -302,6 +322,8 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         }
         thisMemo.maxValue = maxDefault  // this will be overridden if there's a later max element
 
+        thisMemo.readOnly = readOnlyFlag
+        
         thisMemo.offset = 0
         if let attr = attributes["offset"] {
             if let offset = Int(attr) {
@@ -334,6 +356,9 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
                 thisMemo.offset = offset
             }
         }
+
+        thisMemo.readOnly = readOnlyFlag
+
         memoStack.append(thisMemo)
     }
     func eventIdEnd()  {
@@ -357,6 +382,9 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
                 thisMemo.offset = offset
             }
         }
+
+        thisMemo.readOnly = readOnlyFlag
+
         memoStack.append(thisMemo)
     }
     func stringEnd()  {
