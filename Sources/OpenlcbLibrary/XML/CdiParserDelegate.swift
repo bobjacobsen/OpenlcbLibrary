@@ -155,7 +155,10 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     
     var memoStack : [CdiXmlMemo] = []
     var currentTextState = NextTextOperation.NONE
-    
+
+    var readOnlyFlag : Bool = true  // Are we currently in a group that's marked ReadOnly?
+                                    // TODO: Does this properly handle nested groups with following variables?
+                                    // Do we need a stack for these?
     
     /// Defines a state machine that maps specific XML CDI elements to
     ///  `CdiXmlMemo` objects.
@@ -239,21 +242,14 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         // add to children of parent (now last on stack)
         memoStack[memoStack.count-1].children?.append(current) // ".last" is a getter
         // clear readonly flag in case it's set
-        if readOnlyFlag {
-            CdiParserDelegate.logger.error("group end resets flag")
-            readOnlyFlag = false
-        }
+        readOnlyFlag = false
     }
-
-    var readOnlyFlag : Bool = true
     
     func readOnlyStart() {
-        CdiParserDelegate.logger.error("readOnly start sets flag")
         readOnlyFlag = true
     }
     
     func readOnlyEnd() {
-        CdiParserDelegate.logger.error("readOnly end")
     }
 
     func nameSubStart() {
