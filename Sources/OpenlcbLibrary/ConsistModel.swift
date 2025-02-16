@@ -102,7 +102,7 @@ final public class ConsistModel : ObservableObject, Processor {
         linkLayer.sendMessage(message)
 
         // remove from our view of the consist
-        for index in 0...consist.count {
+        for index in 0..<consist.count {
             let entry = consist[index]
             if entry.childLoco == remove {
                 consist.remove(at: index)
