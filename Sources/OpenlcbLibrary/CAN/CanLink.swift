@@ -297,7 +297,7 @@ final public class CanLink : LinkLayer {
                 }
                 // add this data
                 if (frame.data.count > 2) {
-                    for byte in frame.data[2...frame.data.count-1] {
+                    for byte in frame.data[2..<frame.data.count] {
                         accumulator[key]!.append(byte)
                     }
                 }
@@ -382,7 +382,7 @@ final public class CanLink : LinkLayer {
                 link!.sendCanFrame( frame )
                 // send middles
                 if (dataSegments.count >= 3) {
-                    for index in 1...dataSegments.count - 2 { // upper limit leaves one
+                    for index in 1..<dataSegments.count - 1 {
                         frame = CanFrame(header: header|0x0C_000_000, data: dataSegments[index])
                         link!.sendCanFrame( frame )
                     }
@@ -438,7 +438,7 @@ final public class CanLink : LinkLayer {
         }
         // multiple frames
         var retval : [[UInt8]] = []
-        for i in 0...nSegments-2 { // first enty of 2 has full data
+        for i in 0..<nSegments-1 { // first entry of 2 has full data
             let nextEntry = Array(data[i*8 ... i*8+7])
             retval.append(nextEntry)
         }

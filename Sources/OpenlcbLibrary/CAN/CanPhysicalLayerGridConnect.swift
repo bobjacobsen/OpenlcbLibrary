@@ -56,7 +56,7 @@ final public class CanPhysicalLayerGridConnect : CanPhysicalLayer {
         var lastByte = 0
         if inboundBuffer.contains(0x3B) {  // ';' ends message so we have at least one (CR/LF not required)
             // found end, now find start of that same message, earlier in buffer
-            for index in 0...inboundBuffer.count-1 {
+            for index in 0..<inboundBuffer.count {
                 var outData : [UInt8] = []
                 if !inboundBuffer[index...inboundBuffer.count-1].contains(0x3B) { break }
                 if inboundBuffer[index] == 0x3A { // ':' starts message
