@@ -40,7 +40,7 @@ final public class DatagramService : Processor {
     /// Immutable memo carrying write request and two reply callbacks.
     ///
     /// Source is automatically this node.
-    public struct DatagramWriteMemo : Equatable {
+    public struct DatagramWriteMemo : Equatable, CustomStringConvertible {
         
         // source is this node
         let destID : NodeID
@@ -58,7 +58,12 @@ final public class DatagramService : Processor {
         static func defaultIgnoreReply(_ : DatagramWriteMemo) {
             // default handling of reply does nothing
         }
-        
+            
+        // for CustomStringConvertible
+        public var description: String {
+            return "DatagramWriteMemo: to \(destID) contains: \(data)"
+        }
+
         // for Equatable
         public static func == (lhs: DatagramService.DatagramWriteMemo, rhs: DatagramService.DatagramWriteMemo) -> Bool {
             if lhs.destID != rhs.destID { return false }
@@ -122,11 +127,22 @@ final public class DatagramService : Processor {
         }
     }
     
+    private func sendNextDatagramFromQueue() {
+        // is there a next datagram request?
+        if pendingWriteMemos.count > 0 {
+            // yes, get it, process it
+            let memo = pendingWriteMemos[0]
+            sendDatagramMessage(memo: memo)
+        }
+    }
+    
     private func sendDatagramMessage(memo : DatagramWriteMemo) {
         // Send datagram message
         let message = Message(mti: MTI.Datagram, source: linkLayer.localNodeID, destination: memo.destID, data: memo.data)
         linkLayer.sendMessage(message)
         currentOutstandingMemo = memo
+        // and start timer
+        startTimer(memo)
     }
     
     /// Register a listener to be notified when each datagram arrives.
@@ -148,7 +164,9 @@ final public class DatagramService : Processor {
         }
     }
     
-    /// Processor entry point.
+    
+    
+    /// Message Processor entry point.
     /// - Returns: Always false; a datagram doesn't mutate the node, it's the actions brought by that datagram that does.
     public func process( _ message : Message, _ node : Node ) -> Bool {
         // Check that it's to us or a global (for link layer up)
@@ -181,8 +199,11 @@ final public class DatagramService : Processor {
     
     // OK reply to write
     private func handleDatagramReceivedOK(_ message : Message) {
+        
+        clearTimer()
+        
         // match to the memo and remove from queue
-        let memo = matchToWriteMemo(message: message)
+        let memo = removeMatchingWriteMemo(message: message)
         
         // check of tracking logic
         if currentOutstandingMemo != memo {
@@ -190,37 +211,61 @@ final public class DatagramService : Processor {
         }
         currentOutstandingMemo = nil
         
-        // fire the callback
-        memo?.okReply?(memo!)
-        
+        // fire the callback if it exists
+        if let thisMemo = memo {
+            if let replyMethod = thisMemo.okReply {
+                replyMethod(thisMemo)
+            }
+        }
+
         sendNextDatagramFromQueue()
     }
     
     // Not OK reply to write
     private func handleDatagramRejected(_ message : Message) {
-        // match to the memo and remove from queue
-        let memo = matchToWriteMemo(message: message)
+        
+        clearTimer()
 
+        // match to the memo and remove from queue
+        let memo = removeMatchingWriteMemo(message: message)
+        handleDatagramFail(failedMemo: memo)
+    }
+        
+    private func handleDatagramFail(failedMemo memo : DatagramWriteMemo?) {
+        
+        if let thisMemo = memo {
+            if let index = pendingWriteMemos.firstIndex(of: thisMemo) {
+                pendingWriteMemos.remove(at: index)
+            }
+        }
+        
         // check of tracking logic
         if currentOutstandingMemo != memo {
             DatagramService.logger.error("Outstanding and replied-to memos don't match on rejected")
         }
         currentOutstandingMemo = nil
 
-        // fire the callback
-        memo?.rejectedReply?(memo!)
-
+        // fire the callback if it exists - this may immediately call sendMessage, or not
+        if let thisMemo = memo {
+            _ = removeMatchingWriteMemo(thisMemo)
+            if let replyMethod = thisMemo.rejectedReply {
+                replyMethod(thisMemo)
+            }
+        }
+        
         sendNextDatagramFromQueue()
     }
    
     // Link quiesced before outage: stop operation
     private func handleLinkQuiesce(_ message : Message) {
         quiesced = true
+        clearTimer()  // will restart when link restarted
     }
 
     // Link restarted after outage: if write datagram(s) pending reply, resend them
     private func handleLinkRestarted(_ message : Message) {
         quiesced = false
+        clearTimer()  // just in case
         if currentOutstandingMemo != nil {
             // there's a current outstanding memo to repeat
             DatagramService.logger.info("Retrying datagram after restart")
@@ -234,30 +279,85 @@ final public class DatagramService : Processor {
         }
     }
     
-    private func matchToWriteMemo(message : Message) -> DatagramService.DatagramWriteMemo? {
-        for memo in pendingWriteMemos {
-            if memo.destID != message.source { break }
+    private var timer : Timer?
+    private let TIMEOUT_INTERVAL = 3.0  // seconds
+    private var retryCount = 0;
+    private let MAX_TIMEOUT_RETRIES = 2
+
+    
+    private func startTimer(_ memo : DatagramWriteMemo) {
+        if let _ = timer {
+            // there's already a timer running, but there
+            // shouldn't be because this service is one-at-a-time.
+            DatagramService.logger.error("Timer already running in startTimer, will invalidate")
+            clearTimer()
+        }
+        timer = Timer.scheduledTimer(withTimeInterval: TIMEOUT_INTERVAL, repeats: false) {timer in
+                    self.timerFired(memo)
+                }
+    }
+    
+    // invoked when a reply is received in time
+    private func clearTimer() {
+        if let thisTimer = timer {
+            thisTimer.invalidate()
+            timer = nil;
+            retryCount = 0;
+        }
+    }
+    
+    // invoked when no reply received in time
+    private func timerFired(_ memo : DatagramWriteMemo) {
+        // invalidate timer, just in case
+        if let thisTimer = timer {
+            thisTimer.invalidate()
+            timer = nil;
+        }
+
+        // decide what to do about this timeout
+        if retryCount <= MAX_TIMEOUT_RETRIES {
+            retryCount = retryCount + 1
+            // Retry the transmission, without notifying higher levels
+            sendDatagramMessage(memo: memo)
+        } else {
+            // Too many retries, this is a negative reply
+            retryCount = 0
+            handleDatagramFail(failedMemo: memo)
+        }
+        
+    }
+    
+    private func removeMatchingWriteMemo(message : Message) -> DatagramService.DatagramWriteMemo? {
+        for thisMemo in pendingWriteMemos {
+            if thisMemo.destID != message.source { break }
             // remove the found element
-            if let index = pendingWriteMemos.firstIndex(of: memo) {
+            if let index = pendingWriteMemos.firstIndex(of: thisMemo) {
                 pendingWriteMemos.remove(at: index)
             }
-            return memo
+            return thisMemo
         }
         // did not find one
         DatagramService.logger.error("Did not match memo to message \(message)")
         return nil  // this will prevent firther processing
     }
     
-    private func sendNextDatagramFromQueue() {
-        // is there a next datagram request?
-        if pendingWriteMemos.count > 0 {
-            // yes, get it, process it
-            let memo = pendingWriteMemos[0]
-            sendDatagramMessage(memo: memo)
+    private func removeMatchingWriteMemo(_ inputMemo : DatagramWriteMemo) -> DatagramService.DatagramWriteMemo? {
+        for thisMemo in pendingWriteMemos {
+            if thisMemo.destID != inputMemo.destID { break }
+            // remove the found element
+            if let index = pendingWriteMemos.firstIndex(of: thisMemo) {
+                pendingWriteMemos.remove(at: index)
+            }
+            return thisMemo
         }
+        // did not find one
+        DatagramService.logger.error("Did not match memo to existing list")
+        return nil  // this will prevent firther processing
     }
     
-    /// Send a positive reply to a received datagram.
+
+
+    /// Send a positive reply to a received datagram. Called from datagram receiver.
     /// - Parameters:
     ///   - dg: Datagram memo being responded to.
     ///   - flags: Flag byte to be returned to sender, see Datagram S&TN for meaning.
@@ -266,7 +366,7 @@ final public class DatagramService : Processor {
         linkLayer.sendMessage(message)
     }
     
-    /// Send a negative reply to a received datagram.
+    /// Send a negative reply to a received datagram. Called from datagram receiver.
     /// - Parameters:
     ///   - dg: Datagram memo being responded to.
     ///   - err: Error code(s) to be returned to sender, see Datagram S&TN for meaning.

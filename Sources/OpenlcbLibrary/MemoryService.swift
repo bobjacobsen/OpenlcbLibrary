@@ -102,14 +102,22 @@ final public class MemoryService {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
         data.append(contentsOf: [memo.size])
-        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToWrite)
+        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToWrite, rejectedReply: receivedNotOKReplyToWrite)
         service.sendDatagram(dgWriteMemo)
     }
     
     internal func receivedOkReplyToWrite(memo : DatagramService.DatagramWriteMemo) {
         // this is normal.  Wait for following response to be returned via listener
     }
-
+    
+    internal func receivedNotOKReplyToWrite(memo : DatagramService.DatagramWriteMemo) {
+        // not normal, have to handle this
+        MemoryService.logger.error("Received NAK reply to datagram write: \(memo.description)")
+        
+        // first approximation: send again and again
+        service.sendDatagram(memo)
+    }
+    
     // process a datagram.  Sends the positive reply and returns true iff this is from our service.
     internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) -> Bool {
         // node received a datagram, is it our service?
@@ -128,7 +136,7 @@ final public class MemoryService {
             // Acknowledge the datagram
             service.positiveReplyToDatagram(dmemo, flags: 0x0000)
             // return data to requestor: first find matching memory read memo, then reply
-            for index in 0...readMemos.count {
+            for index in 0..<readMemos.count {  // don't include readMemos.count
                 if readMemos[index].nodeID == dmemo.srcID {
                     var tMemoryMemo = readMemos[index]
                     readMemos.remove(at: index)
@@ -162,7 +170,7 @@ final public class MemoryService {
             // Acknowledge the datagram
             service.positiveReplyToDatagram(dmemo, flags: 0x0000)
             // return data to requestor: first find matching memory write memo, then reply
-            for index in 0...writeMemos.count {
+            for index in 0..<writeMemos.count {
                 if writeMemos[index].nodeID == dmemo.srcID {
                     let tMemoryMemo = writeMemos[index]
                     writeMemos.remove(at: index)
