@@ -17,7 +17,7 @@ import os
 /// Service routines are provided to convert from/to hours and minutes.
 final public class ClockModel : ObservableObject {
     // Internal date and time throughout use the default UTC timezone; so long as that's used consistently,
-    // it avoids issues with properly selecting the local timezone if operating remotely.
+    // it avoids issues with properly selecting the local timezone when operating remotely.
 
     var processor : ClockProcessor? = nil  // will be initialized in network initialization
         
