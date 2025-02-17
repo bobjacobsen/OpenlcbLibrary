@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 /// Store and maintain the status of a clock, real time or fast.
 ///
@@ -19,14 +20,14 @@ final public class ClockModel : ObservableObject {
     // it avoids issues with properly selecting the local timezone if operating remotely.
 
     var processor : ClockProcessor? = nil  // will be initialized in network initialization
-    
-    @Published public var showingControlSheet = false  // used to determine whether the control sheet is visible on macOS
-    
+        
     public init() {
         calendar = Calendar.current
     }
     internal var calendar : Calendar
     
+    static let logger = Logger(subsystem: "us.ardenwood.OlcbLibDemo", category: "ClockModel")
+
     /// 'run' determines whetther the clock is running or not.  This is generally set from the
     ///  clock master.
     public var run: Bool {
@@ -89,6 +90,11 @@ final public class ClockModel : ObservableObject {
     /// propagate back via the OpenLCB network to the local clock.
     public func setRunStateInMaster(to newRun: Bool) {
         processor!.sendSetRunState(to: newRun)
+        if !newRun {
+            // save current time state for later
+            lastTimeSet = getTime()
+            timeLastSet = Date() // now
+        }
     }
     
     /// Set the run rate in the master clock.  Normally, this will then
@@ -105,8 +111,8 @@ final public class ClockModel : ObservableObject {
     /// Default arguments are the usual case; argument is
     /// provided for testing.
     private func updateTimeCalculation(time: Date? = nil, now: Date? = nil ) {
+        lastTimeSet = time ?? getTime() // getTime uses these values
         timeLastSet = now ?? Date()
-        lastTimeSet = time ?? getTime()
     }
     
     // convenience methods - NOT atomic, prefer getTime for accuracy,
