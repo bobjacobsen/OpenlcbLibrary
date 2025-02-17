@@ -78,23 +78,30 @@ public struct ClockProcessor : Processor {
         var components = calendar.dateComponents(requestedComponents, from: clock.getTime())
 
         let byte6 = Int(event[6])
+        let byte6low = Int(event[6])&0x7F  // remove the set/report bit, as we react to both reports and settings for some things
         let byte7 = Int(event[7])
         
         // decode byte 6 for type of event
-        if byte6 <= 0x17 {
-            // hours and minutes
-            components.hour = byte6
+        if byte6low <= 0x17 {
+            // set/report hours and minutes
+            components.hour = byte6low
             components.minute = byte7
-        } else if byte6 <= 0x2C {
-            // report Date
-            components.month = byte6 & 0xF
+            // have now loaded a new time, set it
+            clock.setTime(calendar.date(from: components) ?? Date())
+        } else if byte6low <= 0x2C {
+            // set/report Date
+            components.month = byte6low & 0xF
             components.day = byte7
-        } else if byte6 <= 0x3F {
-            // report Year
-            components.year = ((byte6&0x0F)<<8) + byte7
-        } else if byte6 <= 0x4F {
-            // report rate
-            clock.rate = Double(((byte6&0x0F)<<8) + byte7)/4
+            // have now loaded a new time, set it
+            clock.setTime(calendar.date(from: components) ?? Date())
+       } else if byte6low <= 0x3F {
+            // set/report Year
+            components.year = ((byte6low&0x0F)<<8) + byte7
+           // have now loaded a new time, set it
+           clock.setTime(calendar.date(from: components) ?? Date())
+        } else if byte6low <= 0x4F {
+            // set/report rate
+            clock.rate = Double(((byte6low&0x0F)<<8) + byte7)/4
         } else if byte6 == 0xF0 {
             // controls
             // check for run/start
@@ -106,9 +113,6 @@ public struct ClockProcessor : Processor {
                 clock.run = true
             }
         }
-        
-        // have now loaded a new time, set it
-        clock.setTime(calendar.date(from: components) ?? Date())
     }
     
     func sendSetRunState(to : Bool) {
