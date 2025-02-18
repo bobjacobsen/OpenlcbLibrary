@@ -18,16 +18,16 @@ import os
 final public class ClockModel : ObservableObject {
     // Internal date and time throughout use the default UTC timezone; so long as that's used consistently,
     // it avoids issues with properly selecting the local timezone when operating remotely.
-
+    
     var processor : ClockProcessor? = nil  // will be initialized in network initialization
-        
+    
     public init() {
         calendar = Calendar.current
     }
     internal var calendar : Calendar
     
     static let logger = Logger(subsystem: "us.ardenwood.OlcbLibDemo", category: "ClockModel")
-
+    
     /// 'run' determines whetther the clock is running or not.  This is generally set from the
     ///  clock master.
     public var run: Bool {
@@ -38,8 +38,8 @@ final public class ClockModel : ObservableObject {
         }
     }
     internal var internalRun = true  // Starts as true to make real-time clock if no actual clock on bus
-                                     // LCC fasts clock will override on 1st access
-
+    // LCC fasts clock will override on 1st access
+    
     /// 'rate' determines the rate at which the clock advances.  This is generally set from the
     ///  clock master.
     public var rate: Double {
@@ -50,7 +50,7 @@ final public class ClockModel : ObservableObject {
         }
     }
     internal var internalRate = 1.0
-
+    
     
     // fast fime is lastTimeSet+(now-timeLastSet)*rate
     private var timeLastSet = Date()  // default is now
@@ -68,6 +68,29 @@ final public class ClockModel : ObservableObject {
         timeLastSet = now
     }
     
+    /// Update time from a UI, using current year/month/day
+    ///  Returns resulting hour and minute as ints, including 24/60 truncation if needed
+    public func updateTime(hour: Int, minute : Int ) -> (String, String) {
+        let currentDate = getTime()
+        // create a new Date from components
+        var dateComponents = DateComponents()
+        dateComponents.year = getYear(currentDate)
+        dateComponents.month = getMonth(currentDate)
+        dateComponents.day = getDay(currentDate)
+        // dateComponents.timeZone = currentDate.timeZone
+        dateComponents.hour = hour
+        dateComponents.minute = minute
+        dateComponents.second = Int(0)
+        let userCalendar = Calendar(identifier: .gregorian) // since the components above (like year 1980) are for Gregorian
+        let newDate = userCalendar.date(from: dateComponents)
+        setTimeInMaster(to: newDate!)
+        if let tempDate = newDate {
+            setTime(tempDate)
+            return (String(Calendar.current.component(.hour, from: tempDate)), String(Calendar.current.component(.minute, from: tempDate)))
+        }
+        // date unwrap failed
+        return ("0", "0")
+    }
     /// Gets the current time in the clock. Default argument is the usual case; argument is
     /// provided for testing.
     public func getTime(_ now : Date = Date()) -> Date {
