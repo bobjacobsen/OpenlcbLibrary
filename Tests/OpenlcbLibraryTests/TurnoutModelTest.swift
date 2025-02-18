@@ -36,6 +36,11 @@ final class TurnoutModelTest: XCTestCase {
         XCTAssertEqual(TurnoutModel.transmogrifyTurnoutId(from: 257), 0x0208)
         XCTAssertEqual(TurnoutModel.transmogrifyTurnoutId(from: 513), 0x408)
         XCTAssertEqual(TurnoutModel.transmogrifyTurnoutId(from: 2040), 0xFF6)
+
+        XCTAssertEqual(TurnoutModel.transmogrifyTurnoutId(from:  509), 0x400)
+        XCTAssertEqual(TurnoutModel.transmogrifyTurnoutId(from: 2044), 0xFFE)
+        XCTAssertEqual(TurnoutModel.transmogrifyTurnoutId(from: 2045), 0x000)
+        XCTAssertEqual(TurnoutModel.transmogrifyTurnoutId(from: 2048), 0x006)
     }
 
 }

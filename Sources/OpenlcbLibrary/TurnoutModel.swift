@@ -72,10 +72,13 @@ public class TurnoutModel : ObservableObject {
     /// - Parameter from: a 1-2048 turnout address
     /// - Returns eventID to send in AAAaaaaaaDDD format
     static internal func transmogrifyTurnoutId(from : Int) -> UInt64 {  // internal for testing
-        let DD = (from-1) & 0x3
-        let aaaaaa = (( (from-1) >> 2)+1 ) & 0x3F
-        let AAA = ( (from) >> 8) & 0x7
-        let retval : UInt64 = (UInt64) (0x0000 | (AAA << 9) | (aaaaaa << 3) | DD << 1)
-        return retval
+        var turnout = UInt64(from)
+        if (turnout >= 2045) {
+            turnout = turnout-2045;
+        } else {
+            turnout = turnout + 3;
+        }
+
+        return turnout << 1
     }
 }
