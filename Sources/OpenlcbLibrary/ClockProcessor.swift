@@ -94,7 +94,7 @@ public struct ClockProcessor : Processor {
             components.day = byte7
             // have now loaded a new time, set it
             clock.setTime(calendar.date(from: components) ?? Date())
-       } else if byte6low <= 0x3F {
+        } else if byte6low <= 0x3F {
             // set/report Year
             components.year = ((byte6low&0x0F)<<8) + byte7
            // have now loaded a new time, set it
@@ -113,6 +113,7 @@ public struct ClockProcessor : Processor {
                 clock.run = true
             }
         }
+        clock.updateCompanionApp()
     }
     
     func sendSetRunState(to : Bool) {

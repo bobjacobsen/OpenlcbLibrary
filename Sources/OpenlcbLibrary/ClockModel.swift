@@ -6,6 +6,10 @@
 //
 
 import Foundation
+#if os(iOS)
+import UIKit        // for check of iPhone vs iPad
+import WatchConnectivity
+#endif
 import os
 
 /// Store and maintain the status of a clock, real time or fast.
@@ -183,6 +187,24 @@ final public class ClockModel : ObservableObject {
         }
     }
 
+    public func updateCompanionApp() {
+#if os(iOS)
+        if WCSession.default.activationState == .activated {
+            let context : [String : Any] = ["rate": rate, "run": run,
+                                            "lastTimeSet": lastTimeSet,
+                                            "timeLastSet": timeLastSet]
+            do {
+                try WCSession.default.updateApplicationContext(context)
+            } catch {
+                ClockModel.logger.error("Catch from updateApplicationContext")
+            }
+        } else {
+            if UIDevice.current.userInterfaceIdiom == .phone { // not expected to work on iPad
+                ClockModel.logger.warning("WCSession not activated in updateCompanionApp")
+            }
+        }
+#endif
+    }
 }
 
 // provide a "-" subtraction operator for times:
