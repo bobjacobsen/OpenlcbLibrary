@@ -90,7 +90,9 @@ final public class ClockModel : ObservableObject {
         setTimeInMaster(to: newDate!)
         if let tempDate = newDate {
             setTime(tempDate)
-            return (String(Calendar.current.component(.hour, from: tempDate)), String(Calendar.current.component(.minute, from: tempDate)))
+            var tempMinutes = String(Calendar.current.component(.minute, from: tempDate))
+            if tempMinutes.count < 2 { tempMinutes = "0" + tempMinutes }
+            return (String(Calendar.current.component(.hour, from: tempDate)), tempMinutes)
         }
         // date unwrap failed
         return ("0", "0")
