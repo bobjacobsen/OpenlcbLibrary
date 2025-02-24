@@ -70,6 +70,10 @@ struct ThrottleProcessor : Processor {
             return
         }
         let fn = Int(message.data[3])
+        if fn > model.maxFn {
+            // not set up to handle this, ignore
+            return
+        }
         let capturedN = fn
         let capturedState = model.fnModels[fn].pressed
         let nextState = (message.data[5] != 0)
@@ -85,7 +89,7 @@ struct ThrottleProcessor : Processor {
                 // objective conditions have not changed, do the update
                 model.fnModels[capturedN].pressed = nextState
             } else {
-                ThrottleProcessor.logger.trace("skipping speed update as fn \(capturedN, privacy: .public) has changed")
+                ThrottleProcessor.logger.trace("skipping function update as fn \(capturedN, privacy: .public) has changed")
             }
         }
 
