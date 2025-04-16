@@ -316,7 +316,6 @@ final public class CanLink : LinkLayer {
         } else {
             // forward global message
             let msg = Message(mti: mti, source: sourceID, destination: destID, data: frame.data)
-            fireListeners(msg)
             // if this is a partial EWP, add data to accumulatingEWP and perhaps forward
             switch mti {
             case .Event_With_Data_First :
@@ -341,7 +340,8 @@ final public class CanLink : LinkLayer {
                 fireListeners(msg)
                 accumulatingEWP = []
                 break
-            default :
+            default : // all other global messages go as created.
+                fireListeners(msg)
                 break
             }
         }
