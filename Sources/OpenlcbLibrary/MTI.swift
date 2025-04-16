@@ -34,7 +34,11 @@ public enum MTI : Int {
     case Identify_Events_Global             = 0x0970
     case Learn_Event                        = 0x0594
     case Producer_Consumer_Event_Report     = 0x05b4
-    
+    case Event_With_Data_First              = 0x0F14
+    case Event_With_Data_Middle             = 0x0F15
+    case Event_With_Data_Last               = 0x0F16
+    case Event_With_Data                    = 0x2F14
+
     case Simple_Node_Ident_Info_Request     = 0x0DE8
     case Simple_Node_Ident_Info_Reply       = 0x0A08
     
@@ -50,7 +54,7 @@ public enum MTI : Int {
     
     case Unknown                            = 0x0000
     
-    // these are used for internal signalling and are not present in the MTI specification.
+    // these are used for internal signaling and are not present in the MTI specification.
     case Link_Layer_Up                      = 0x2000   // entered Permitted state; needs to be marked global
     case Link_Layer_Quiesce                 = 0x2010   // Link needs to be drained, will come back with Link_Layer_Restarted next
     case Link_Layer_Restarted               = 0x2020   // link cycled without change of node state; needs to be marked global
