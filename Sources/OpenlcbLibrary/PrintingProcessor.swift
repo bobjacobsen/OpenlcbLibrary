@@ -57,7 +57,11 @@ public struct PrintingProcessor : Processor {
                 .Producer_Identified_Inactive,
                 .Identify_Events_Global,
                 .Learn_Event,
-                .Producer_Consumer_Event_Report :
+                .Producer_Consumer_Event_Report,
+                .Event_With_Data,
+                .Event_With_Data_First,
+                .Event_With_Data_Middle,
+                .Event_With_Data_Last :
             simpleGlobalMessage(message, node, dataString)
             
         case    .Link_Layer_Up,
