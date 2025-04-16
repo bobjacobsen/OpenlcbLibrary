@@ -34,9 +34,9 @@ public enum MTI : Int {
     case Identify_Events_Global             = 0x0970
     case Learn_Event                        = 0x0594
     case Producer_Consumer_Event_Report     = 0x05b4
-    case Event_With_Data_First              = 0x0F14
+    case Event_With_Data_First              = 0x0F16
     case Event_With_Data_Middle             = 0x0F15
-    case Event_With_Data_Last               = 0x0F16
+    case Event_With_Data_Last               = 0x0F14
     case Event_With_Data                    = 0x2F14
 
     case Simple_Node_Ident_Info_Request     = 0x0DE8
