@@ -34,6 +34,8 @@ final public class CanLink : LinkLayer {
     // place to keep pending transmit messages
     var pendingMessages : [NodeID:[Message]] = [:]
     
+    var accumulatingEWP : [UInt8] = []
+        
     var nextInternallyAssignedNodeID : UInt64 = 1
 
     public init(localNodeID : NodeID) {
@@ -246,7 +248,7 @@ final public class CanLink : LinkLayer {
                     accumulator[key] = []
                 } else {
                     // not start frame
-                    // check for never properly started, this is an errorn
+                    // check for never properly started, this is an error
                     guard accumulator[key] != nil else {
                         // have not-start frame, but never started
                         CanLink.logger.error("Dropping non-start datagram frame without accumulation started: \(frame, privacy: .public)")
@@ -315,6 +317,33 @@ final public class CanLink : LinkLayer {
             // forward global message
             let msg = Message(mti: mti, source: sourceID, destination: destID, data: frame.data)
             fireListeners(msg)
+            // if this is a partial EWP, add data to accumulatingEWP and perhaps forward
+            switch mti {
+            case .Event_With_Data_First :
+                // check for data, which is an error
+                if (accumulatingEWP.count != 0 ) {
+                    CanLink.logger.error("First EWP frame with data already accumulated")
+                }
+                accumulatingEWP.append(contentsOf: frame.data)
+                break
+            case .Event_With_Data_Middle :
+                if (accumulatingEWP.count == 0 ) {
+                    CanLink.logger.error("Middle EWP frame with no data already accumulated")
+                }
+                accumulatingEWP.append(contentsOf: frame.data)
+                break
+            case .Event_With_Data_Last :
+                if (accumulatingEWP.count == 0 ) {
+                    CanLink.logger.error("Final EWP frame with no data already accumulated")
+                }
+                accumulatingEWP.append(contentsOf: frame.data)
+                let msg = Message(mti: .Event_With_Data, source: sourceID, destination: destID, data: accumulatingEWP)
+                fireListeners(msg)
+                accumulatingEWP = []
+                break
+            default :
+                break
+            }
         }
     }
     
