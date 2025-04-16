@@ -130,12 +130,29 @@ public struct RemoteNodeProcessor : Processor {
     private func producedEventIndicated(_ message : Message, _ node : Node) {
         if checkSourceID(message, node) { // produced by this node?
             // make an event id from the data
-            let eventID = EventID(message.data)
+            let eventID = EventID(message.data)  // takes only first eight bytes from EWP
             // register it
             node.events.produces(eventID)
+
+            if (message.mti == .Event_With_Data) {
+                processEWP(message, node)
+            }
         }
     }
     
+    private func processEWP(_ message : Message, _ node : Node) {
+        // decode protocol and process
+        if (message.data[0]==0x01 && message.data[1]==0x02) {
+            processEwpLocationServices(message, node)
+        }
+    }
+
+    // TODO: should this be a method a new class that holds the LS information? MetersModel?
+    private func processEwpLocationServices(_ message : Message, _ node : Node) {
+        // decode and process to meter(s) in the node
+        // TODO: Decode location services to meter
+    }
+
     private func consumedEventIndicated(_ message : Message, _ node : Node) {
         if checkSourceID(message, node) { // consumed by this node?
             // make an event id from the data
