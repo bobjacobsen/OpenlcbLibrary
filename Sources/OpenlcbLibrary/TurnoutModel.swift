@@ -10,7 +10,7 @@ import Foundation
 // TODO: Add tracking of turnout state, including when others throw
 
 /// Provide Turnout commands for e.g. a Turnout View
-public class TurnoutModel : ObservableObject {
+final public class TurnoutModel : ObservableObject {
     @Published public private(set) var addressArray : [Int] = []  // address-sorted form of addressSet
     private var addressSet = Set<Int>()
     @Published public private(set) var macroArray : [Int] = []  // number-sorted form of macroSet

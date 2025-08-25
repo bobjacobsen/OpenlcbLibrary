@@ -8,9 +8,9 @@ import Foundation
 
 /// Represents the basic message, with an MTI, source, destination? and data content.
 public struct Message : Equatable, Hashable, CustomStringConvertible {
-    let mti : MTI
     let source : NodeID
     let destination : NodeID?
+    let mti : MTI
     let data : [UInt8]
     
     /// Addressed message initialization

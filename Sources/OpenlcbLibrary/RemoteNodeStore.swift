@@ -10,7 +10,7 @@ import os
 
 /// Accumulates Nodes that it sees requested, unless they're already in a given local NodeStore
 /// 
-public class RemoteNodeStore : NodeStore, CustomStringConvertible {
+final public class RemoteNodeStore : NodeStore, CustomStringConvertible {
         
     // local variables
     

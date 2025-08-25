@@ -13,7 +13,7 @@ import UIKit
 
 /// Provides a common base implementation of an OpenLCB/LCC network using this package.
 /// Configures a working OpenlcbLibrary subsystem.
-public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // class to use @Published
+final public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { // class to use @Published
 
     @Published public private(set) var remoteNodeStore : RemoteNodeStore
 
