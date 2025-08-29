@@ -219,6 +219,7 @@ final public class ThrottleModel : ObservableObject {
         tc_state = .Wait_on_TC_Assign_Reply
         requestedLocoID = entry.label
         selected_nodeId = entry.nodeID
+        // send Controller Configuration: Assign Controller
         let header : [UInt8] = [0x20, 0x01, 0x01]
         let data = header + (linkLayer!.localNodeID.toArray())
         let command = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
@@ -238,6 +239,7 @@ final public class ThrottleModel : ObservableObject {
     ///
     /// Used as part of selection
     internal func setUpMonitorConsist(_ trainNodeID: NodeID) {
+        // send Listener Configuration: Attach Node
         let flags : UInt8 = 0x8C  // hidden, link Fn, link F0
         let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: trainNodeID, data: [0x30, 0x01, flags]+linkLayer!.localNodeID.toArray())
         linkLayer!.sendMessage(message)
@@ -249,8 +251,15 @@ final public class ThrottleModel : ObservableObject {
     internal func tearDownMonitorConsist() {
         ThrottleModel.logger.debug("tearDownMonitorConsist for destination: \(self.selected_nodeId)")
         if (selected_nodeId.nodeId != 0) { // only send if we have a node previously selected
+            // Send Listener Configuration : Detach Node
             let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId, data: [0x30, 0x02, 0x00]+linkLayer!.localNodeID.toArray())
             linkLayer!.sendMessage(message)
+            // Send Controller Configuration: Release Controller
+            let header : [UInt8] = [0x20, 0x02, 0x01]
+            let data = header + (linkLayer!.localNodeID.toArray())
+            let command = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID,
+                                  destination: selected_nodeId, data: data)
+            linkLayer!.sendMessage(command)
         }
     }
     
