@@ -218,7 +218,7 @@ struct ThrottleProcessor : Processor {
     }
     
     
-    public enum TC_Request_Type : UInt8 {
+    @frozen public enum TC_Request_Type : UInt8 {
         case SetSpeed               = 0x00
         case SetFunction            = 0x01
         case EStop                  = 0x02
@@ -228,7 +228,7 @@ struct ThrottleProcessor : Processor {
         case ListenerConfig         = 0x30
         case TractionManagement     = 0x40
     }
-    public enum TC_Reply_Type : UInt8 {
+    @frozen public enum TC_Reply_Type : UInt8 {
         case QuerySpeeds            = 0x10
         case QueryFunction          = 0x11
         case ControllerConfig       = 0x20

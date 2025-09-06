@@ -16,7 +16,7 @@ public final class CdiXmlMemo : Identifiable {
 
     /// Represent the type of each node.
     /// Maps to `CdiParserDelegate.NextTextOperation` states
-    public enum XMLMemoType {
+    @frozen public enum XMLMemoType {
         case TOPLEVEL // cdi element itself
         case SEGMENT  // Segment is a top-level group
         case GROUP

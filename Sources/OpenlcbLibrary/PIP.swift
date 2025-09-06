@@ -9,7 +9,7 @@ import Foundation
 /// Defines the various protocol bits as a enum, and
 /// provides a routine for converting a numeric value to a set of enum constants.
 ///
-public enum PIP : UInt32, CaseIterable {
+@frozen public enum PIP : UInt32, CaseIterable {
     
     /// Coded as a 32-bit values instead of the 24-bit values in the standard to give expansion room
     case SIMPLE_PROTOCOL                        = 0x80_00_00_00

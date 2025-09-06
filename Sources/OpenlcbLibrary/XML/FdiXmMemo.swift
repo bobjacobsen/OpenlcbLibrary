@@ -18,7 +18,7 @@ public final class FdiXmlMemo : Identifiable {
     
     /// Represent the type of each node.
     /// Maps to `FdiParserDelegate.NextTextOperation` states
-    public enum XMLMemoType {
+    @frozen public enum XMLMemoType {
         case TOPLEVEL // FDI element itself
         case SEGMENT  // Segment is a top-level group
         case GROUP

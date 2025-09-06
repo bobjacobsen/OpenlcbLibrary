@@ -89,7 +89,7 @@ final public class DatagramService : Processor {
     }
     
     /// Known datagram protocol types
-    public enum ProtocolID : UInt8 {
+    @frozen public enum ProtocolID : UInt8 {
         case LogRequest      = 0x01
         case LogReply        = 0x02
         
