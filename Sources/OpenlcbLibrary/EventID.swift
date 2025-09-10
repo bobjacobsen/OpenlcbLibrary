@@ -8,7 +8,7 @@ import Foundation
 
 /// Represents an 8-byte event ID.
 ///  Provides conversion to and from Ints and Strings in standard form.
-public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible {
+public struct EventID : Equatable, Hashable, Comparable, CustomStringConvertible, Codable {
     public let eventID : UInt64 // to ensure 8 byte EventID)
     
     /// Display in standard format
