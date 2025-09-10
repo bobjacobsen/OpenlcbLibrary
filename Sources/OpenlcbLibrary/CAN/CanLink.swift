@@ -127,13 +127,17 @@ final public class CanLink : LinkLayer {
         // TODO: wait 200 msec before declaring ready to go (and doing steps following the call here)
         
         // send AMD frame, go to Permitted state
-        link!.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray()) )
+        if let link = link {
+            link.sendCanFrame( CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray()) )
+        }
         state = .Permitted
         // add to map
         aliasToNodeID[localAlias] = localNodeID
         nodeIdToAlias[localNodeID] = localAlias
         // send AME with no NodeID to get full alias map
-        link!.sendCanFrame( CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias) )
+        if let link = link {
+            link.sendCanFrame( CanFrame(control: ControlFrame.AME.rawValue, alias: localAlias) )
+        }
     }
     
     // TODO: (restart) Should this set inhibited every time? LinkUp not called on restart
@@ -150,7 +154,9 @@ final public class CanLink : LinkLayer {
         // Does this carry our alias?
         if (frame.header & 0xFFF) != localAlias {return} // no match
         // send an RID in response
-        link!.sendCanFrame( CanFrame(control: ControlFrame.RID.rawValue, alias: localAlias) )
+        if let link = link {
+            link.sendCanFrame( CanFrame(control: ControlFrame.RID.rawValue, alias: localAlias) )
+        }
     }
     
     func handleReceivedRID(_ frame : CanFrame) {
@@ -188,7 +194,9 @@ final public class CanLink : LinkLayer {
         if (localNodeID == matchNodeID) {
             // matched, send AMD
             let returnFrame = CanFrame(control: ControlFrame.AMD.rawValue, alias: localAlias, data: localNodeID.toArray())
-            link!.sendCanFrame( returnFrame )
+            if let link = link {
+                link.sendCanFrame( returnFrame )
+            }
         }
     }
     
@@ -402,23 +410,31 @@ final public class CanLink : LinkLayer {
                 // single frame
                 header |= 0x0A_000_000
                 let frame = CanFrame(header: header, data: msg.data)
-                link!.sendCanFrame( frame )
+                if let link = link {
+                    link.sendCanFrame( frame )
+                }
             } else {
                 // multi-frame datagram
                 let dataSegments = segmentDatagramDataArray(msg.data)
                 // send the first one
                 var frame = CanFrame(header: header|0x0B_000_000, data: dataSegments[0])
-                link!.sendCanFrame( frame )
+                if let link = link {
+                    link.sendCanFrame( frame )
+                }
                 // send middles
                 if (dataSegments.count >= 3) {
                     for index in 1..<dataSegments.count - 1 {
                         frame = CanFrame(header: header|0x0C_000_000, data: dataSegments[index])
-                        link!.sendCanFrame( frame )
+                        if let link = link {
+                            link.sendCanFrame( frame )
+                        }
                     }
                 }
                 // send last one
                 frame = CanFrame(header: header|0x0D_000_000, data: dataSegments[dataSegments.count - 1])
-                link!.sendCanFrame( frame )
+                if let link = link {
+                    link.sendCanFrame( frame )
+                }
             }
         } else {
             // all non-datagram cases
@@ -439,7 +455,9 @@ final public class CanLink : LinkLayer {
                     for content in dataSegments {
                         // send the resulting frame
                         let frame = CanFrame(header: header, data: content)
-                        link!.sendCanFrame( frame )
+                        if let link = link {
+                            link.sendCanFrame( frame )
+                        }
                     }
                 } else {
                     CanLink.logger.notice("Oon't know alias for destination = \(msg.destination ?? NodeID(0), privacy: .public), queued")
@@ -450,7 +468,9 @@ final public class CanLink : LinkLayer {
                 // global still can hold data; assume length is correct by protocol
                 // send the resulting frame
                 let frame = CanFrame(header: header, data: msg.data)
-                link!.sendCanFrame( frame )
+                if let link = link {
+                    link.sendCanFrame( frame )
+                }
             }
             
         }
@@ -510,7 +530,9 @@ final public class CanLink : LinkLayer {
         if (abort ) {
             // Collision!
             CanLink.logger.notice("alias collision in frame \(frame, privacy: .public), we restart with AMR and attempt to get new alias")
-            link!.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
+            if let link = link {
+                link.sendCanFrame( CanFrame(control: ControlFrame.AMR.rawValue, alias: localAlias, data: localNodeID.toArray()) )
+            }
             // Standard 6.2.5
             state = .Inhibited
             // attempt to get a new alias and go back to .Permitted
@@ -523,11 +545,13 @@ final public class CanLink : LinkLayer {
     
     /// Send the alias allocation sequence
     func sendAliasAllocationSequence() {
-        link!.sendCanFrame( CanFrame(cid: 7, nodeID: localNodeID, alias: localAlias) )
-        link!.sendCanFrame( CanFrame(cid: 6, nodeID: localNodeID, alias: localAlias) )
-        link!.sendCanFrame( CanFrame(cid: 5, nodeID: localNodeID, alias: localAlias) )
-        link!.sendCanFrame( CanFrame(cid: 4, nodeID: localNodeID, alias: localAlias) )
-        link!.sendCanFrame( CanFrame(control : ControlFrame.RID.rawValue,   alias: localAlias) )
+        if let link = link {
+            link.sendCanFrame( CanFrame(cid: 7, nodeID: localNodeID, alias: localAlias) )
+            link.sendCanFrame( CanFrame(cid: 6, nodeID: localNodeID, alias: localAlias) )
+            link.sendCanFrame( CanFrame(cid: 5, nodeID: localNodeID, alias: localAlias) )
+            link.sendCanFrame( CanFrame(cid: 4, nodeID: localNodeID, alias: localAlias) )
+            link.sendCanFrame( CanFrame(control : ControlFrame.RID.rawValue,   alias: localAlias) )
+        }
     }
     
     /// Implements the OpenLCB preferred alias
