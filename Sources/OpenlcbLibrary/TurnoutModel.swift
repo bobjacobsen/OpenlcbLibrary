@@ -1,6 +1,5 @@
 //
 //  TurnoutModel.swift
-//  
 //
 //  Created by Bob Jacobsen on 10/3/22.
 //
@@ -10,53 +9,108 @@ import Foundation
 // TODO: Add tracking of turnout state, including when others throw
 
 /// Provide Turnout commands for e.g. a Turnout View
+/// and Macro commands
 final public class TurnoutModel : ObservableObject {
-    @Published public private(set) var addressArray : [Int] = []  // address-sorted form of addressSet
-    private var addressSet = Set<Int>()
+    @Published public private(set) var turnoutDefinitionArray : [TurnoutDefinition] = [] // address-sorted form of addressSet
+    private var turnoutDefinitionSet = Set<TurnoutDefinition>()
+
     @Published public private(set) var macroArray : [Int] = []  // number-sorted form of macroSet
     private var macroSet = Set<Int>()
+
     internal var network : OpenlcbNetwork?  // set during contruction
     
     init() {
     }
-    
-    let TURNOUT_BASE_EVENTID : UInt64   = UInt64(0x01_01_02_00_00_FF_00_00)
-    let MACRO_BASE_EVENTID : UInt64     = UInt64(0x09_00_99_FE_FF_FE_00_00)
-    
+        
     /// Make sure a layout turnout is set closed
-    /// - Parameter address: Address in 1-2048 form
-    public func setClosed(_ address : Int) {
-        processAddress(address)
-        let eventID : UInt64 = UInt64(TURNOUT_BASE_EVENTID+TurnoutModel.transmogrifyTurnoutId(from: address))+1
-        network!.produceEvent(eventID: EventID(eventID))
-    }
-    
-    /// Make sure a layout turnout is set thrown
-    /// - Parameter address: Address in 1-2048 form
-    public func setThrown(_ address : Int) {
-        processAddress(address)
-        let eventID : UInt64 = UInt64(TURNOUT_BASE_EVENTID+TurnoutModel.transmogrifyTurnoutId(from: address))+0
-        network!.produceEvent(eventID: EventID(eventID))
-    }
-    
-    /// Make sure a layout turnout is set thrown
-    /// - Parameter macro: Macro in 1-65535 form
-    public func setMacro(_ macro : Int) {
-        processMacro(macro)
-        let eventID : UInt64 = UInt64(MACRO_BASE_EVENTID+TurnoutModel.transmogrifyTurnoutId(from: macro))
-        network!.produceEvent(eventID: EventID(eventID))
-    }
-    
-    /// Add an address to the list of known addresses
-    /// - Parameter address: Address in 1-2048 form
-    func processAddress(_ address : Int) {
-        if !addressSet.contains(address) {
-            // only do this if needed to avoid unnecesary publishes
-            addressSet.insert(address)
-            addressArray = addressSet.sorted()
+    /// - Parameter turnoutDefinition: Defines closed Event ID
+    public func setClosed(_ turnoutDefinition : TurnoutDefinition) {
+        processTurnoutDefinition(turnoutDefinition)
+        let eventID = turnoutDefinition.closedEventID
+        if let network = network {
+            network.produceEvent(eventID: eventID)
         }
     }
     
+    /// Make sure a layout turnout is set closed
+    /// - Parameter address: Address in 1 - 2048 form
+    public func setClosed(_ address : Int) {
+        let turnoutDefinition = processTurnout(address)
+        let eventID = turnoutDefinition.closedEventID
+        if let network = network {
+            network.produceEvent(eventID: eventID)
+        }
+    }
+    
+    /// Make sure a layout turnout is set thrown
+    /// - Parameter turnoutDefinition: Defines thrown Event ID
+    public func setThrown(_ turnoutDefinition : TurnoutDefinition) {
+        processTurnoutDefinition(turnoutDefinition)
+        let eventID = turnoutDefinition.thrownEventID
+        if let network = network {
+            network.produceEvent(eventID: eventID)
+        }
+    }
+    
+    /// Make sure a layout turnout is set thrown
+    /// - Parameter address: Address in 1 - 2048 form
+    public func setThrown(_ address : Int) {
+        let turnoutDefinition = processTurnout(address)
+        let eventID = turnoutDefinition.thrownEventID
+        if let network = network {
+            network.produceEvent(eventID: eventID)
+        }
+    }
+    
+    /// Add a turnout to the list of known turnouts
+    /// - Parameter address: Address in 1 - 2048 form
+    func processTurnout(_ address : Int) -> TurnoutDefinition {
+        let turnoutDefinition = TurnoutDefinition(address)
+        processTurnoutDefinition(turnoutDefinition)
+        return turnoutDefinition
+    }
+
+    public func processTurnoutDefinition(_ turnoutDefinition : TurnoutDefinition) {
+        if !turnoutDefinitionSet.contains(turnoutDefinition) {
+            // only do this if needed to avoid unnecesary publishes
+            turnoutDefinitionSet.insert(turnoutDefinition)
+            turnoutDefinitionArray = turnoutDefinitionSet.sorted()
+        }
+    }
+    
+    /// Force a new definition to be stored, perhaps because it has different thrown/closed event IDs
+    public func replaceTurnoutDefinition(_ turnoutDefinition : TurnoutDefinition) {
+        turnoutDefinitionSet.insert(turnoutDefinition)
+        turnoutDefinitionArray = turnoutDefinitionSet.sorted()
+    }
+    
+    /// Make sure a layout macro is set
+    /// - Parameter macro: Macro in 1-65535 form
+    public func setMacro(_ macro : Int) {
+        processMacro(macro)
+        let eventID : UInt64 = UInt64(MACRO_BASE_EVENTID+TurnoutModel.transmogrifyModelId(from: macro))
+        if let network = network {
+            network.produceEvent(eventID: EventID(eventID))
+        }
+    }
+        
+    /// Convert from a 1-2048 turnout address to the Olcb format for NMRA DCC.
+    /// See the Event ID TN section 2.5.3.3 for more information.
+    /// - Parameter from: a 1-2048 turnout address
+    /// - Returns eventID to send in AAAaaaaaaDDD format
+    static internal func transmogrifyModelId(from : Int) -> UInt64 {  // internal for testing
+        var turnout = UInt64(from)
+        if (turnout >= 2045) {
+            turnout = turnout-2045;
+        } else {
+            turnout = turnout + 3;
+        }
+
+        return turnout << 1
+    }
+
+    let MACRO_BASE_EVENTID : UInt64     = UInt64(0x09_00_99_FE_FF_FE_00_00)
+
     /// Add an macro to the list of known macros
     /// - Parameter macro: Address in 1-65535 form
     func processMacro(_ macro : Int) {
@@ -67,8 +121,32 @@ final public class TurnoutModel : ObservableObject {
         }
     }
     
+}
+
+///
+/// Record the name and EventID addresses for a single Turnout
+///
+public struct TurnoutDefinition : Equatable, Hashable, Comparable, Codable {
+    public let visibleAddress : String
+    public let closedEventID : EventID
+    public let thrownEventID : EventID 
+
+    public init(_ address : String, _ closed : EventID, _ thrown : EventID) {
+        self.visibleAddress = address
+        self.closedEventID = closed
+        self.thrownEventID = thrown
+    }
+
+    var TURNOUT_BASE_EVENTID : UInt64 = UInt64(0x01_01_02_00_00_FF_00_00)  // form of constant that doesn't issue decoding warnings
+    
+    public init(_ address : Int) {
+        self.visibleAddress = String(address)
+        self.closedEventID = EventID(UInt64(TURNOUT_BASE_EVENTID+TurnoutDefinition.transmogrifyTurnoutId(from: address))+1)
+        self.thrownEventID = EventID(UInt64(TURNOUT_BASE_EVENTID+TurnoutDefinition.transmogrifyTurnoutId(from: address))+0)
+    }
+
     /// Convert from a 1-2048 turnout address to the Olcb format for NMRA DCC.
-    /// See the Event Transfer TN section 2.5.3.3 for more information.
+    /// See the Event ID TN section 2.5.3.3 for more information.
     /// - Parameter from: a 1-2048 turnout address
     /// - Returns eventID to send in AAAaaaaaaDDD format
     static internal func transmogrifyTurnoutId(from : Int) -> UInt64 {  // internal for testing
@@ -80,5 +158,21 @@ final public class TurnoutModel : ObservableObject {
         }
 
         return turnout << 1
+    }
+
+    /// Used to make Set.contains work on just the address
+    // Comparable is defined on the address only
+    public static func <(lhs: TurnoutDefinition, rhs: TurnoutDefinition) -> Bool {
+        return lhs.visibleAddress < rhs.visibleAddress
+    }
+    
+    // Equatable is defined on the address only
+    public static func ==(lhs: TurnoutDefinition, rhs: TurnoutDefinition) -> Bool {
+        return lhs.visibleAddress == rhs.visibleAddress
+    }
+    
+    // Hashable is defined on the address only
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(visibleAddress)
     }
 }
