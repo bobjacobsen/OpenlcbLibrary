@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import SwiftUI // for array remove at offsets
 
 // TODO: Add tracking of turnout state, including when others throw
 
@@ -70,18 +71,39 @@ final public class TurnoutModel : ObservableObject {
         return turnoutDefinition
     }
 
+    /// See if a TurnoutDefinition needs to be stored; only store if new or changed
     public func processTurnoutDefinition(_ turnoutDefinition : TurnoutDefinition) {
+        // if not present, add
         if !turnoutDefinitionSet.contains(turnoutDefinition) {
-            // only do this if needed to avoid unnecesary publishes
-            turnoutDefinitionSet.insert(turnoutDefinition)
-            turnoutDefinitionArray = turnoutDefinitionSet.sorted()
+            replaceTurnoutDefinition(turnoutDefinition)
+            return
+        }
+        // check for different contents; if so, replace
+        for element in turnoutDefinitionSet {
+            if element == turnoutDefinition {
+                // this is the element - compare the event IDs
+                if element.closedEventID != turnoutDefinition.closedEventID || element.thrownEventID != turnoutDefinition.thrownEventID {
+                    replaceTurnoutDefinition(turnoutDefinition)
+                    return
+                }
+            }
         }
     }
     
-    /// Force a new definition to be stored, perhaps because it has different thrown/closed event IDs
-    public func replaceTurnoutDefinition(_ turnoutDefinition : TurnoutDefinition) {
+    /// Force a  definition to be stored, perhaps because it has different thrown/closed event IDs
+    private func replaceTurnoutDefinition(_ turnoutDefinition : TurnoutDefinition) {
         turnoutDefinitionSet.insert(turnoutDefinition)
         turnoutDefinitionArray = turnoutDefinitionSet.sorted()
+    }
+    
+    /// Delete specific definition(s)
+    public func deleteAtOffsets(_ offsets: IndexSet) {
+        turnoutDefinitionSet = Set<TurnoutDefinition>() // new empty set
+        
+        // array .remove(atOffsets: offsets) is not compiling without import SwiftUI
+        turnoutDefinitionArray.remove(atOffsets: offsets)
+        
+        turnoutDefinitionSet.formUnion(turnoutDefinitionArray)
     }
     
     /// Make sure a layout macro is set
