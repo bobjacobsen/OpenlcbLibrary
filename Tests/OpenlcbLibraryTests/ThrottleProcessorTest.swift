@@ -51,14 +51,16 @@ final class ThrottleProcessorTest: XCTestCase {
         
         let put = ThrottleProcessor(nil, model: model)
         
+        model.speedSettings = SpeedAndDirection(10.0, false, true)
+        
         // 0 mps test
         let replyMsg0 = Message(mti:.Traction_Control_Reply, source: NodeID(10), destination: NodeID(1), data: [0x10, 0x00, 0x00, 0x00, 0x80, 0x00, 0xFF, 0xFF]) // speed reply
         
         _ = put.process(replyMsg0, node1)
         
-        expectToEventually(model.speed == 0.0)
-        XCTAssertTrue(model.forward)
-        XCTAssertFalse(model.reverse)
+        expectToEventually(model.speedSettings.speed == 0.0)
+        XCTAssertTrue(model.speedSettings.forward)
+        XCTAssertFalse(model.speedSettings.reverse)
     }
     
     func testSpeedReply100() {
@@ -72,9 +74,9 @@ final class ThrottleProcessorTest: XCTestCase {
         
         _ = put.process(replyMsg100, node1)
         
-        expectToEventually(model.speed == 100.0)
-        XCTAssertTrue(model.forward)
-        XCTAssertFalse(model.reverse)
+        expectToEventually(model.speedSettings.speed == 100.0)
+        XCTAssertTrue(model.speedSettings.forward)
+        XCTAssertFalse(model.speedSettings.reverse)
         
         }
     
@@ -89,9 +91,9 @@ final class ThrottleProcessorTest: XCTestCase {
 
         _ = put.process(replyMsg50, node1)
 
-        expectToEventually(model.speed == 50.0)
-        XCTAssertTrue(model.forward)
-        XCTAssertFalse(model.reverse)
+        expectToEventually(model.speedSettings.speed == 50.0)
+        XCTAssertTrue(model.speedSettings.forward)
+        XCTAssertFalse(model.speedSettings.reverse)
         
     }
     
@@ -106,9 +108,9 @@ final class ThrottleProcessorTest: XCTestCase {
         
         _ = put.process(replyMsgR0, node1)
         
-        expectToEventually(model.speed == 0.0)
-        expectToEventually(model.reverse)
-        XCTAssertFalse(model.forward)
+        expectToEventually(model.speedSettings.speed == 0.0)
+        expectToEventually(model.speedSettings.reverse)
+        XCTAssertFalse(model.speedSettings.forward)
 
     }
 

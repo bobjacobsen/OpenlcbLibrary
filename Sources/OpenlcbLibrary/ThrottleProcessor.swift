@@ -43,22 +43,25 @@ struct ThrottleProcessor : Processor {
             nextReverse = true
         }
         
-        // remember the current speed
-        let currentMph = model.speed
+        // remember the current speed settings
+        let currentSettings = model.speedSettings
         
         // wait a bit, then update if the current conditions have not changed.
         // this is done to damp down race condition between multiple throttles.
         let deadlineTime = DispatchTime.now() + .milliseconds(100)
         DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
-            if model.speed == currentMph {
+            
+            if model.speedSettings == currentSettings {
                 // objective conditions have not changed, do the update
-                model.speed = nextMphSpeed
-                model.forward = nextForward
-                model.reverse = nextReverse
+                let newSettings = SpeedAndDirection(nextMphSpeed, nextForward, nextReverse)
+                model.lastSpeedSettings = newSettings // no differene, no message send
+                model.speedSettings = newSettings
             } else {
                 ThrottleProcessor.logger.trace("skipping speed update as model.speed has changed")
             }
         }
+        
+        
     }
     
     /// Received a function update message from command station, update appropriate function value

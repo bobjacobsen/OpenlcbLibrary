@@ -18,22 +18,19 @@ final public class ThrottleModel : ObservableObject {
     var linkLayer : LinkLayer?
     var openlcbNetwork : OpenlcbNetwork?
     
-    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
-    
-    /// Speed here is in meters/second.  Views that work in MPH need to do the conversion before
-    /// changing `speed` here
-    @Published public var speed : Float = 0.0 {
-        willSet(speed) {
-            sendSetSpeed(to: speed)
+    static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ThrottleModel")
+        
+    // We publish this as a struct so that we can simultaneously
+    // send updates for speed/forward/reverse by replacing the struct value
+    @Published public var speedSettings : SpeedAndDirection = SpeedAndDirection(0.0, false, false) {
+        willSet(speedSettings) {
+            ThrottleModel.logger.debug("willSet \(speedSettings))")
+            sendSetSpeed(to: speedSettings)
         }
     }
     
-    // keep track of the last one you sent to not repeat yourself
-    var lastSentMphSpeed : Float = 0.0
-    
-    // We have separate forward and false to represent the initial case where it's not known what the status is
-    @Published public var forward = true
-    @Published public var reverse = false
+    // keep track of last settings to check for size of changes
+    var lastSpeedSettings : SpeedAndDirection = SpeedAndDirection(0.0, false, false)
     
     // MARK: Operations methods
     
@@ -43,25 +40,28 @@ final public class ThrottleModel : ObservableObject {
     
     /// Send the current speed in mph to the command station.
     /// Speed here is in MPH, and conversion to meters/sec is done here
-    public func sendSetSpeed(to mphSpeed: Float) {
+    public func sendSetSpeed(to newSpeedSetting : SpeedAndDirection) {
         if tc_state != .Selected {
             // nothing selected to send the speed to
             return
         }
         
-        if abs(mphSpeed - lastSentMphSpeed) < 0.5 {
-            return // don't send duplicates
+        ThrottleModel.logger.debug("compared to \(self.lastSpeedSettings))")
+        if newSpeedSetting == lastSpeedSettings { // comparison has an acceptance band on speed
+            return // don't send if unchanged
         }
-        lastSentMphSpeed = mphSpeed
         
-        let bytes = encodeSpeed(to: round(mphSpeed))
+        lastSpeedSettings = newSpeedSetting
         
+        let bytes = encodeSpeed(to: round(newSpeedSetting.speed), reverse: newSpeedSetting.reverse)
+        
+        ThrottleModel.logger.debug("sendSetSpeed")
         let message = Message(mti: .Traction_Control_Command, source: linkLayer!.localNodeID, destination: selected_nodeId,
                               data: [0x00, bytes[1], bytes[0]])
         linkLayer?.sendMessage(message)
     }
     
-    func encodeSpeed(to mphSpeed : Float) -> ([UInt8]){
+    func encodeSpeed(to mphSpeed : Float, reverse : Bool) -> ([UInt8]){
         let mpsSpeed = mphSpeed * ThrottleModel.mps_per_MPH
         let signedSpeed = reverse ? -1.0 * mpsSpeed : mpsSpeed
         let bytes = floatToFloat16(signedSpeed)
@@ -70,7 +70,7 @@ final public class ThrottleModel : ObservableObject {
     
     public let maxFn = 28
     @Published public var fnModels : [FnModel] = []
-
+    
     public init(_ linkLayer : CanLink?) {
         self.linkLayer = linkLayer
         
@@ -99,18 +99,18 @@ final public class ThrottleModel : ObservableObject {
             }
         }
         @Published public var momentary : Bool = false
-
+        
         public init(number : Int, label : String, model : ThrottleModel) {
             self.number = number
             self.label = label
             self.model = model
         }
     }
-
+    
     // MARK: Roster support
     
     @Published public var roster : [RosterEntry] = [RosterEntry(label: "<None>", nodeID: NodeID(0), labelSource: .Initial)]
- 
+    
     /// Get the name of a roster entry from its NodeID
     public func getRosterEntryName(from : NodeID) -> String {
         for entry in roster {
@@ -120,7 +120,7 @@ final public class ThrottleModel : ObservableObject {
         }
         return from.description
     }
-
+    
     /// Get the roster entry NodeID from its label name
     public func getRosterEntryNodeID(from : String) -> NodeID {
         for entry in roster {
@@ -131,7 +131,7 @@ final public class ThrottleModel : ObservableObject {
         ThrottleModel.logger.error("getRosterEntryNodeID asked for \"\(from, privacy:.public)\" which didn't match")
         return NodeID(0)
     }
-
+    
     /// Add a roster entry to the roster.  Prevents duplication by, if needed, updating
     /// an existing entry that's not as current
     public func addToRoster(item : RosterEntry) {
@@ -158,7 +158,7 @@ final public class ThrottleModel : ObservableObject {
                 let newEntry = self.createRosterEntryFromNodeID(for: self.roster[index].nodeID)
                 // remake if label quality has improved or name changed
                 if newEntry.labelSource.rawValue > self.roster[index].labelSource.rawValue
-                            || ( newEntry.labelSource.rawValue == self.roster[index].labelSource.rawValue && newEntry.label != self.roster[index].label) {
+                    || ( newEntry.labelSource.rawValue == self.roster[index].labelSource.rawValue && newEntry.label != self.roster[index].label) {
                     ThrottleModel.logger.trace("   Updating roster entry due to new label: \(newEntry.label)")
                     self.roster[index].label = newEntry.label
                     self.roster[index].labelSource = newEntry.labelSource
@@ -180,7 +180,7 @@ final public class ThrottleModel : ObservableObject {
             shift += 1
             binaryInput /= 10;
         }
-
+        
         // shift result into position and add unused indicators
         while (bcdResult >> 20 ) & 0xF == 0 { // shift to have MSNibble in position
             bcdResult = ( bcdResult << 4) | 0xF
@@ -196,9 +196,9 @@ final public class ThrottleModel : ObservableObject {
     // works with ThrottleProcessor to execute a state machine
     public func startSelection(address : UInt64, forceLongAddr : Bool = false) {
         // we no longer zero speed, reset functions in current locomotive so as to allow sharing
-
+        
         tearDownMonitorConsist()
-
+        
         // start search for requested number
         tc_state = .Wait_on_TC_Search_reply
         let shortLongLabel : String = forceLongAddr ? "L" : (address > 127 ? "L" : "S")
@@ -212,7 +212,7 @@ final public class ThrottleModel : ObservableObject {
     /// Start the locomotive selection process from a specific RosterEntry.
     public func startSelection(entry: RosterEntry) {
         // we no longer zero speed, reset functions in current locomotive so as to allow sharing
-
+        
         tearDownMonitorConsist()
         
         // selection has actual node ID, go straight to sending Assign
@@ -232,7 +232,7 @@ final public class ThrottleModel : ObservableObject {
         // start the read of the FDI
         fdiModel = FdiModel(mservice: openlcbNetwork!.mservice, nodeID: entry.nodeID, throttleModel: self)
         fdiModel!.readModel(nodeID: entry.nodeID)
-
+        
     }
     
     /// Add this throttle node to a consist to the being-selected loco
@@ -266,9 +266,8 @@ final public class ThrottleModel : ObservableObject {
     /// Set speed to 0 Forward and turn off all functions.
     /// This will trigger updates to the command station as needed.
     internal func resetSpeedAndFunctions() {
-        speed = 0
-        forward = true
-        reverse = false
+        speedSettings = SpeedAndDirection(0.0, true, false)
+
         for fn in fnModels {
             fn.pressed = false
         }
@@ -313,7 +312,7 @@ final public class ThrottleModel : ObservableObject {
     @Published public var selected : Bool = false
     /// When `selected` is true, this carries the user-friendly-name of the selected locomotive
     @Published public var selectedLoco : String = "Select"  // "Select" goes with !selected
-
+    
     /// Is the selection view showing?  This is set true
     /// when a View presents the selection sheet, and
     /// reset to false when selection succeeds.
@@ -334,7 +333,32 @@ final public class ThrottleModel : ObservableObject {
                               data: [0x01, 0x00, 0x00, UInt8(function), 0x00, to ? 0x01 : 0x00])
         linkLayer!.sendMessage(message)
     }
+    
 } // end of ThrottleModel class
+
+public struct SpeedAndDirection : Equatable, CustomStringConvertible {
+    public var speed : Float
+    // We have separate forward and false to represent the initial case where it's not known what the status is
+    public var forward : Bool
+    public var reverse : Bool
+    
+    public init(_ speed: Float, _ forward: Bool = false, _ reverse: Bool = false) {
+        self.speed = speed
+        self.forward = forward
+        self.reverse = reverse
+    }
+    
+    public static func == (lhs: SpeedAndDirection, rhs: SpeedAndDirection) -> Bool {
+        ThrottleModel.logger.debug("SpeedAndDirection: comparing \(lhs) and \(rhs)")
+        if lhs.forward != rhs.forward { return false}
+        if lhs.reverse != rhs.reverse { return false}
+        return abs(lhs.speed - rhs.speed) < 0.5
+    }
+    
+    public var description: String {
+        return "(\(speed), \(forward), \(reverse))"
+    }
+}
 
 /// The selection state during a locomotive selection.
 internal enum TC_Selection_State {
