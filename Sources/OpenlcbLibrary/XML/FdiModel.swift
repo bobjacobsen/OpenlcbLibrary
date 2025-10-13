@@ -38,6 +38,7 @@ public class FdiModel : XmlModel, ObservableObject {
         tree = processedData[0].children! // index due to null base node
         
         // Copy the FDI definitions into the function model items, overwriting standard content
+        if tree.isEmpty { return }  // in case reading FDI failed, don't crash app
         let segment = tree[0]
         if let group = segment.children?[0] {
             // find the individual function elements
