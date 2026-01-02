@@ -36,8 +36,8 @@ final public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { 
     
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
         
-    let dservice : DatagramService
-    public let mservice : MemoryService // needed for `CdCdiView`
+    public let dservice : DatagramService // needed for `UpdateFirmwareModel`
+    public let mservice : MemoryService // needed for `CdCdiView`, `UpdateFirmwareModel`
 
     /// Initialize a basic system
     /// - Parameter defaultNodeID: NodeiID for this program

@@ -91,7 +91,7 @@ class DatagramServiceTest: XCTestCase {
     }
 
     var callback = false
-    func writeCallBackCheck(_ : DatagramService.DatagramWriteMemo) -> () {
+    func writeCallBackCheck(_ : DatagramService.DatagramWriteMemo, _ : Int) -> () {
         callback = true
     }
     
@@ -107,15 +107,19 @@ class DatagramServiceTest: XCTestCase {
         _ = service.process(message, Node(NodeID(21)))
         // was callback called?
         XCTAssertTrue(callback)
+
+        // no further messages sent to link
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
+
     }
 
-    func testSendThreeDatagramOK() {
+    func testSendThreeDatagramAtOnceOK() {
         let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], okReply: writeCallBackCheck)
         
         service.sendDatagram(writeMemo)
         service.sendDatagram(writeMemo)
         service.sendDatagram(writeMemo)
-
+        
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // only first is send until reply
         
         // send a reply back through
@@ -140,11 +144,52 @@ class DatagramServiceTest: XCTestCase {
         // was callback called?
         XCTAssertTrue(callback)
         callback = false
-
+        
         // that should be it
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 3)
     }
 
+    func writeCallBackSendAgain(_ : DatagramService.DatagramWriteMemo, _ : Int) -> () {
+        callback = true
+
+        let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], okReply: writeCallBackSendAgain)
+        service.sendDatagram(writeMemo)
+    }
+
+    func testSendThreeDatagramSequentialOK() {
+        let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], okReply: writeCallBackSendAgain)
+        
+        service.sendDatagram(writeMemo)
+        
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // only first is send until reply
+        
+        // send a reply back through
+        let message = Message(mti: .Datagram_Received_OK, source: NodeID(22), destination: NodeID(12))
+        _ = service.process(message, Node(NodeID(21)))
+        // was callback called?
+        XCTAssertTrue(callback)
+        callback = false
+        
+        // one more should have been sent
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 2)
+        // send a reply back through
+        _ = service.process(message, Node(NodeID(21)))
+        // was callback called?
+        XCTAssertTrue(callback)
+        callback = false
+        
+        // one more should have been sent
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 3)
+        // send a reply back through
+        _ = service.process(message, Node(NodeID(21)))
+        // was callback called?
+        XCTAssertTrue(callback)
+        callback = false
+        
+        // should have sent one more
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 4)
+    }
+    
     func testSendDatagramRejected() {
         let writeMemo = DatagramService.DatagramWriteMemo(destID: NodeID(22), data: [0x20, 0x42, 0x30], rejectedReply: writeCallBackCheck)
         
@@ -153,10 +198,12 @@ class DatagramServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         
         // send a reply back through
-        let message = Message(mti: .Datagram_Rejected, source: NodeID(22), destination: NodeID(12))
+        let message = Message(mti: .Datagram_Rejected, source: NodeID(22), destination: NodeID(12), data: [0x80, 0x20])
         _ = service.process(message, Node(NodeID(21)))
         // was callback called?
         XCTAssertTrue(callback)
+
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
     }
 
     func testReceiveDatagramOK() {

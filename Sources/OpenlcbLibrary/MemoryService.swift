@@ -102,22 +102,60 @@ final public class MemoryService {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
         data.append(contentsOf: [memo.size])
-        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToWrite, rejectedReply: receivedNotOKReplyToWrite)
+        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToMemReadDg, rejectedReply: receivedNotOKReplyToMemReadDg)
         service.sendDatagram(dgWriteMemo)
     }
     
-    internal func receivedOkReplyToWrite(memo : DatagramService.DatagramWriteMemo) {
-        // this is normal.  Wait for following response to be returned via listener
-    }
-    
-    internal func receivedNotOKReplyToWrite(memo : DatagramService.DatagramWriteMemo) {
+    internal func receivedNotOKReplyToMemReadDg(dmemo : DatagramService.DatagramWriteMemo, flags : Int) {
         // not normal, have to handle this
-        MemoryService.logger.error("Received NAK reply to datagram write: \(memo.description)")
+        MemoryService.logger.warning("Received NAK reply to mem read datagram: \(dmemo.description)")
         
-        // first approximation: send again and again
-        service.sendDatagram(memo)
+        // invoke rejected reply
+        
+    }
+
+    internal func receivedOkReplyToMemReadDg(dmemo : DatagramService.DatagramWriteMemo, flags: Int) {
+        MemoryService.logger.debug("Received OK reply to mem read datagram write: \(dmemo.description)")
+        // check the high bit of the flags to see if this is the only reply, or something will come later
+        if flags & 0x80 == 0 {
+            // no reply datagram will follow, so process end of memory request
+            MemoryService.logger.error("Memory Read operation rejected, not able to continue")
+        }
+    }
+
+    internal func receivedNotOKReplyToWriteDg(dmemo : DatagramService.DatagramWriteMemo, flags : Int) {
+        // not normal, have to handle this
+        MemoryService.logger.error("Received NAK reply to mem write datagram: \(dmemo.description)")
+        
+        // invoke rejected reply
+        memoryWriteOperationComplete(srcID: dmemo.destID, flag1: 0x08)  // flags fixed at failure
+    }
+
+    internal func receivedOkReplyToMemWriteDg(dmemo : DatagramService.DatagramWriteMemo, flags: Int) {
+        MemoryService.logger.debug("Received OK reply to mem write datagram write: \(dmemo.description)")
+        // check the high bit of the flags to see if this is the only reply, or something will come later
+        if flags & 0x80 == 0 {
+            // no reply datagram will follow, so process end of memory request
+            memoryWriteOperationComplete(srcID: dmemo.destID, flag1: 0)  // flags fixed at success
+        } // otherwise do nothing until the reply datagram arrives
     }
     
+    internal func memoryWriteOperationComplete(srcID: NodeID, flag1: Int) {
+        // return data to requestor: first find matching memory write memo, then reply
+        for index in 0..<writeMemos.count {
+            if writeMemos[index].nodeID == srcID {
+                let tMemoryMemo = writeMemos[index]
+                writeMemos.remove(at: index)
+                if (flag1 & 0x08 == 0) {
+                    tMemoryMemo.okReply?(tMemoryMemo)
+                } else {
+                    tMemoryMemo.rejectedReply?(tMemoryMemo)
+                }
+                break
+            }
+        }
+    }
+
     // process a datagram.  Sends the positive reply and returns true iff this is from our service.
     internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) -> Bool {
         // node received a datagram, is it our service?
@@ -169,19 +207,10 @@ final public class MemoryService {
         case 0x10, 0x11, 0x12, 0x13, 0x18, 0x19, 0x1A, 0x1B : // write reply good, bad
             // Acknowledge the datagram
             service.positiveReplyToDatagram(dmemo, flags: 0x0000)
-            // return data to requestor: first find matching memory write memo, then reply
-            for index in 0..<writeMemos.count {
-                if writeMemos[index].nodeID == dmemo.srcID {
-                    let tMemoryMemo = writeMemos[index]
-                    writeMemos.remove(at: index)
-                    if (dmemo.data[1] & 0x08 == 0) {
-                        tMemoryMemo.okReply?(tMemoryMemo)
-                    } else {
-                        tMemoryMemo.rejectedReply?(tMemoryMemo)
-                    }
-                    break
-                }
-            }
+            
+            // write complete, handle
+            memoryWriteOperationComplete(srcID: dmemo.srcID, flag1: (Int) (dmemo.data[1]))
+            
         case 0x86, 0x87 : // Address Space Information Reply
             // Acknowledge the datagram
             service.positiveReplyToDatagram(dmemo, flags: 0x0000)
@@ -245,7 +274,7 @@ final public class MemoryService {
             data.append(contentsOf: [UInt8(memo.space & 0xFF)])
         }
         data.append(contentsOf: memo.data)
-        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data)
+        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToMemWriteDg, rejectedReply: receivedNotOKReplyToWriteDg)
         service.sendDatagram(dgWriteMemo)
 
     }
@@ -263,7 +292,19 @@ final public class MemoryService {
         let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [DatagramService.ProtocolID.MemoryOperation.rawValue, 0x84, space])
         service.sendDatagram(dgReqMemo)
     }
-    
+   
+    public func sendFreeze(nodeID : NodeID, space: UInt8) {
+        // send request with no wait for reply
+        let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [DatagramService.ProtocolID.MemoryOperation.rawValue, 0xA1, space])
+        service.sendDatagram(dgReqMemo)
+    }
+
+    public func sendUnFreeze(nodeID : NodeID, space: UInt8) {
+        // send request with no wait for reply
+        let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [DatagramService.ProtocolID.MemoryOperation.rawValue, 0xA0, space])
+        service.sendDatagram(dgReqMemo)
+    }
+
     internal func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {
         var result = 0
         for index in 0...Int(length-1) {

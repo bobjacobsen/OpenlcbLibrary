@@ -61,7 +61,7 @@ class MemoryServiceTest: XCTestCase {
         
     }
     
-    func testSingleWrite() throws {
+    func testSingleWriteReply() throws {
         let memMemo = MemoryService.MemoryWriteMemo(nodeID: NodeID(123),
                                                     okReply: callbackW, rejectedReply: callbackW,
                                                     size: 64, space: 0xFD, address: 0,
@@ -70,17 +70,33 @@ class MemoryServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
         
         // have to reply through DatagramService
-        _ = dService.process(Message(mti:.Datagram_Received_OK, source: NodeID(123), destination: NodeID(12)), node12)
+        _ = dService.process(Message(mti:.Datagram_Received_OK, source: NodeID(123), destination: NodeID(12), data:[0x80]), node12)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x20, 0x01, 0,0,0,0, 1,2,3])
-        XCTAssertEqual(returnedMemoryWriteMemo.count, 0) // no memory write op returned
+        XCTAssertEqual(returnedMemoryWriteMemo.count, 0) // no memory write op returned, waiting for reply datagram
         
         _ = dService.process(Message(mti:.Datagram, source: NodeID(123), destination: NodeID(12), data:  [0x20, 0x11, 0,0,0,0]), node12)
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 2) // write reply datagram reply sent
         XCTAssertEqual(returnedMemoryWriteMemo.count, 1) // memory write returned
         
     }
-    
+ 
+    func testSingleWriteNoReply() throws {
+        let memMemo = MemoryService.MemoryWriteMemo(nodeID: NodeID(123),
+                                                    okReply: callbackW, rejectedReply: callbackW,
+                                                    size: 64, space: 0xFD, address: 0,
+                                                    data: [1,2,3])
+        mService.requestMemoryWrite(memMemo)
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
+        
+        // datagram OK reply says no following message
+        _ = dService.process(Message(mti:.Datagram_Received_OK, source: NodeID(123), destination: NodeID(12), data:[0x00]), node12)
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x20, 0x01, 0,0,0,0, 1,2,3])
+        XCTAssertEqual(returnedMemoryWriteMemo.count, 1) // memory write op returns immediately
+        
+    }
+
     func testMultipleRead() throws {
 
         // make three requests, only one of which should go forward at a time
