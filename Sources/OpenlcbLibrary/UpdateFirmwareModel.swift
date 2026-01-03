@@ -8,6 +8,7 @@
 import Foundation
 import os
 
+@MainActor
 final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable { // shoulc change to Actor to remove @unchecked Sendable
     
 
@@ -16,7 +17,7 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
     @Published public internal(set) var transferring = false
     @Published public internal(set) var status = ""
     @Published public internal(set) var nextWriteAddress = 0
-    
+
     var firmwareContent : NSData
     var canceled : Bool = false
 
@@ -27,8 +28,8 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
 
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "UpdateFirmwareModel")
 
-    public init (firmwareContent: NSData, mservice : MemoryService, dservice : DatagramService, nodeID : NodeID) {
-        self.firmwareContent = firmwareContent
+    public init (mservice : MemoryService, dservice : DatagramService, nodeID : NodeID) {
+        self.firmwareContent = NSData()
         self.mservice = mservice
         self.dservice = dservice
         self.nodeID = nodeID
@@ -49,7 +50,7 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
         // send the Freeze datagram to the node
         mservice.sendFreeze(nodeID: nodeID, space: space)
         // wait for init complete from the node, then start
-        // better would have been to trigger on datagram reply or Initialization complete,
+        // better would have been to trigger on datagram reply or Initialization Complete,
         // but some nodes are not really ready to go on InitCompl
         DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
             UpdateFirmwareModel.logger.debug("startUpdate timer expires")
@@ -59,7 +60,7 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
     
     public func cancel() {
         canceled = true
-        status = "Cancelled"
+        status = "Update Cancelled"
         mservice.sendUnFreeze(nodeID: nodeID, space: space)
     }
     
@@ -70,23 +71,25 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
     }
     
     fileprivate func sendNext() {
-        UpdateFirmwareModel.logger.debug("sendNext")
-        if canceled || !transferring {
-            transferring = false
-            return
+        DispatchQueue.main.async { [self] in
+            UpdateFirmwareModel.logger.debug("sendNext")
+            if canceled || !transferring {
+                transferring = false
+                return
+            }
+            
+            // create and send the next data chunk
+            let length = min(64, writeLength-nextWriteAddress)
+            
+            
+            let package = self.firmwareContent[nextWriteAddress..<nextWriteAddress+length]
+            let byteArray = [UInt8](Data(package))
+            
+            let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: dataReplyCallback, rejectedReply: rejectedReplyCallback, size: UInt8(length), space: UInt8(space), address: nextWriteAddress, data: byteArray)
+            mservice.requestMemoryWrite(memMemo)
+            
+            nextWriteAddress = nextWriteAddress+length
         }
-        
-       // create and send the next data chunk
-        let length = min(64, writeLength-nextWriteAddress)
-        
-        
-        let package = firmwareContent[nextWriteAddress..<nextWriteAddress+length]
-        let byteArray = [UInt8](Data(package))
-        
-        let memMemo = MemoryService.MemoryWriteMemo(nodeID: nodeID, okReply: dataReplyCallback, rejectedReply: rejectedReplyCallback, size: UInt8(length), space: UInt8(space), address: nextWriteAddress, data: byteArray)
-       mservice.requestMemoryWrite(memMemo)
-
-        nextWriteAddress = nextWriteAddress+length
     }
 
     fileprivate func rejectedReplyCallback(memo : MemoryService.MemoryWriteMemo) {
@@ -98,7 +101,12 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
 
     fileprivate func dataReplyCallback(memo : MemoryService.MemoryWriteMemo) {
         UpdateFirmwareModel.logger.debug("dataReplyCallback")
-        if nextWriteAddress < writeLength {
+        if canceled {
+            // done early
+            mservice.sendUnFreeze(nodeID: nodeID, space: space)
+            transferring = false
+            status = "Update Cancelled"
+        } else if nextWriteAddress < writeLength {
             sendNext()
         } else {
             // we're done!
