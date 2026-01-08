@@ -55,8 +55,8 @@ import Foundation
     case Stream_Initiate_Request            = 0x0CC8
     case Stream_Initiate_Reply              = 0x0868
     case Stream_Data_Send                   = 0x1F88
-    case Stream_Data_Reply                  = 0x0888
-    case Stream_Data_Control                = 0x08A8
+    case Stream_Data_Proceed                = 0x0888
+    case Stream_Data_Complete               = 0x08A8
     
     case Unknown                            = 0x0000
     

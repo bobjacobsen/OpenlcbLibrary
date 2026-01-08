@@ -39,10 +39,10 @@ public struct PrintingProcessor : Processor {
                 .Traction_Control_Command,
                 .Traction_Control_Reply,
                 .Stream_Data_Send,
-                .Stream_Data_Reply,
+                .Stream_Data_Proceed,
                 .Stream_Initiate_Request,
                 .Stream_Initiate_Reply,
-                .Stream_Data_Control:
+                .Stream_Data_Complete:
             simpleAddressedMessage(message, node, dataString)
             
         case    .Initialization_Complete,
