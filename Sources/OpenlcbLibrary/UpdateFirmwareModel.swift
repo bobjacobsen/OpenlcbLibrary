@@ -25,6 +25,8 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
     let nodeID : NodeID
     let mservice : MemoryService
     let dservice : DatagramService
+    
+    let INIT_DELAY_SECONDS = 7.0
 
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "UpdateFirmwareModel")
 
@@ -52,7 +54,7 @@ final public class UpdateFirmwareModel : ObservableObject, @unchecked Sendable {
         // wait for init complete from the node, then start
         // better would have been to trigger on datagram reply or Initialization Complete,
         // but some nodes are not really ready to go on InitCompl
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + INIT_DELAY_SECONDS) {
             UpdateFirmwareModel.logger.debug("startUpdate timer expires")
             self.startDataTransfer()
         }
