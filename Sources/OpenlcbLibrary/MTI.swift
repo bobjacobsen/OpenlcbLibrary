@@ -52,6 +52,12 @@ import Foundation
     case Datagram_Received_OK               = 0x0A28
     case Datagram_Rejected                  = 0x0A48
     
+    case Stream_Initiate_Request            = 0x0CC8
+    case Stream_Initiate_Reply              = 0x0868
+    case Stream_Data_Send                   = 0x1F88
+    case Stream_Data_Reply                  = 0x0888
+    case Stream_Data_Control                = 0x08A8
+    
     case Unknown                            = 0x0000
     
     // these are used for internal signaling and are not present in the MTI specification.

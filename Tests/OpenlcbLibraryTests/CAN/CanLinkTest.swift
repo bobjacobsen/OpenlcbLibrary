@@ -23,12 +23,12 @@ class CanLinkTest: XCTestCase {
         var receivedMessages : [Message] = []
         func receiveMessage(_ msg : Message) { receivedMessages.append(msg) }
     }
-  
+    
     class PhyMockLayer : CanPhysicalLayer {
         var receivedFrames : [CanFrame] = []
         override func sendCanFrame(_ frame : CanFrame) { receivedFrames.append(frame) }
     }
-
+    
     // MARK: - Alias calculations
     func testIncrementAlias48() {
         // check precision of calculation
@@ -56,7 +56,7 @@ class CanLinkTest: XCTestCase {
         next = CanLink.incrementAlias48(next);
         XCTAssertEqual(next, 0xE5_82_F9_B4_AE_4D)
     }
-
+    
     func testCreateAlias12() {
         // check precision of calculation
         XCTAssertEqual(CanLink.createAlias12(0x001), 0x001, "0x001 input")
@@ -130,7 +130,7 @@ class CanLinkTest: XCTestCase {
     func testAMEnoDataInhibited() {
         // Receive an AME in Inhibited state without a NodeID
         // Test that no response is sent.
-       let canPhysicalLayer = CanPhysicalLayerSimulation()
+        let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
         canLink.state = CanLink.State.Inhibited
@@ -398,7 +398,7 @@ class CanLinkTest: XCTestCase {
         amd = CanFrame(control: 0x0701, alias: 0x123)
         amd.data = [6,5,4,3,2,1]
         canPhysicalLayer.fireListeners(amd)
-
+        
         var frame = CanFrame(control: 0x1A123, alias: 0x247) // single frame datagram
         frame.data = [10, 11, 12, 13]
         canPhysicalLayer.fireListeners(frame) // from previously seen alias
@@ -417,7 +417,7 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages[1].data[2], 12)
         XCTAssertEqual(messageLayer.receivedMessages[1].data[3], 13)
     }
-
+    
     func testThreeFrameDatagram() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
@@ -434,7 +434,7 @@ class CanLinkTest: XCTestCase {
         amd = CanFrame(control: 0x0701, alias: 0x123)
         amd.data = [6,5,4,3,2,1]
         canPhysicalLayer.fireListeners(amd)
-
+        
         var frame = CanFrame(control: 0x1B123, alias: 0x247) // single frame datagram
         frame.data = [10, 11, 12, 13]
         canPhysicalLayer.fireListeners(frame) // from previously seen alias
@@ -444,7 +444,7 @@ class CanLinkTest: XCTestCase {
         frame = CanFrame(control: 0x1D123, alias: 0x247) // single frame datagram
         frame.data = [30, 31, 32, 33]
         canPhysicalLayer.fireListeners(frame) // from previously seen alias
-
+        
         XCTAssertEqual(messageLayer.receivedMessages.count, 2) // startup plus one message forwarded
         // check for proper global MTI
         XCTAssertEqual(messageLayer.receivedMessages[1].mti,
@@ -472,21 +472,21 @@ class CanLinkTest: XCTestCase {
         let canPhysicalLayer = PhyMockLayer()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
-
+        
         // map alias we'll use
         var amd = CanFrame(control: 0x0701, alias: 0x247)
         amd.data = [05,01,01,01,03,01]
         canPhysicalLayer.fireListeners(amd)
-
+        
         let message = Message(mti: .Datagram, source: NodeID("05.01.01.01.03.01"), destination: NodeID("05.01.01.01.03.01"))
         
         canLink.sendMessage(message)
         
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].description, "CanFrame header: 0x1A247247 ) []")
-
+        
     }
-
+    
     func testThreeFrameEWP() {
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
@@ -544,7 +544,40 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages[1].data[18], 32)
         XCTAssertEqual(messageLayer.receivedMessages[1].data[19], 33)
     }
-
+    
+    func testStreamFrame() { // Test single stream frame
+        let canPhysicalLayer = CanPhysicalLayerSimulation()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+        canLink.linkPhysicalLayer(canPhysicalLayer)
+        let messageLayer = MessageMockLayer()
+        canLink.registerMessageReceivedListener(messageLayer.receiveMessage)
+        
+        canPhysicalLayer.physicalLayerUp()
+        
+        // map an alias we'll use
+        var amd = CanFrame(control: 0x0701, alias: 0x247)
+        amd.data = [01,02,03,04,05,06]
+        canPhysicalLayer.fireListeners(amd)
+        
+        let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
+        var frame = CanFrame(control: 0x1F000 | Int(ourAlias), alias: 0x247) // Verify Node ID Addressed
+        frame.data = [10, 11, 12, 13, 14, 15, 16, 17]
+        canPhysicalLayer.fireListeners(frame) // from previously seen alias
+        
+        XCTAssertEqual(messageLayer.receivedMessages.count, 2) // startup plus one message forwarded
+        // check for proper global MTI
+        XCTAssertEqual(messageLayer.receivedMessages[1].mti,
+                       MTI.Stream_Data_Send )
+        XCTAssertEqual(messageLayer.receivedMessages[1].source,
+                       NodeID(0x01_02_03_04_05_06))
+        XCTAssertEqual(messageLayer.receivedMessages[1].destination,
+                       NodeID(0x05_01_01_01_03_01))
+        XCTAssertEqual(messageLayer.receivedMessages[1].data.count, 8)
+        XCTAssertEqual(messageLayer.receivedMessages[1].data[0], 10)
+        XCTAssertEqual(messageLayer.receivedMessages[1].data[1], 11)
+        XCTAssertEqual(messageLayer.receivedMessages[1].data[7], 17)
+    }
+    
     // MARK: Test transmitting messages
     
     func testOneFrameDatagramXmt(){
@@ -582,18 +615,18 @@ class CanLinkTest: XCTestCase {
         // This will have queued the message. Should have sent an AME for the alias
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 1)
         XCTAssertEqual(canPhysicalLayer.receivedFrames[0].description, "CanFrame header: 0x10702240 ) [5, 1, 1, 1, 3, 2]")
-
+        
         // Now map the destination alias and expect the message to be sent
         amd = CanFrame(control: 0x0701, alias: 0x248)
         amd.data = [05,01,01,01,03,02]
         canPhysicalLayer.fireListeners(amd)
-
+        
         XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 2)
         XCTAssertEqual(canPhysicalLayer.receivedFrames[1].description, "CanFrame header: 0x1A248247 ) [1, 2, 3, 4, 5, 6, 7, 8]")
         
     }
     
-
+    
     func testTwoFrameDatagramXmt(){
         let canPhysicalLayer = PhyMockLayer()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
@@ -603,7 +636,7 @@ class CanLinkTest: XCTestCase {
         var amd = CanFrame(control: 0x0701, alias: 0x247)
         amd.data = [05,01,01,01,03,01]
         canPhysicalLayer.fireListeners(amd)
-
+        
         let message = Message(mti: .Datagram, source: NodeID("05.01.01.01.03.01"), destination: NodeID("05.01.01.01.03.01"), data: [1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15,16])
         
         canLink.sendMessage(message)
@@ -617,12 +650,12 @@ class CanLinkTest: XCTestCase {
         let canPhysicalLayer = PhyMockLayer()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
-
+        
         // map alias we'll use
         var amd = CanFrame(control: 0x0701, alias: 0x247)
         amd.data = [05,01,01,01,03,01]
         canPhysicalLayer.fireListeners(amd)
-
+        
         let message = Message(mti: .Datagram, source: NodeID("05.01.01.01.03.01"), destination: NodeID("05.01.01.01.03.01"), data: [1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15,16, 17,18,19])
         
         canLink.sendMessage(message)
@@ -633,6 +666,25 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canPhysicalLayer.receivedFrames[2].description, "CanFrame header: 0x1D247247 ) [17, 18, 19]")
     }
     
+    func testTwoFrameStreamXmt(){
+        let canPhysicalLayer = PhyMockLayer()
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+        canLink.linkPhysicalLayer(canPhysicalLayer)
+        
+        // map alias we'll use
+        var amd = CanFrame(control: 0x0701, alias: 0x247)
+        amd.data = [05,01,01,01,03,01]
+        canPhysicalLayer.fireListeners(amd)
+        
+        let message = Message(mti: .Stream_Data_Send, source: NodeID("05.01.01.01.03.01"), destination: NodeID("05.01.01.01.03.01"), data: [1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15,16])
+        
+        canLink.sendMessage(message)
+        
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 2)
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0].description, "CanFrame header: 0x1F247247 ) [1, 2, 3, 4, 5, 6, 7, 8]")
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[1].description, "CanFrame header: 0x1F247247 ) [9, 10, 11, 12, 13, 14, 15, 16]")
+    }
+
     // MARK: - Test Remote Node Alias Tracking
     
     func testAmdAmrSequence() {
@@ -708,4 +760,5 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canLink.segmentDatagramDataArray([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10, 0x11]),
                        [[0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8], [0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10], [0x11]])
     }
+    
 }

@@ -37,7 +37,12 @@ public struct PrintingProcessor : Processor {
                 .Remote_Button_Request,
                 .Remote_Button_Reply,
                 .Traction_Control_Command,
-                .Traction_Control_Reply :
+                .Traction_Control_Reply,
+                .Stream_Data_Send,
+                .Stream_Data_Reply,
+                .Stream_Initiate_Request,
+                .Stream_Initiate_Reply,
+                .Stream_Data_Control:
             simpleAddressedMessage(message, node, dataString)
             
         case    .Initialization_Complete,
@@ -75,13 +80,16 @@ public struct PrintingProcessor : Processor {
         return false
     }
     
+    private func mtiName(_ mti : MTI) -> String {
+        return mti.name.replacingOccurrences(of: "_", with: " ").capitalized
+    }
     private func simpleAddressedMessage(_ message : Message, _ node : Node, _ dataString : String) {
-        let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
+        let name = mtiName(message.mti)
         result("\(message.source): \(name) \(dataString) to \(message.destination ?? NodeID(0))")
     }
 
     private func simpleGlobalMessage(_ message : Message, _ node : Node, _ dataString : String) {
-        let name = message.mti.name.replacingOccurrences(of: "_", with: " ").capitalized
+        let name = mtiName(message.mti)
         result("\(message.source): \(name) \(dataString)")
     }
     
@@ -115,7 +123,7 @@ final public class MonitorModel: ObservableObject {
     
     /// Add a line
     public func addLine(line : MonitorLine) {
-        let NUMBER_OF_LINES = 100
+        let NUMBER_OF_LINES = 500
 
         printingProcessorContentArray.append(line)
 

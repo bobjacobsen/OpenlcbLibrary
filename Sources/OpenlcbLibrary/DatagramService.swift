@@ -123,7 +123,7 @@ final public class DatagramService : Processor {
         // Make a record of memo for reply
         pendingWriteMemos.append(memo)
         
-        // can only have one outstanding at a time, so check it there was already one there.
+        // can only have one outstanding at a time, so check it there was already one there, send if not
         if pendingWriteMemos.count == 1 {
             sendDatagramMessage(memo: memo)
         }

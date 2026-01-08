@@ -235,8 +235,19 @@ final public class CanLink : LinkLayer {
         // handle destination for addressed messages
         let dgCode = frame.header & 0x00F_000_000
         if (frame.header & 0x008_000 != 0 || (dgCode >= 0x00A_000_000 && dgCode <= 0x00F_000_000)) {  // Addressed bit is active 1
-            // decoder regular addressed message from Datagram
-            if (dgCode >= 0x00A_000_000 && dgCode <= 0x00F_000_000) {
+            // decode regular addressed message from Datagram
+            if dgCode == 0x00F_000_000  {
+                // stream - we forward each of these as a single message
+
+                if let mapped = aliasToNodeID[(frame.header&0xFFF_000) >> 12] {
+                    destID = mapped
+                }
+
+                let msg = Message(mti: mti, source: sourceID, destination: destID, data: frame.data)
+                fireListeners(msg)
+
+                
+            } else if (dgCode >= 0x00A_000_000 && dgCode <= 0x00F_000_000) {
                 // datagram case
 
                 let destAlias : UInt = (frame.header & 0x00_FFF_000 ) >> 12
@@ -385,8 +396,36 @@ final public class CanLink : LinkLayer {
     }
     
     public override func sendMessage(_ msg : Message) {
-        // special case for datagram
-        if msg.mti == .Datagram {
+        if msg.mti == .Stream_Data_Send {
+            // special case for stream data
+            // stream header is
+            //          1Fdddsss
+            var header = UInt(0x1F_000_000)
+            if let sssAlias = nodeIdToAlias[msg.source] { // might not know it if error
+                header |= (UInt(sssAlias) & 0xFFF)
+            } else {
+                CanLink.logger.error("Did not know source = \(msg.source, privacy: .public) on datagram send")
+            }
+            if let dddAlias = nodeIdToAlias[msg.destination!] { // might not know it if error
+                header |= (UInt(dddAlias) & 0xFFF) << 12
+            } else {
+                CanLink.logger.notice("Did not know destination = \(msg.source, privacy: .public) on datagram send, queued")
+                queuePendingMessage(msg.destination!, msg)
+                return
+            }
+            // possible multi-frame stream
+            let dataSegments = segmentDatagramDataArray(msg.data)
+            // send segments
+            for index in 0..<dataSegments.count {
+                var frame = CanFrame(header: header, data: dataSegments[index])
+                if let link = link {
+                    link.sendCanFrame( frame )
+                }
+            }
+
+        } else if msg.mti == .Datagram {
+            // special case for datagram
+            
             var header = UInt(0x10_000_000)
             // datagram headers are
             //          1Adddsss - one frame
@@ -610,8 +649,11 @@ final public class CanLink : LinkLayer {
         } else if (frameType >= 2 && 5 >= frameType) {
             // datagram type - we don't address the subtypes here
             return MTI.Datagram
+        } else if (frameType == 7) {
+            // stream type
+            return MTI.Stream_Data_Send
         } else {
-            // not handling reserver and stream type except to log
+            // not handling reserved type except to log
             CanLink.logger.error("unhandled canMTI: \(frame, privacy: .public), marked Unknown")
             return MTI.Unknown
         }
