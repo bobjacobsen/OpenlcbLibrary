@@ -30,7 +30,7 @@ final public class ClockModel : ObservableObject {
     }
     internal var calendar : Calendar
     
-    static let logger = Logger(subsystem: "us.ardenwood.OlcbLibDemo", category: "ClockModel")
+    static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "ClockModel")
     
     /// 'run' determines whetther the clock is running or not.  This is generally set from the
     ///  clock master.
