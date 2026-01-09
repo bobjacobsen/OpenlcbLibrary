@@ -414,10 +414,10 @@ final public class CanLink : LinkLayer {
                 return
             }
             // possible multi-frame stream
-            let dataSegments = segmentDatagramDataArray(msg.data)
+            let dataSegments = segmentStreamDataArray(msg.data)  // includes putting the [0] dest stream in all segments
             // send segments
             for index in 0..<dataSegments.count {
-                var frame = CanFrame(header: header, data: dataSegments[index])
+                let frame = CanFrame(header: header, data: dataSegments[index])
                 if let link = link {
                     link.sendCanFrame( frame )
                 }
@@ -536,7 +536,34 @@ final public class CanLink : LinkLayer {
         
         return retval
     }
-
+    
+    // segment data into zero or more arrays of no more than 7 bytes for stream, put [0] dest stream ID at front
+    final func segmentStreamDataArray(_ data : [UInt8]) ->[[UInt8]] {
+        let nSegments = (data.count+6) / 7 // the +6 is since integer division takes the floor value
+        if (nSegments == 0 ) {
+            return [[]]
+        }
+        if (nSegments == 1 ) {
+            return [data]
+        }
+        let destStream : UInt8 = data[0]
+        // multiple frames
+        var retval : [[UInt8]] = []
+        for i in 0..<nSegments-1 { // first entry of 2 has full data
+            var nextEntry = Array(data[i*7+1 ... i*7+1+6])
+            nextEntry.insert(destStream, at: 0)
+            retval.append(nextEntry)
+        }
+        // add the last if there is one
+        if 7*(nSegments-1)+1 < data.count {
+            var lastEntry = Array(data[7*(nSegments-1)+1 ... data.count-1])
+            lastEntry.insert(destStream, at: 0)
+            retval.append(lastEntry)
+        }
+                
+        return retval
+    }
+    
     // segment data into zero or more arrays of no more than 8 bytes, with the alias at the start of each, for addressed non-datagram messages
     final func segmentAddressedDataArray(_ alias : UInt, _ data : [UInt8]) ->[[UInt8]] {
         let part0 = UInt8( (alias >> 8) & 0xF)

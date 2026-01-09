@@ -95,16 +95,15 @@ final public class StreamService : Processor  {
     
     public func sendStreamData(with: StreamWriteUserMemo, contains: [UInt8]) {
     
-        var content : [UInt8] = Array(contains[0..<min(with.bufferSize-2, contains.count)])
+        var content : [UInt8] = Array(contains[0..<min(with.bufferSize-1, contains.count)])
         content.insert((UInt8)(with.destStreamNumber), at: 0)
-        content.insert((UInt8)(with.sourceStreamNumber), at: 1)
 
         guard let pendingMemo = findPendingMemo(from: with) else {
             StreamService.logger.warning("sendStreamData does not match any pending stream: \(with)")
             return
         }
         pendingMemo.wholeData = contains
-        pendingMemo.nextWrite += content.count-2   // there are two header, non-payload, bytes
+        pendingMemo.nextWrite += content.count-1   // there is one header, non-payload, bytes
 
         let msg = Message(mti: .Stream_Data_Send, source: linkLayer.localNodeID,
                           destination: with.nodeId,
@@ -217,9 +216,10 @@ final public class StreamService : Processor  {
         
         // send next buffer of data
         let lowerLimit = pendingMemo.nextWrite
-        let upperLimit = min(pendingMemo.wholeData.count, pendingMemo.nextWrite + pendingMemo.bufferSize)
+        let upperLimit = min(pendingMemo.wholeData.count, pendingMemo.nextWrite + pendingMemo.bufferSize-1)
         
-        let content : [UInt8] = Array(pendingMemo.wholeData[lowerLimit..<upperLimit])
+        var content : [UInt8] = Array(pendingMemo.wholeData[lowerLimit..<upperLimit])
+        content.insert((UInt8)(pendingMemo.destStreamNumber), at: 0)
         pendingMemo.nextWrite += content.count
         let msg = Message(mti: .Stream_Data_Send, source: linkLayer.localNodeID,
                           destination: pendingMemo.destNodeID,

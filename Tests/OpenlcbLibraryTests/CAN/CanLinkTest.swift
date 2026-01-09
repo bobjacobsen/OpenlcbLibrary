@@ -545,7 +545,7 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages[1].data[19], 33)
     }
     
-    func testStreamFrame() { // Test single stream frame
+    func testStreamFrame() { // Test single stream frame reception
         let canPhysicalLayer = CanPhysicalLayerSimulation()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
@@ -561,7 +561,7 @@ class CanLinkTest: XCTestCase {
         
         let ourAlias = canLink.localAlias // 576 with NodeID(0x05_01_01_01_03_01)
         var frame = CanFrame(control: 0x1F000 | Int(ourAlias), alias: 0x247) // Verify Node ID Addressed
-        frame.data = [10, 11, 12, 13, 14, 15, 16, 17]
+        frame.data = [5, 11, 12, 13, 14, 15, 16, 17]  // destID 5, seven bytes of data
         canPhysicalLayer.fireListeners(frame) // from previously seen alias
         
         XCTAssertEqual(messageLayer.receivedMessages.count, 2) // startup plus one message forwarded
@@ -573,11 +573,48 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(messageLayer.receivedMessages[1].destination,
                        NodeID(0x05_01_01_01_03_01))
         XCTAssertEqual(messageLayer.receivedMessages[1].data.count, 8)
-        XCTAssertEqual(messageLayer.receivedMessages[1].data[0], 10)
+        XCTAssertEqual(messageLayer.receivedMessages[1].data[0],  5)
         XCTAssertEqual(messageLayer.receivedMessages[1].data[1], 11)
         XCTAssertEqual(messageLayer.receivedMessages[1].data[7], 17)
     }
     
+    // MARK: Test transmit utilities
+    
+    func testsSegmentStreamDataArray() {
+        let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
+
+        let data1 : [UInt8] = [5,1,2,3] // one short result case
+        let result1 = canLink.segmentStreamDataArray(data1)
+        let expected1 : [[UInt8]] = [[5,1,2,3]]
+        XCTAssertEqual(expected1, result1)
+        
+        let data2 : [UInt8] = [5,1,2,3,4,5,6,7]     // one exactly full case
+        let result2 = canLink.segmentStreamDataArray(data2)
+        let expected2 : [[UInt8]] = [[5,1,2,3,4,5,6,7]]
+        XCTAssertEqual(expected2, result2)
+        
+        let data3 : [UInt8] = [5,1,2,3,4,5,6,7,8]   // one byte in 2nd result case
+        let result3 = canLink.segmentStreamDataArray(data3)
+        let expected3 : [[UInt8]] = [[5,1,2,3,4,5,6,7], [5,8]]
+        XCTAssertEqual(expected3, result3)
+        
+        let data4 : [UInt8] = [5,1,2,3,4,5,6,7,8,9,10,11,12,13,14]  // full second result case
+        let result4 = canLink.segmentStreamDataArray(data4)
+        let expected4 : [[UInt8]] = [[5,1,2,3,4,5,6,7], [5,8,9,10,11,12,13,14]]
+        XCTAssertEqual(expected4, result4)
+        
+        let data5 : [UInt8] = [5,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]  // two bytes in 3rd result case
+        let result5 = canLink.segmentStreamDataArray(data5)
+        let expected5 : [[UInt8]] = [[5,1,2,3,4,5,6,7], [5,8,9,10,11,12,13,14], [5, 15,16]]
+        XCTAssertEqual(expected5, result5)
+        
+        let data6 : [UInt8] = []        // no data case
+        let result6 = canLink.segmentStreamDataArray(data6)
+        let expected6 : [[UInt8]] = [[]]
+        XCTAssertEqual(expected6, result6)
+        
+
+    }
     // MARK: Test transmitting messages
     
     func testOneFrameDatagramXmt(){
@@ -666,7 +703,7 @@ class CanLinkTest: XCTestCase {
         XCTAssertEqual(canPhysicalLayer.receivedFrames[2].description, "CanFrame header: 0x1D247247 ) [17, 18, 19]")
     }
     
-    func testTwoFrameStreamXmt(){
+    func testThreeFrameStreamXmt(){
         let canPhysicalLayer = PhyMockLayer()
         let canLink = CanLink(localNodeID: NodeID("05.01.01.01.03.01"))
         canLink.linkPhysicalLayer(canPhysicalLayer)
@@ -676,13 +713,14 @@ class CanLinkTest: XCTestCase {
         amd.data = [05,01,01,01,03,01]
         canPhysicalLayer.fireListeners(amd)
         
-        let message = Message(mti: .Stream_Data_Send, source: NodeID("05.01.01.01.03.01"), destination: NodeID("05.01.01.01.03.01"), data: [1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15,16])
+        let message = Message(mti: .Stream_Data_Send, source: NodeID("05.01.01.01.03.01"), destination: NodeID("05.01.01.01.03.01"), data: [5, 1,2,3,4,5,6,7, 11,12,13,14,15,16,17, 21,22,23])
         
         canLink.sendMessage(message)
         
-        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 2)
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[0].description, "CanFrame header: 0x1F247247 ) [1, 2, 3, 4, 5, 6, 7, 8]")
-        XCTAssertEqual(canPhysicalLayer.receivedFrames[1].description, "CanFrame header: 0x1F247247 ) [9, 10, 11, 12, 13, 14, 15, 16]")
+        XCTAssertEqual(canPhysicalLayer.receivedFrames.count, 3)
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[0].description, "CanFrame header: 0x1F247247 ) [5, 1, 2, 3, 4, 5, 6, 7]")
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[1].description, "CanFrame header: 0x1F247247 ) [5, 11, 12, 13, 14, 15, 16, 17]")
+        XCTAssertEqual(canPhysicalLayer.receivedFrames[2].description, "CanFrame header: 0x1F247247 ) [5, 21, 22, 23]")
     }
 
     // MARK: - Test Remote Node Alias Tracking

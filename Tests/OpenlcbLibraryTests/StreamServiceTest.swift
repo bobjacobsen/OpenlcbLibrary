@@ -68,7 +68,9 @@ final class StreamServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0, 0, 0x01, 0x00 , 0x00, 0x00])
 
         // send a initiate OK reply back through with dest stream ID 5
-        let message1 = Message(mti: .Stream_Initiate_Reply, source: destId, destination: sourceId, data: [5, 6, 0,0x80, 0x80,0x00]) // dest 5, source 6, 128 bytes, code 0
+        let destStreamID : UInt8 = 5
+        let sourceStreamID : UInt8 = 6
+        let message1 = Message(mti: .Stream_Initiate_Reply, source: destId, destination: sourceId, data: [destStreamID, sourceStreamID, 0,0x80, 0x80,0x00]) // dest 5, source 6, 128 bytes, code 0
         _ = service.process(message1, Node(NodeID(21)))
 
         // was good callback called?
@@ -78,7 +80,7 @@ final class StreamServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages.count, 1)
         let memo = receivedMemo
         
-        // send 148 bytes of data, which should be a 126 data byte message followed by a 22 date byte message
+        // send 148 bytes of data, which should be a 127 data byte message followed by a 21 data byte message
         LinkMockLayer.sentMessages = []
         
         let data = [UInt8](Array(0...147))
@@ -89,11 +91,11 @@ final class StreamServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages[0].source, sourceId)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].destination, destId)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 128)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[0], 5)    // dest stream
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[1], 6)    // source stream
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[2], 0)    // data first
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[3], 1)    // data second
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[127], 125)    // data last
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[0], destStreamID)    // dest stream
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[1], 0)    // data first
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[2], 1)    // data 2nd
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[3], 2)    // data 3rd
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[127], 126)    // data last
 
 
         // send a data OK reply back through
@@ -107,9 +109,9 @@ final class StreamServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages[0].source, sourceId)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].destination, destId)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 22)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[0], 126)    // data first
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[1], 127)    // data second
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[2], 128)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[0], 5)    // data first
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[1], 127)    // data first
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[2], 128)    // data second
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data[3], 129)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data[21], 147)    // data last
 
@@ -162,12 +164,11 @@ final class StreamServiceTest: XCTestCase {
         XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, MTI.Stream_Data_Send)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].source, sourceId)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].destination, destId)
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 50)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data.count, 49)
         XCTAssertEqual(LinkMockLayer.sentMessages[0].data[0], 5)    // dest stream
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[1], 6)    // source stream
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[2], 0)    // data first
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[3], 1)    // data second
-        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[49], 47)    // data last
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[1], 0)    // data first
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[2], 1)    // data second
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data[48], 47)    // data last
 
         // send a data OK reply back through and expect end
         LinkMockLayer.sentMessages = []
