@@ -25,12 +25,14 @@ import os
 /// 
 final public class MemoryService {
     
-    internal let service : DatagramService
+    internal let dservice : DatagramService
+    internal let sservice : StreamService?
     
-    public init(service : DatagramService) {
-        self.service = service
+    public init(dservice : DatagramService, sservice : StreamService? = nil) {
+        self.dservice = dservice
+        self.sservice = sservice
         // register to DatagramService to hear arriving datagrams
-        service.registerDatagramReceivedListener(datagramReceivedListener)
+        dservice.registerDatagramReceivedListener(datagramReceivedListener)
     }
     
     private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "MemoryService")
@@ -82,7 +84,7 @@ final public class MemoryService {
         // preserve the request
         readMemos.append(memo)
         
-        if readMemos.count == 1 {
+        if readMemos.count == 1 { // if there are no outstanding, only the one we just added
             requestMemoryReadNext(memo: memo)
         }
     }
@@ -103,7 +105,7 @@ final public class MemoryService {
         }
         data.append(contentsOf: [memo.size])
         let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToMemReadDg, rejectedReply: receivedNotOKReplyToMemReadDg)
-        service.sendDatagram(dgWriteMemo)
+        dservice.sendDatagram(dgWriteMemo)
     }
     
     internal func receivedNotOKReplyToMemReadDg(dmemo : DatagramService.DatagramWriteMemo, flags : Int) {
@@ -130,7 +132,7 @@ final public class MemoryService {
         // invoke rejected reply
         memoryWriteOperationComplete(srcID: dmemo.destID, flag1: 0x08)  // flags fixed at failure
     }
-
+    
     internal func receivedOkReplyToMemWriteDg(dmemo : DatagramService.DatagramWriteMemo, flags: Int) {
         MemoryService.logger.debug("Received OK reply to mem write datagram write: \(dmemo.description)")
         // check the high bit of the flags to see if this is the only reply, or something will come later
@@ -140,6 +142,14 @@ final public class MemoryService {
         } // otherwise do nothing until the reply datagram arrives
     }
     
+    internal func receivedNotOKReplyToWriteStr(dmemo : DatagramService.DatagramWriteMemo, flags : Int) {
+        // not normal, have to handle this
+        MemoryService.logger.error("Received NAK reply to mem write stream datagram: \(dmemo.description)")
+        
+        // invoke rejected reply
+        memoryWriteOperationComplete(srcID: dmemo.destID, flag1: 0x08)  // flags fixed at failure
+    }
+        
     internal func memoryWriteOperationComplete(srcID: NodeID, flag1: Int) {
         // return data to requestor: first find matching memory write memo, then reply
         for index in 0..<writeMemos.count {
@@ -159,12 +169,12 @@ final public class MemoryService {
     // process a datagram.  Sends the positive reply and returns true iff this is from our service.
     internal func datagramReceivedListener(dmemo: DatagramService.DatagramReadMemo) -> Bool {
         // node received a datagram, is it our service?
-        guard service.datagramType(data: dmemo.data) == DatagramService.ProtocolID.MemoryOperation else { return false }
+        guard dservice.datagramType(data: dmemo.data) == DatagramService.ProtocolID.MemoryOperation else { return false }
 
         // datagram must has a command value
         if dmemo.data.count < 2 {
             MemoryService.logger.error("Memory service datagram too short: \(dmemo.data.count, privacy: .public)")
-            service.negativeReplyToDatagram(dmemo, err: 0x1041)  // Permanent error: Not implemented, subcommand is unknown.
+            dservice.negativeReplyToDatagram(dmemo, err: 0x1041)  // Permanent error: Not implemented, subcommand is unknown.
             return true;  // error, but for our service; sent negative reply
         }
         
@@ -172,7 +182,7 @@ final public class MemoryService {
         switch dmemo.data[1] {
         case 0x50, 0x51, 0x52, 0x53, 0x58, 0x59, 0x5A, 0x5B : // read or read-error reply
             // Acknowledge the datagram
-            service.positiveReplyToDatagram(dmemo, flags: 0x0000)
+            dservice.positiveReplyToDatagram(dmemo, flags: 0x0000)
             // return data to requestor: first find matching memory read memo, then reply
             for index in 0..<readMemos.count {  // don't include readMemos.count
                 if readMemos[index].nodeID == dmemo.srcID {
@@ -204,16 +214,29 @@ final public class MemoryService {
                     break
                 }
             }
-        case 0x10, 0x11, 0x12, 0x13, 0x18, 0x19, 0x1A, 0x1B : // write reply good, bad
+        case 0x10, 0x11, 0x12, 0x13, 0x18, 0x19, 0x1A, 0x1B : // write datagram reply good, bad
             // Acknowledge the datagram
-            service.positiveReplyToDatagram(dmemo, flags: 0x0000)
+            dservice.positiveReplyToDatagram(dmemo, flags: 0x0000)
             
             // write complete, handle
             memoryWriteOperationComplete(srcID: dmemo.srcID, flag1: (Int) (dmemo.data[1]))
             
+        case 0x30, 0x31, 0x32, 0x33, 0x38, 0x39, 0x3A, 0x3B : // write stream reply good, bad
+            // Acknowledge the datagram
+            dservice.positiveReplyToDatagram(dmemo, flags: 0x0000)
+            
+            // find the write memo, then start the stream operation
+            for index in 0..<writeMemos.count {
+                if writeMemos[index].nodeID == dmemo.srcID {
+                    let tMemoryMemo = writeMemos[index]
+                    startStreamWrite(with: tMemoryMemo)
+                    break
+                }
+            }
+
         case 0x86, 0x87 : // Address Space Information Reply
             // Acknowledge the datagram
-            service.positiveReplyToDatagram(dmemo, flags: 0x0000)
+            dservice.positiveReplyToDatagram(dmemo, flags: 0x0000)
 
             guard spaceLengthCallback != nil else {
                 MemoryService.logger.error("Address Space Information Reply received with no callback")
@@ -236,7 +259,7 @@ final public class MemoryService {
         default:
             MemoryService.logger.error("Did not expect reply of type \(dmemo.data[1], privacy:.public)")
             // Reject the datagram
-            service.negativeReplyToDatagram(dmemo, err: 0x1041) // Permanent error: Not implemented, subcommand is unknown.
+            dservice.negativeReplyToDatagram(dmemo, err: 0x1041) // Permanent error: Not implemented, subcommand is unknown.
         }
         
         return true
@@ -247,12 +270,27 @@ final public class MemoryService {
         let nodeID : NodeID
         let okReply :       ( (_ : MemoryWriteMemo) -> () )?
         let rejectedReply : ( (_ : MemoryWriteMemo) -> () )?
+        let progressReply : ( (_ : MemoryWriteMemo, _ : Int, _ : Int) -> () )?  // used by stream operations
 
-        let size : UInt8  // max 64 bytes
+        let size : UInt8  // max 64 bytes, set to 0 for stream write
         let space : UInt8
         let address : Int
 
         let data : [UInt8]
+        
+        public init(nodeID: NodeID,
+                    okReply: ((_: MemoryWriteMemo) -> Void)?, rejectedReply: ((_: MemoryWriteMemo) -> Void)?,
+                    progressReply: ((_: MemoryWriteMemo, _: Int, _: Int) -> Void)? = nil,
+                    size: UInt8, space: UInt8, address: Int, data: [UInt8]) {
+            self.nodeID = nodeID
+            self.okReply = okReply
+            self.rejectedReply = rejectedReply
+            self.progressReply = progressReply
+            self.size = size
+            self.space = space
+            self.address = address
+            self.data = data
+        }
     }
 
     internal var writeMemos : [MemoryWriteMemo] = []
@@ -275,9 +313,103 @@ final public class MemoryService {
         }
         data.append(contentsOf: memo.data)
         let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToMemWriteDg, rejectedReply: receivedNotOKReplyToWriteDg)
-        service.sendDatagram(dgWriteMemo)
+        dservice.sendDatagram(dgWriteMemo)
 
     }
+    
+    internal func receivedOkReplyToMemWriteStrInit(dmemo : DatagramService.DatagramWriteMemo, flags: Int) {
+        MemoryService.logger.debug("Received OK reply to mem write stream datagram write: \(dmemo.description)")
+        // wait for the following Write Stream Reply datagram
+    }
+    
+    internal func receivedNakReplyToMemWriteStrInit(dmemo : DatagramService.DatagramWriteMemo, flags: Int) {
+        MemoryService.logger.error("Received Nak reply to mem write stream datagram write: \(dmemo.description)")
+        // wait for the following Write Stream Reply datagram
+    }
+    
+
+    var pendingStreamMemos = [StreamService.StreamWriteMemo : MemoryWriteMemo]()
+    
+    internal func receivedOkReplyToWriteStream(memo : StreamService.StreamWriteMemo) {
+        MemoryService.logger.debug("Received OK reply to mem write stream operation")
+        if let writeMemo = pendingStreamMemos[memo] {
+            pendingStreamMemos[memo] = nil
+            if let callback = writeMemo.okReply {
+                callback(writeMemo)
+            }
+        } else {
+            MemoryService.logger.warning("Could not match stream memo to write memo")
+        }
+    }
+    
+    internal func receivedNakReplyToWriteStream(memo : StreamService.StreamWriteMemo, code : Int) {
+        MemoryService.logger.warning("Received not-OK reply to mem write stream operation \(code)")
+        if let writeMemo = pendingStreamMemos[memo] {
+            pendingStreamMemos[memo] = nil
+            if let callback = writeMemo.rejectedReply {
+                callback(writeMemo)
+            }
+        } else {
+            MemoryService.logger.warning("Could not match stream memo to write memo")
+        }
+    }
+
+    internal func progressReplyFromWriteStream(memo : StreamService.StreamWriteMemo, totalBytes: Int, bytesWritten: Int, finished : Bool) {
+        MemoryService.logger.info("Write Stream progress: \(bytesWritten)/\(totalBytes)")
+        if let writeMemo = pendingStreamMemos[memo] {
+            if let callback = writeMemo.progressReply {
+                callback(writeMemo, totalBytes, bytesWritten)
+            }
+        } else {
+            MemoryService.logger.warning("Could not match stream memo to write memo")
+        }
+    }
+    
+    public func requestMemoryWriteStream(_ memo : MemoryWriteMemo) {
+        // preserve the request
+        writeMemos.append(memo)
+        // create & send a write stream datagram
+        let sourceStream : UInt8 = 0x04
+        var byte6 = false
+        var flag : UInt8 = 0
+        (byte6, flag) = spaceDecode(space: memo.space)
+        let spaceFlag = byte6 ? 0x20 : flag | 0x20
+        let addr2 = UInt8( (memo.address >> 24) & 0xFF )
+        let addr3 = UInt8( (memo.address >> 16) & 0xFF )
+        let addr4 = UInt8( (memo.address >>  8) & 0xFF )
+        let addr5 = UInt8( memo.address & 0xFF )
+        var data : [UInt8] = [DatagramService.ProtocolID.MemoryOperation.rawValue, spaceFlag, addr2,addr3,addr4,addr5]
+        if (byte6) {
+            data.append(contentsOf: [UInt8(memo.space & 0xFF)])
+        }
+        data.append(contentsOf: [sourceStream])
+        let dgWriteMemo = DatagramService.DatagramWriteMemo(destID : memo.nodeID, data: data, okReply: receivedOkReplyToMemWriteStrInit, rejectedReply: receivedNakReplyToMemWriteStrInit)
+        dservice.sendDatagram(dgWriteMemo)
+    }
+
+    private func startStreamWrite(with memo: MemoryWriteMemo) {
+        // create & start a stream request
+        let streamMemo = StreamService.StreamWriteMemo(
+                                            nodeId: memo.nodeID, sourceStreamNumber: 0x04, bufferSize: 8192, wholeData : memo.data, // TODO: rationalize all these source stream IDs
+                                            okReply : receivedOkReplyToWriteStream,
+                                            rejectedReply : receivedNakReplyToWriteStream,
+                                            progressCallBack: progressReplyFromWriteStream
+                                    )
+        
+        pendingStreamMemos[streamMemo] = memo
+        
+        guard let sservice = sservice else {
+            MemoryService.logger.error("No StreamService available, stream write cannot procced")
+            if let reply = memo.rejectedReply {
+                reply(memo)
+            }
+            return
+        }
+            
+        sservice.createWriteStream(withMemo: streamMemo)
+    }
+
+    
     
     private var spaceLengthCallback : ((Int) -> ())? = nil
     
@@ -290,19 +422,19 @@ final public class MemoryService {
         spaceLengthCallback = callback
         // send request
         let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [DatagramService.ProtocolID.MemoryOperation.rawValue, 0x84, space])
-        service.sendDatagram(dgReqMemo)
+        dservice.sendDatagram(dgReqMemo)
     }
    
     public func sendFreeze(nodeID : NodeID, space: UInt8) {
         // send request with no wait for reply
         let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [DatagramService.ProtocolID.MemoryOperation.rawValue, 0xA1, space])
-        service.sendDatagram(dgReqMemo)
+        dservice.sendDatagram(dgReqMemo)
     }
 
     public func sendUnFreeze(nodeID : NodeID, space: UInt8) {
         // send request with no wait for reply
         let dgReqMemo = DatagramService.DatagramWriteMemo(destID : nodeID, data: [DatagramService.ProtocolID.MemoryOperation.rawValue, 0xA0, space])
-        service.sendDatagram(dgReqMemo)
+        dservice.sendDatagram(dgReqMemo)
     }
 
     internal func arrayToInt(data: [UInt8], length: UInt8) -> (Int) {

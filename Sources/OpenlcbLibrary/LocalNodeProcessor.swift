@@ -40,6 +40,9 @@ struct LocalNodeProcessor : Processor {
         case .Datagram, .Datagram_Rejected, .Datagram_Received_OK :
             // datagrams and datagram replies are handled in the DatagramService
             break
+        case .Stream_Initiate_Request, .Stream_Initiate_Reply, .Stream_Data_Send, .Stream_Data_Proceed, .Stream_Data_Complete    :
+            // datagrams and datagram replies are handled in the DatagramService
+            break
         case .Simple_Node_Ident_Info_Request :
             simpleNodeIdentInfoRequest(message, node)
         case .Identify_Events_Addressed :

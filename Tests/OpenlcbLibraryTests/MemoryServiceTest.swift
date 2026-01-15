@@ -19,7 +19,8 @@ class MemoryServiceTest: XCTestCase {
     
     let node12 = Node(NodeID(12))
     var dService : DatagramService = DatagramService(LinkMockLayer(NodeID(12)))
-    var mService : MemoryService = MemoryService(service: DatagramService(LinkMockLayer(NodeID(12))))
+    var sService : StreamService = StreamService(LinkMockLayer(NodeID(12)))
+    var mService : MemoryService = MemoryService(dservice: DatagramService(LinkMockLayer(NodeID(12))))  // have to init with something, will overwrite in setUpWithError
 
     var returnedMemoryReadMemo : [MemoryService.MemoryReadMemo] = []
     func callbackR(memo : MemoryService.MemoryReadMemo) {
@@ -30,13 +31,23 @@ class MemoryServiceTest: XCTestCase {
     func callbackW(memo : MemoryService.MemoryWriteMemo) {
         returnedMemoryWriteMemo.append(memo)
     }
+
+    func callbackP(memo : MemoryService.MemoryWriteMemo, totalLength : Int, bytesSoFar : Int) {
+        self.totalLength = totalLength
+        self.bytesSoFar  = bytesSoFar
+    }
+
+    var totalLength = -1    // for progress reply
+    var bytesSoFar  = -1
     
     override func setUpWithError() throws {
         LinkMockLayer.sentMessages = []
         returnedMemoryReadMemo = []
         returnedMemoryWriteMemo = []
-        dService = DatagramService(LinkMockLayer(NodeID(12)))
-        mService = MemoryService(service: dService)
+        let linkMockLayer = LinkMockLayer(NodeID(12))
+        dService = DatagramService(linkMockLayer)
+        sService = StreamService(linkMockLayer)
+        mService = MemoryService(dservice: dService, sservice: sService)
     }
 
     override func tearDownWithError() throws {
@@ -133,6 +144,72 @@ class MemoryServiceTest: XCTestCase {
         XCTAssertEqual(returnedMemoryReadMemo.count, 2) // memory read returned
 }
 
+    func testSingleWriteStream() throws {
+        let memMemo = MemoryService.MemoryWriteMemo(nodeID: NodeID(123),
+                                                    okReply: callbackW, rejectedReply: callbackW,
+                                                    progressReply: callbackP,
+                                                    size: 64, space: 0xEF, address: 0,
+                                                    data: [1,2,3])
+        mService.requestMemoryWriteStream(memMemo)
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory request datagram sent
+        
+        let sourceStream : UInt8 = 0x04
+        let destStream : UInt8 = 0x06
+
+        // provide datagram received OK
+        let msg1 = Message(mti:.Datagram_Received_OK, source: NodeID(123), destination: NodeID(12), data:[0x80])
+        _ = dService.process(msg1, node12)
+        _ = sService.process(msg1, node12)
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 1) // memory write stream datagram sent
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [0x20, 0x20, 0,0,0,0, 0xEF, sourceStream])
+        XCTAssertEqual(returnedMemoryWriteMemo.count, 0) // no memory write op returned, waiting for end of stream
+
+        LinkMockLayer.sentMessages = [] // reset counts
+        totalLength = -1
+        bytesSoFar  = -1
+        
+        // provide write reply datagram
+        let msg2 = Message(mti:.Datagram, source: NodeID(123), destination: NodeID(12), data:  [0x20, 0x30, 0,0,0,0, 0xEF, sourceStream, destStream])
+        _ = dService.process(msg2, node12)
+        _ = sService.process(msg2, node12)
+
+        XCTAssertEqual(returnedMemoryWriteMemo.count, 0) // no memory write op returned, waiting for end of stream
+        XCTAssertEqual(totalLength, -1) // no progress reply yet
+        XCTAssertEqual(bytesSoFar, -1) // no progress reply yet
+
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 2) // write reply datagram reply and stream init message sent
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, .Datagram_Received_OK)
+        
+        guard LinkMockLayer.sentMessages.count >= 2 else { XCTFail(); return } // to prevent test crashing in tests below
+        XCTAssertEqual(LinkMockLayer.sentMessages[1].mti, .Stream_Initiate_Request)
+        XCTAssertEqual(LinkMockLayer.sentMessages[1].data, [0x20,0x00, 0x00,0x00,  sourceStream, 0])
+        
+        LinkMockLayer.sentMessages = [] // reset counts
+        totalLength = -1
+        bytesSoFar  = -1
+
+        // provide stream init reply messsage
+        let msg3 = Message(mti:.Stream_Initiate_Reply, source: NodeID(123), destination: NodeID(12), data:  [0x10,0x00, 0x00,0x00, sourceStream, destStream])
+        _ = dService.process(msg3, node12)
+        _ = sService.process(msg3, node12)
+
+        XCTAssertEqual(LinkMockLayer.sentMessages.count, 2) // stream data, stream end
+        guard LinkMockLayer.sentMessages.count >= 1 else { XCTFail(); return } // to prevent test crashing in tests below
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].mti, .Stream_Data_Send)
+        XCTAssertEqual(LinkMockLayer.sentMessages[0].data, [destStream, 1,2,3]) // source stream 5, dest stream 6
+        guard LinkMockLayer.sentMessages.count >= 2 else { XCTFail(); return } // to prevent test crashing in tests below
+        XCTAssertEqual(LinkMockLayer.sentMessages[1].mti, .Stream_Data_Complete)
+        XCTAssertEqual(LinkMockLayer.sentMessages[1].data, [sourceStream, destStream])
+
+        XCTAssertEqual(totalLength, 3) // all data
+        XCTAssertEqual(bytesSoFar, 3) // sent
+        XCTAssertEqual(returnedMemoryWriteMemo.count, 1) // memory write complete
+
+    }
+    
+
+    
+    
     func testArrayToString() {
         var sut = mService.arrayToString(data: [0x41,0x42,0x43,0x44], length: 4)
         XCTAssertEqual(sut, "ABCD")

@@ -34,10 +34,11 @@ final public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { 
     
     var localNodeStore : LocalNodeStore
     
-    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbLibrary")
+    private static let logger = Logger(subsystem: "us.ardenwood.OpenlcbLibrary", category: "OpenlcbNetwork")
         
-    public let dservice : DatagramService // needed for `UpdateFirmwareModel`
-    public let mservice : MemoryService // needed for `CdCdiView`, `UpdateFirmwareModel`
+    public let dservice : DatagramService // needed for `MemoryService`
+    public let mservice : MemoryService // needed for `CdCdiView`, `UpdateFirmwareModel`, Train protocols
+    public let sservice : StreamService // needed for `MemoryService`
 
     /// Initialize a basic system
     /// - Parameter defaultNodeID: NodeiID for this program
@@ -55,7 +56,8 @@ final public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { 
         turnoutModel0 = TurnoutModel()
         consistModel0 = ConsistModel(linkLayer: linkLayer)
         dservice = DatagramService(linkLayer)
-        mservice = MemoryService(service: dservice)
+        sservice = StreamService(linkLayer)
+        mservice = MemoryService(dservice: dservice, sservice : sservice)
 
         // stored values initialized, 'self' available below here
         OpenlcbNetwork.logger.info("OpenlcbLibrary init")
@@ -141,7 +143,7 @@ final public class OpenlcbNetwork : ObservableObject, CustomStringConvertible { 
         
         // install processors
         remoteNodeStore.processors = [                        rprocessor]
-        localNodeStore.processors =  [pprocessor, dservice,             lprocessor, cprocessor, tprocessor, consistModel0]
+        localNodeStore.processors =  [pprocessor, dservice,             lprocessor, cprocessor, tprocessor, consistModel0, sservice]
  
         // register listener here to process the node stores without copying them
         linkLayer.registerMessageReceivedListener(processMessageFromLinkLayer)

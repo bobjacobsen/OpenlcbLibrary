@@ -287,6 +287,7 @@ final public class DatagramService : Processor {
         if currentOutstandingMemo != nil {
             // there's a current outstanding memo to cancel
             DatagramService.logger.info("Rejecting datagram after quiesce")
+            clearTimer()
             if let memo = currentOutstandingMemo {
                 if let replyMethod = memo.rejectedReply {
                     replyMethod(memo, 0x8000)
@@ -304,15 +305,11 @@ final public class DatagramService : Processor {
         clearTimer()  // just in case
         if currentOutstandingMemo != nil {
             // there's a current outstanding memo from after quiesce, resend it
-            DatagramService.logger.debug("Found datagram waiting to be sent")
-            sendDatagramMessage(memo: currentOutstandingMemo!)
-            return
-        } else {
-            // are there any queued datagrams? If so, send first
-            if pendingWriteMemos.count > 0 {
-                sendNextDatagramFromQueue()
-            }
+            DatagramService.logger.info("Found datagram waiting to be sent on restart, but not resending")
         }
+        pendingWriteMemos = []
+        currentOutstandingMemo = nil
+        clearTimer()
     }
     
     // if our outstanding datagram destination initialized, e.g. as part of FirmwareUpdate,
@@ -320,23 +317,26 @@ final public class DatagramService : Processor {
     private func handleInitializationComplete(_ message : Message) {
         if currentOutstandingMemo != nil {
             // there's a current outstanding memo, cancel if IDs match
-            DatagramService.logger.info("Rejecting datagram after quiesce")
+            DatagramService.logger.info("Rejecting datagram after initialization complete")
             if let memo = currentOutstandingMemo {
                 if (message.source.nodeId) == (memo.destID.nodeId) {
                     if let replyMethod = memo.rejectedReply {
-                        DatagramService.logger.info("Rejecting datagram after Initialization Complete")
+                        DatagramService.logger.info("Calling rejectedReply after Initialization Complete")
                         replyMethod(memo, 0x8000)
                     }
                     return
                 }
             }
         }
+        pendingWriteMemos = []
+        currentOutstandingMemo = nil
+        clearTimer()
     }
     
     private var timer : Timer?
     private var retryCount = 0;
-    private let MAX_TIMEOUT_RETRIES = 2
-    private let TIMEOUT_INTERVAL = 3.0  // seconds
+//    private let MAX_TIMEOUT_RETRIES = 2
+    private let TIMEOUT_INTERVAL = 4.0  // seconds
 
     
     private func startTimer(_ memo : DatagramWriteMemo) {
@@ -362,7 +362,7 @@ final public class DatagramService : Processor {
     
     // invoked when no reply received in time
     private func timerFired(_ memo : DatagramWriteMemo) {
-        DatagramService.logger.info("Datagram response timer fired")
+        DatagramService.logger.debug("Datagram response timer fired")
         // invalidate timer, just in case
         if let thisTimer = timer {
             thisTimer.invalidate()
@@ -370,17 +370,17 @@ final public class DatagramService : Processor {
         }
 
         // decide what to do about this timeout
-        if retryCount <= MAX_TIMEOUT_RETRIES {
-            retryCount = retryCount + 1
-            // Retry the transmission, without notifying higher levels
-            DatagramService.logger.debug("   resending datagram, attempt \(self.retryCount)")
-            sendDatagramMessage(memo: memo)
-        } else {
+//        if retryCount <= MAX_TIMEOUT_RETRIES {
+//            retryCount = retryCount + 1
+//            // Retry the transmission, without notifying higher levels
+//            DatagramService.logger.debug("   resending datagram, attempt \(self.retryCount)")
+//            sendDatagramMessage(memo: memo)
+//        } else {
             // Too many retries, this is a negative reply
             retryCount = 0
             DatagramService.logger.error("   too many retries, fail the datagram send of \(memo)")
             handleDatagramFail(failedMemo: memo, flags: 0)
-        }
+//        }
         
     }
     
