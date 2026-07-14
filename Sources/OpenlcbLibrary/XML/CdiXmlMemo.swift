@@ -128,6 +128,12 @@ public final class CdiXmlMemo : Identifiable {
         
         // run the parser
         parser.parse()
+        
+        // protect against a failure to parse
+        guard delegate.memoStack.count > 1 else {
+            return delegate.memoStack
+        }
+                
         // and post-process
         processGroupReplication(delegate.memoStack[0])
         _ = computeMemoryLocations(delegate.memoStack[0], space: 0, endAddress: 0)
