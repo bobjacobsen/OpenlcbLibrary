@@ -13,7 +13,7 @@ import os
 /// connection resets, a new SNIP struct should be installed in the node.
 public struct SNIP {
 
-    // The values of these are updated as more data comes in so othat they're
+    // The values of these are updated as more data comes in so that they're
     // always the best available names.
     public internal(set) var manufacturerName = ""
     public internal(set) var modelName = ""

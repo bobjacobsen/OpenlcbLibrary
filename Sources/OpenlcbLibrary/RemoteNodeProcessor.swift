@@ -99,7 +99,7 @@ public struct RemoteNodeProcessor : Processor {
     }
     
     private func protocolSupportReply(_ message : Message, _ node : Node) {
-        if checkSourceID(message, node) { // send by us?
+        if checkSourceID(message, node) { // should we check that this is addressed to us?
             let part0 : Int = (message.data.count > 0) ? (Int(message.data[0]) << 24) : 0
             let part1 : Int = (message.data.count > 1) ? (Int(message.data[1]) << 16) : 0
             let part2 : Int = (message.data.count > 2) ? (Int(message.data[2]) <<  8) : 0
@@ -110,14 +110,14 @@ public struct RemoteNodeProcessor : Processor {
     }
     
     private func simpleNodeIdentInfoRequest(_ message : Message, _ node : Node) {
-        if checkDestID(message, node) { // sent by us? - overlapping SNIP activity is otherwise confusing
+        if checkDestID(message, node) { // should we check sent by us?- overlapping SNIP activity is otherwise confusing
             // clear SNIP in the node to start accumulating
             node.snip = SNIP()
         }
     }
     
     private func simpleNodeIdentInfoReply(_ message : Message, _ node : Node) {
-        if checkSourceID(message, node) { // sent by this node? - overlapping SNIP activity is otherwise confusing
+        if checkSourceID(message, node) { // should we check sent by us? - overlapping SNIP activity is otherwise confusing
             // accumulate data in the node
             if message.data.count > 2 {
                 node.snip.addData(data: message.data)
