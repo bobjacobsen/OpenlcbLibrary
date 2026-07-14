@@ -156,7 +156,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
     var memoStack : [CdiXmlMemo] = []
     var currentTextState = NextTextOperation.NONE
 
-    var readOnlyFlag : Bool = true  // Are we currently in a group that's marked ReadOnly?
+    var readOnlyFlag : Bool = false // Are we currently in a group that's marked ReadOnly?
                                     // TODO: Does this properly handle nested groups with following variables?
                                     // Do we need a stack for these?
     
