@@ -130,7 +130,7 @@ public final class CdiXmlMemo : Identifiable {
         parser.parse()
         
         // protect against a failure to parse
-        guard delegate.memoStack.count > 1 else {
+        guard delegate.memoStack.count > 0 else {
             return delegate.memoStack
         }
                 
