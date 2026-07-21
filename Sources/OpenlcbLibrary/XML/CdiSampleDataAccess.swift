@@ -276,6 +276,48 @@ public struct CdiSampleDataAccess {
                               </eventid>
                             </group>
                           </group>
+                        <group replication="16">
+                        <name>Inputs as they appear on the ESP32 Devkit 1 sensor shield</name>
+                        <repname>Input D4 </repname>
+                        <repname>Input D16 </repname>
+                        <repname>Input D17 </repname>
+                        <repname>Input D5 </repname>
+                        <repname>Input D18 </repname>
+                        <repname>Input D19 </repname>
+                        <repname>Input D21 </repname>
+                        <repname>Input D22 </repname>
+                        <repname>Input D13 </repname>
+                        <repname>Input D12 </repname>
+                        <repname>Input D14 </repname>
+                        <repname>Input D27 </repname>
+                        <repname>Input D26 </repname>
+                        <repname>Input D25 </repname>
+                        <repname>Input D33 </repname>
+                        <repname>Input D32 </repname>
+                        <string size='24'><name>Description</name></string>
+                        <int size='1'><name> Choose an input type from the drop down list</name>
+                        <name>Channel Type</name>
+                        <map>
+                        <relation><property>0</property><value>None</value></relation> 
+                        <relation><property>1</property><value>1. Active High (no pull-up)</value></relation> 
+                        <relation><property>2</property><value>2. Active Low  (no pull-up)</value></relation> 
+                        <relation><property>3</property><value>3. Active Low with Pull-up (switch to GND)</value></relation>
+                        <relation><property>4</property><value>4. Active High with Pull-up</value></relation>
+                        <relation><property>5</property><value>5. Toggle (falling edge)</value></relation>
+                        <relation><property>6</property><value>6. Toggle with Pull-up</value></relation>
+                        </map>
+                        </int>
+                        <int size='1'>
+                        <name>On-delay 0=steady-state, 1-255 = From 100ms to 25.5 seconds </name>
+                        <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
+                        </int>
+                        <int size='1'>
+                        <name>Off-delay  0=No repeat, 1-255 = from 100ms to 25.5 seconds,</name>
+                        <hints><slider tickSpacing='85' immediate='yes' showValue='yes'> </slider></hints>
+                        </int>
+                        <eventid><name>HIGH State 3.3 volts - Event</name></eventid>
+                        <eventid><name>LOW State 0 Volts - Event</name></eventid>
+                        </group>
                         </segment>
                         </cdi>
                         """.data(using: .utf8))!
