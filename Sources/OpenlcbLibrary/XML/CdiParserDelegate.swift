@@ -123,7 +123,7 @@ final class CdiParserDelegate : NSObject, XMLParserDelegate { // class for inher
         case .NAME :
             memoStack[memoStack.count-1].name = foundCharacters
         case .REPNAME :
-            memoStack[memoStack.count-1].repname = foundCharacters
+            memoStack[memoStack.count-1].repnames.append(foundCharacters)
         case .DESCRIPTION :
             memoStack[memoStack.count-1].description = foundCharacters
         case .DEFAULT :

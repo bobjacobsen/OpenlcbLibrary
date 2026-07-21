@@ -32,7 +32,7 @@ public final class CdiXmlMemo : Identifiable {
     // common values
     public internal(set) var type : XMLMemoType
     public internal(set) var name : String
-    public internal(set) var repname : String
+    public internal(set) var repnames : [String] = []
     public internal(set) var description : String
     
     // input values - usage determined by type
@@ -69,7 +69,10 @@ public final class CdiXmlMemo : Identifiable {
     internal init(_ memo : CdiXmlMemo) {
         self.type = memo.type
         self.name = memo.name
-        self.repname = memo.repname
+        self.repnames = []
+        for repname in repnames {
+            self.repnames.append(repname)
+        }
         self.description = memo.description
         self.length = memo.length
         self.offset = memo.offset
@@ -106,7 +109,7 @@ public final class CdiXmlMemo : Identifiable {
     internal init() {
         self.type = .TOPLEVEL
         self.name = ""
-        self.repname = ""
+        self.repnames = []
         self.description = ""
         self.length = 0
         self.offset = 0
@@ -153,10 +156,33 @@ public final class CdiXmlMemo : Identifiable {
             // drop children in prior memo
             memo.children = []  // clears old elements (int, event, even group) that are now in new sub-elements
             
-            // add repl nodes as children of original
+            // add repl nodes as children of original and attach their replication names
             for i in 1...memo.length {
                 let tempChildNode = CdiXmlMemo(newChildNode)  // create a new, to-be child node
-                tempChildNode.name = memo.repname+" \(i)"
+
+                if memo.repnames.count >= memo.length {     // a repname element for every replication - TN example 1
+                    tempChildNode.name = memo.repnames[i-1]
+                } else { // short of repnames, TN example 2
+                    // TODO: this needs to handle trailing numeric value
+                    if memo.repnames.count == 0 { // No repname element, we provide a default
+                        tempChildNode.name = "Group \(i-(memo.repnames.count))"
+                    } else if i >= memo.repnames.count {
+                        // at or after the last repname
+                        if indexOfFirstTrailingDigit(memo.repnames[memo.repnames.count-1]) >= 0 {
+                            // handle augmenting trailing numeric field - TN 2B
+                            let n = trailingNumber(memo.repnames[memo.repnames.count-1])
+                            let prefix = leadingText(memo.repnames[memo.repnames.count-1])
+                            tempChildNode.name = prefix+"\(i-memo.repnames.count+n)"
+                        } else {
+                            // no trailing numeric field - TN 2A
+                            tempChildNode.name = memo.repnames[memo.repnames.count-1]+"\(i-(memo.repnames.count-1))"
+                        }
+                    } else {
+                        // one of the provided initial repname(s)
+                        tempChildNode.name = memo.repnames[i-1]
+                    }
+                }
+
                 tempChildNode.offset = 0  // offset is only on original node, kept in place there
                 memo.children?.append(tempChildNode)
             }
@@ -168,7 +194,44 @@ public final class CdiXmlMemo : Identifiable {
             }
         }
     }
+    
+    // find the first trailing digit, e.g. the index of the first digit in a group of digits
+    // at the end of the input string, or -1 if no such group of digits
+    static func indexOfFirstTrailingDigit(_ input : String) -> Int {
+        if input.isEmpty { return -1 }
+        if !input.last!.isNumber { return -1 }
+        
+        // so there is at least one digit at end, scan backwards for first non-digit
+        let reversed = String(input.reversed())
+        var count = 0
+        for char in reversed {
+            if !char.isNumber {
+                return input.count - count;
+            }
+            count += 1
+        }
+        
+        // here if its all digits!
+        return 0
+    }
 
+    static func trailingNumber(_ input : String) -> Int {
+        let n = indexOfFirstTrailingDigit(input)
+        if n < 0 { return -1 }
+        if n == 0 {return Int(input) ?? 0}
+        
+        let startIndex = input.index(input.startIndex, offsetBy: min(n, input.count))
+        return Int(String(input[startIndex...])) ?? 0
+    }
+    
+    static func leadingText(_ input : String) -> String {
+        let n = indexOfFirstTrailingDigit(input)
+        if n < 0 { return input }
+        if n == 0 {return ""}
+        
+        return String(input.prefix(n))
+    }
+    
     // Recursively scan the tree (depth first) assigning starting addresses.
     // Assumes that group expansion has already taken place (or won't be done)
     static private func computeMemoryLocations(_ memo : CdiXmlMemo, space : Int, endAddress : Int) -> Int {  // returns endAddress of entire memo subtree

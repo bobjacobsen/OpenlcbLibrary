@@ -137,7 +137,7 @@ class CdiXmlMemoTest: XCTestCase {
         
         XCTAssertEqual(result[0].children![0].type, .GROUP)
         XCTAssertEqual(result[0].children![0].name, "NameSeg")
-        XCTAssertEqual(result[0].children![0].repname, "RepNameSeg")
+        XCTAssertEqual(result[0].children![0].repnames[0], "RepNameSeg")
         XCTAssertEqual(result[0].children![0].description, "DescSeg")
         
         XCTAssertEqual(result[0].children![0].children!.count, 3)
@@ -162,7 +162,7 @@ class CdiXmlMemoTest: XCTestCase {
         let data : Data = ("""
                             <cdi><group replication="3" offset="2">
                                     <name>NameGroup</name>
-                                    <repname>Repl Name</repname>
+                                    <repname>Repl Name </repname>
                                     <description>DescGroup</description>
                                     <int>
                                         <name>Int Name</name>
@@ -192,7 +192,7 @@ class CdiXmlMemoTest: XCTestCase {
         
         XCTAssertEqual(result[0].children![0].children![0].children![0].type, .INPUT_INT) // each repl contains all elements
         XCTAssertEqual(result[0].children![0].children![0].children![0].startAddress, 2)
-        XCTAssertEqual(result[0].children![0].children![0].children![0].name, "Int Name")  // created from replication name and number
+        XCTAssertEqual(result[0].children![0].children![0].children![0].name, "Int Name")
         XCTAssertEqual(result[0].children![0].children![0].children![0].description, "Desc")
         XCTAssertEqual(result[0].children![0].children![0].children![1].type, .INPUT_STRING)
         XCTAssertEqual(result[0].children![0].children![0].children![1].startAddress, 3)
@@ -219,7 +219,210 @@ class CdiXmlMemoTest: XCTestCase {
 
     }
 
+    func testNamedTripleRepGroupOfOneElement() throws {
+        let data : Data = ("""
+                            <cdi><group replication="3" offset="2">
+                                    <name>NameGroup</name>
+                                    <repname>Repl A</repname>
+                                    <repname>Repl B</repname>
+                                    <repname>Repl C</repname>
+                                    <description>DescGroup</description>
+                                    <int>
+                                        <name>Int Name</name>
+                                        <description>Desc</description></int>"
+                                    <string size="5"></string>
+                            </group></cdi>
+                        """.data(using: .utf8))!
+        
+        let result = CdiXmlMemo.process(data)
+        
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
+        
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameGroup")
+        XCTAssertEqual(result[0].children![0].description, "DescGroup")
+        
+        XCTAssertEqual(result[0].children![0].children!.count, 3)
+        
+        XCTAssertEqual(result[0].children![0].children![0].type, .GROUP_REP) // three repl's under the group
+        XCTAssertEqual(result[0].children![0].children![0].name, "Repl A")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![1].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![1].name, "Repl B")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![2].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![2].name, "Repl C")  // created from replication name element
+        
+    }
+    
+    func testNamedQuadRepGroupOfOneElement() throws {
+        let data : Data = ("""
+                            <cdi><group replication="4" offset="2">
+                                    <name>NameGroup</name>
+                                    <repname>Repl A</repname>
+                                    <repname>Repl B</repname>
+                                    <repname>Repl C</repname>
+                                    <description>DescGroup</description>
+                                    <int>
+                                        <name>Int Name</name>
+                                        <description>Desc</description></int>"
+                                    <string size="5"></string>
+                            </group></cdi>
+                        """.data(using: .utf8))!
+        
+        let result = CdiXmlMemo.process(data)
+        
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
+        
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameGroup")
+        XCTAssertEqual(result[0].children![0].description, "DescGroup")
+        
+        XCTAssertEqual(result[0].children![0].children!.count, 4)
+        
+        XCTAssertEqual(result[0].children![0].children![0].type, .GROUP_REP) // four repl's under the group
+        XCTAssertEqual(result[0].children![0].children![0].name, "Repl A")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![1].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![1].name, "Repl B")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![2].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![2].name, "Repl C1")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![3].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![3].name, "Repl C2")  // created from replication name element
+        
+    }
 
+    func testCdiTechNoteExample2A() throws {
+        let data : Data = ("""
+                            <cdi><group replication="4" offset="2">
+                                    <name>NameGroup</name>
+                                    <repname>Headlight</repname>
+                                    <repname>F</repname>
+                                    <description>DescGroup</description>
+                                    <int>
+                                        <name>Int Name</name>
+                                        <description>Desc</description></int>"
+                                    <string size="5"></string>
+                            </group></cdi>
+                        """.data(using: .utf8))!
+        
+        let result = CdiXmlMemo.process(data)
+        
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
+        
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameGroup")
+        XCTAssertEqual(result[0].children![0].description, "DescGroup")
+        
+        XCTAssertEqual(result[0].children![0].children!.count, 4)
+        
+        XCTAssertEqual(result[0].children![0].children![0].type, .GROUP_REP) // three repl's under the group
+        XCTAssertEqual(result[0].children![0].children![0].name, "Headlight")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![1].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![1].name, "F1")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![2].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![2].name, "F2")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![3].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![3].name, "F3")  // created from replication name element
+        
+    }
+    
+    func testCdiTechNoteExample2B() throws {
+        let data : Data = ("""
+                            <cdi><group replication="4" offset="2">
+                                    <name>NameGroup</name>
+                                    <repname>F0</repname>
+                                    <description>DescGroup</description>
+                                    <int>
+                                        <name>Int Name</name>
+                                        <description>Desc</description></int>"
+                                    <string size="5"></string>
+                            </group></cdi>
+                        """.data(using: .utf8))!
+        
+        let result = CdiXmlMemo.process(data)
+        
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
+        
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameGroup")
+        XCTAssertEqual(result[0].children![0].description, "DescGroup")
+        
+        XCTAssertEqual(result[0].children![0].children!.count, 4)
+        
+        XCTAssertEqual(result[0].children![0].children![0].type, .GROUP_REP) // three repl's under the group
+        XCTAssertEqual(result[0].children![0].children![0].name, "F0")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![1].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![1].name, "F1")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![2].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![2].name, "F2")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![3].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![3].name, "F3")  // created from replication name element
+        
+    }
+    
+
+    func testNoRepnameGroup() throws {
+        let data : Data = ("""
+                            <cdi><group replication="2" offset="2">
+                                    <name>NameGroup</name>
+                                    <description>DescGroup</description>
+                                    <int>
+                                        <name>Int Name</name>
+                                        <description>Desc</description></int>"
+                                    <string size="5"></string>
+                            </group></cdi>
+                        """.data(using: .utf8))!
+        
+        let result = CdiXmlMemo.process(data)
+        
+        XCTAssertEqual(result.count, 1)
+        XCTAssertEqual(result[0].children!.count, 1)
+        
+        XCTAssertEqual(result[0].children![0].type, .GROUP)
+        XCTAssertEqual(result[0].children![0].name, "NameGroup")
+        XCTAssertEqual(result[0].children![0].description, "DescGroup")
+        
+        XCTAssertEqual(result[0].children![0].children!.count, 2)
+        
+        XCTAssertEqual(result[0].children![0].children![0].type, .GROUP_REP) // three repl's under the group
+        XCTAssertEqual(result[0].children![0].children![0].name, "Group 1")  // created from replication name element
+        XCTAssertEqual(result[0].children![0].children![1].type, .GROUP_REP)
+        XCTAssertEqual(result[0].children![0].children![1].name, "Group 2")  // created from replication name element
+        
+    }
+
+    func testIndexOfFirstTrailingDigit() throws {
+        XCTAssertEqual(CdiXmlMemo.indexOfFirstTrailingDigit("ABCD"), -1)
+        XCTAssertEqual(CdiXmlMemo.indexOfFirstTrailingDigit("0123"), 0)
+        XCTAssertEqual(CdiXmlMemo.indexOfFirstTrailingDigit("F0"), 1)
+        XCTAssertEqual(CdiXmlMemo.indexOfFirstTrailingDigit("FF00"), 2)
+        XCTAssertEqual(CdiXmlMemo.indexOfFirstTrailingDigit("ABC0"), 3)
+        XCTAssertEqual(CdiXmlMemo.indexOfFirstTrailingDigit("FF0000000"), 2)
+    }
+
+    func testLeadingAndTrailingText() throws {
+        XCTAssertEqual(CdiXmlMemo.trailingNumber("ABCD"), -1)
+        XCTAssertEqual(CdiXmlMemo.leadingText("ABCD"), "ABCD")
+
+        XCTAssertEqual(CdiXmlMemo.trailingNumber("0123"), 123)
+        XCTAssertEqual(CdiXmlMemo.leadingText("0123"), "")
+
+        XCTAssertEqual(CdiXmlMemo.trailingNumber("F2"), 2)
+        XCTAssertEqual(CdiXmlMemo.leadingText("F2"), "F")
+
+        XCTAssertEqual(CdiXmlMemo.trailingNumber("FF10"), 10)
+        XCTAssertEqual(CdiXmlMemo.leadingText("FF00"), "FF")
+
+        XCTAssertEqual(CdiXmlMemo.trailingNumber("ABC9"), 9)
+        XCTAssertEqual(CdiXmlMemo.leadingText("ABC0"), "ABC")
+
+        XCTAssertEqual(CdiXmlMemo.trailingNumber("FF12345678"), 12345678)
+        XCTAssertEqual(CdiXmlMemo.leadingText("FF12345678"), "FF")
+
+    }
+    
     func testIntWithMap() throws {
         let data : Data = ("""
                             <cdi><segment>
